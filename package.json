@@ -23,15 +23,15 @@
     "start": "next start",
     "format": "npx prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "npx prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "prepare": "husky install",
-    "knip": "npx knip",
+    "knip:check": "npx knip",
     "knip:exports": "npx knip --exports",
     "knip:deps": "npx knip --dependencies",
     "knip:files": "npx knip --files",
     "knip:prod": "npx knip --production",
     "knip:fix": "npx knip --fix",
     "postinstall": "prisma generate",
-    "media-kit": "npx tsx scripts/generate-media-kit.ts"
+    "media-kit": "npx tsx scripts/generate-media-kit.ts",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.864.0",
@@ -122,8 +122,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@react-email/components": "^1.0.2",
     "@react-email/tailwind": "^2.0.2",
     "@tailwindcss/typography": "^0.5.19",
@@ -134,28 +134,29 @@
     "@types/react-dom": "^18.3.7",
     "@types/uuid": "^10.0.0",
     "babel-plugin-react-compiler": "^19.0.0-beta-ebf51a3-20250411",
-    "commitlint": "^19.8.1",
+    "commitlint": "^21.0.1",
+    "eslint": "^10.2.0",
     "eslint-config-next": "^15.4.4",
     "husky": "^8.0.3",
     "knip": "^5.62.0",
     "lint-staged": "^15.5.2",
     "postcss": "^8.5.6",
     "postcss-load-config": "^6.0.1",
-    "prettier": "^3.6.2",
+    "prettier": "^3.8.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "next lint .",
-      "prettier -w ."
+      "eslint --fix",
+      "prettier --write"
     ],
     "*.{css,scss}": [
-      "prettier -w ."
+      "prettier --write"
     ],
     "*.{json,md}": [
-      "prettier --w ."
+      "prettier --write"
     ]
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"

@@ -13,6 +13,21 @@ jobs:
     permissions:
       contents: read
     
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: emberly_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v6
 
@@ -29,7 +44,12 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: bun install
+          command: bun install --ignore-scripts
+
+      - name: Generate Prisma Client
+        run: bun x prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/emberly_test
 
       - name: Type Check
         run: bun x tsc --noEmit
