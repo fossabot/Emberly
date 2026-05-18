@@ -2,47 +2,51 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FileCode,
+  Loader2,
+  Package,
+  RefreshCw,
+  Tag,
+  Trash2,
+} from 'lucide-react'
 
-import { ExternalLink, Package, Plus, Trash2 } from 'lucide-react'
-
+import PromoCodesManager from '@/packages/components/admin/payments/promo-codes-manager'
 import { Badge } from '@/packages/components/ui/badge'
 import { Button } from '@/packages/components/ui/button'
-import { Input } from '@/packages/components/ui/input'
-import { Label } from '@/packages/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/packages/components/ui/select'
+import { Skeleton } from '@/packages/components/ui/skeleton'
 import { Switch } from '@/packages/components/ui/switch'
-import { Textarea } from '@/packages/components/ui/textarea'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/packages/components/ui/tabs'
 import { useToast } from '@/packages/hooks/use-toast'
-import { cn } from '@/packages/lib/utils'
+import { ToastAction } from '@/packages/components/ui/toast'
 
-const emptyForm = {
-  id: null as string | null,
-  name: '',
-  slug: '',
-  description: '',
-  type: 'plan',
-  stripeProductId: '',
-  stripePriceMonthlyId: '',
-  stripePriceYearlyId: '',
-  stripePriceOneTimeId: '',
-  defaultPriceCents: '',
-  billingInterval: 'month',
-  features: '' as string,
-  active: true,
-  popular: false,
+const SEED_SCRIPT_URL = 'https://github.com/EmberlyOSS/Emberly/blob/dev/scripts/seed-plans.ts'
+const PAGE_SIZE = 10
+
+function TypeBadge({ type }: { type: string }) {
+  switch (type) {
+    case 'plan':
+      return <Badge className="bg-blue-500/15 text-blue-400 border border-blue-400/30 font-mono text-[10px] py-0">plan</Badge>
+    case 'addon':
+      return <Badge className="bg-violet-500/15 text-violet-400 border border-violet-400/30 font-mono text-[10px] py-0">addon</Badge>
+    case 'nexium-plan':
+      return <Badge className="bg-orange-500/15 text-orange-400 border border-orange-400/30 font-mono text-[10px] py-0">nexium-plan</Badge>
+    case 'one-time':
+      return <Badge className="bg-slate-500/15 text-slate-400 border border-slate-400/30 font-mono text-[10px] py-0">one-time</Badge>
+    default:
+      return <Badge variant="outline" className="font-mono text-[10px] py-0">{type || 'plan'}</Badge>
+  }
 }
 
 export default function AdminProductManager() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ ...emptyForm })
+  const [syncing, setSyncing] = useState<string | null>(null)
+  const [toggling, setToggling] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const { toast } = useToast()
 
   const fetchProducts = async () => {
@@ -50,302 +54,359 @@ export default function AdminProductManager() {
     try {
       const res = await fetch('/api/products')
       if (!res.ok) throw new Error('Failed to load products')
-      const data = await res.json()
-      setProducts(data)
+      setProducts(await res.json())
     } catch (err: any) {
-      toast({ title: 'Failed to load products', description: err.message || 'Please try again.', variant: 'destructive' })
+      toast({ title: 'Failed to load products', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
+  useEffect(() => { fetchProducts() }, [])
 
-  const resetForm = () => {
-    setForm({ ...emptyForm })
-  }
-
-  const startEdit = (p: any) => {
-    setForm({
-      id: p.id,
-      name: p.name || '',
-      slug: p.slug || '',
-      description: p.description || '',
-      type: p.type || 'plan',
-      stripeProductId: p.stripeProductId || '',
-      stripePriceMonthlyId: p.stripePriceMonthlyId || '',
-      stripePriceYearlyId: p.stripePriceYearlyId || '',
-      stripePriceOneTimeId: p.stripePriceOneTimeId || '',
-      defaultPriceCents: p.defaultPriceCents != null ? String(p.defaultPriceCents) : '',
-      billingInterval: p.billingInterval || 'month',
-      features: Array.isArray(p.features) ? p.features.join('\n') : '',
-      active: !!p.active,
-      popular: !!p.popular,
-    })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-
+  const handleToggle = async (id: string, field: 'active' | 'popular', value: boolean) => {
+    setToggling(`${id}:${field}`)
+    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, [field]: value } : p))
     try {
-      const payload: any = {
-        name: form.name,
-        slug: form.slug,
-        description: form.description || null,
-        type: form.type || 'plan',
-        stripeProductId: form.stripeProductId || null,
-        stripePriceMonthlyId: form.stripePriceMonthlyId || null,
-        stripePriceYearlyId: form.stripePriceYearlyId || null,
-        stripePriceOneTimeId: form.stripePriceOneTimeId || null,
-        defaultPriceCents: form.defaultPriceCents === '' ? null : Number(form.defaultPriceCents),
-        billingInterval: form.billingInterval || null,
-        features: form.features
-          ? form.features
-            .split(/\r?\n/)
-            .map((f) => f.trim())
-            .filter(Boolean)
-          : [],
-        active: form.active,
-        popular: form.popular,
-      }
-
-      const res = await fetch(form.id ? `/api/products/${form.id}` : '/api/products', {
-        method: form.id ? 'PATCH' : 'POST',
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ [field]: value }),
       })
-
-      if (!res.ok) throw new Error('Save failed')
-      await fetchProducts()
-      toast({ title: form.id ? 'Product updated' : 'Product created', description: form.name })
-      resetForm()
+      if (!res.ok) throw new Error('Update failed')
     } catch (err: any) {
-      toast({ title: 'Save failed', description: err.message || 'Please try again.', variant: 'destructive' })
+      setProducts((prev) => prev.map((p) => p.id === id ? { ...p, [field]: !value } : p))
+      toast({ title: 'Update failed', description: err.message, variant: 'destructive' })
     } finally {
-      setSaving(false)
+      setToggling(null)
+    }
+  }
+
+  const handleSync = async (id: string, name: string) => {
+    setSyncing(id)
+    try {
+      const res = await fetch(`/api/admin/products/${id}/sync`, { method: 'POST' })
+      if (!res.ok) throw new Error('Sync failed')
+      const data = await res.json()
+      await fetchProducts()
+      toast({ title: data.synced ? 'Synced to Stripe' : 'Already up to date', description: name })
+    } catch (err: any) {
+      toast({ title: 'Sync failed', description: err.message, variant: 'destructive' })
+    } finally {
+      setSyncing(null)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this product?')) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Delete failed')
-      await fetchProducts()
-      toast({ title: 'Product deleted' })
-    } catch (err: any) {
-      toast({ title: 'Delete failed', description: err.message || 'Please try again.', variant: 'destructive' })
-    } finally {
-      setSaving(false)
-    }
+    toast({
+      title: 'Delete this product?',
+      description: 'This cannot be undone.',
+      variant: 'destructive',
+      action: (
+        <ToastAction
+          altText="Confirm delete"
+          onClick={async () => {
+            setToggling(`${id}:delete`)
+            try {
+              const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+              if (!res.ok) throw new Error('Delete failed')
+              setProducts((prev) => prev.filter((p) => p.id !== id))
+              toast({ title: 'Product deleted' })
+            } catch (err: any) {
+              toast({ title: 'Delete failed', description: err.message, variant: 'destructive' })
+            } finally {
+              setToggling(null)
+            }
+          }}
+        >
+          Delete
+        </ToastAction>
+      ),
+    })
   }
 
-  const formTitle = form.id ? 'Edit product' : 'Create product'
+  const sorted = useMemo(
+    () => [...products].sort((a, b) => Number(b.active) - Number(a.active)),
+    [products]
+  )
 
-  const sortedProducts = useMemo(() => {
-    return [...products].sort((a, b) => Number(b.active) - Number(a.active))
-  }, [products])
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="space-y-6 w-full">
-      {/* Product Form */}
-      <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/50">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <span className="font-medium">{formTitle}</span>
-              <p className="text-xs text-muted-foreground">Manage Stripe-linked products</p>
-            </div>
-          </div>
-          {form.id ? (
-            <Button variant="ghost" size="sm" onClick={resetForm}>Cancel edit</Button>
-          ) : null}
-        </div>
+    <Tabs defaultValue="products">
+      {/* ── Tab bar ── */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <TabsList className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 h-auto">
+          <TabsTrigger
+            value="products"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm font-medium transition-all flex items-center gap-1.5"
+          >
+            <Package className="h-3.5 w-3.5" />
+            Products
+            {sorted.length > 0 && (
+              <span className="ml-1 rounded-full bg-primary/20 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary data-[state=active]:bg-primary-foreground/20 data-[state=active]:text-primary-foreground">
+                {sorted.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="promo-codes"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm font-medium transition-all flex items-center gap-1.5"
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Promo Codes
+          </TabsTrigger>
+        </TabsList>
 
-        <form className="p-4 space-y-4" onSubmit={handleSubmit}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={100} className="bg-background/50 border-border/50" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required className="bg-background/50 border-border/50 font-mono text-sm" />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select value={form.type} onValueChange={(value) => setForm({ ...form, type: value })}>
-                <SelectTrigger className="bg-background/50 border-border/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="plan">Plan</SelectItem>
-                  <SelectItem value="addon">Add-on</SelectItem>
-                  <SelectItem value="one-time">One-time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="billingInterval">Billing Interval</Label>
-              <Select value={form.billingInterval} onValueChange={(value) => setForm({ ...form, billingInterval: value })}>
-                <SelectTrigger className="bg-background/50 border-border/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="month">Monthly</SelectItem>
-                  <SelectItem value="year">Yearly</SelectItem>
-                  <SelectItem value="one-time">One-time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="bg-background/50 border-border/50" />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="stripeProductId">Stripe Product ID</Label>
-              <Input id="stripeProductId" value={form.stripeProductId} onChange={(e) => setForm({ ...form, stripeProductId: e.target.value })} placeholder="prod_xxx" className="bg-background/50 border-border/50 font-mono text-sm" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="defaultPriceCents">Default Price (cents)</Label>
-              <Input id="defaultPriceCents" type="number" inputMode="numeric" value={form.defaultPriceCents} onChange={(e) => setForm({ ...form, defaultPriceCents: e.target.value })} className="bg-background/50 border-border/50" />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="stripePriceMonthlyId">Monthly Price ID</Label>
-              <Input id="stripePriceMonthlyId" value={form.stripePriceMonthlyId} onChange={(e) => setForm({ ...form, stripePriceMonthlyId: e.target.value })} placeholder="price_xxx" className="bg-background/50 border-border/50 font-mono text-xs" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="stripePriceYearlyId">Yearly Price ID</Label>
-              <Input id="stripePriceYearlyId" value={form.stripePriceYearlyId} onChange={(e) => setForm({ ...form, stripePriceYearlyId: e.target.value })} placeholder="price_xxx" className="bg-background/50 border-border/50 font-mono text-xs" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="stripePriceOneTimeId">One-time Price ID</Label>
-              <Input id="stripePriceOneTimeId" value={form.stripePriceOneTimeId} onChange={(e) => setForm({ ...form, stripePriceOneTimeId: e.target.value })} placeholder="price_xxx" className="bg-background/50 border-border/50 font-mono text-xs" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="features">Features (one per line)</Label>
-            <Textarea id="features" value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} placeholder="Custom domains&#10;Analytics&#10;Priority support" className="bg-background/50 border-border/50 font-mono text-sm" rows={4} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 pt-2">
-            <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-background/30 px-4 py-3">
-              <Switch id="active" checked={form.active} onCheckedChange={(checked) => setForm({ ...form, active: checked })} />
-              <Label htmlFor="active" className="cursor-pointer">Active</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-background/30 px-4 py-3">
-              <Switch id="popular" checked={form.popular} onCheckedChange={(checked) => setForm({ ...form, popular: checked })} />
-              <Label htmlFor="popular" className="cursor-pointer">Popular badge</Label>
-            </div>
-            <div className="ml-auto">
-              <Button type="submit" disabled={saving} className="gap-2">
-                <Plus className="h-4 w-4" />
-                {form.id ? 'Update Product' : 'Create Product'}
-              </Button>
-            </div>
-          </div>
-        </form>
+        <TabsContent value="products" className="m-0">
+          <Button variant="outline" size="sm" onClick={fetchProducts} disabled={loading} className="gap-1.5">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </TabsContent>
       </div>
 
-      {/* Product List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Package className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">Existing Products</h2>
-              <p className="text-sm text-muted-foreground">{sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''}</p>
-            </div>
+      {/* ── Products tab ── */}
+      <TabsContent value="products" className="mt-0 space-y-4">
+        {/* Seed notice */}
+        <div className="glass-subtle rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-start gap-2.5 text-sm text-muted-foreground">
+            <FileCode className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+            <span>
+              Products are defined in{' '}
+              <code className="font-mono text-xs bg-muted/40 px-1.5 py-0.5 rounded">scripts/seed-plans.ts</code>.
+              Run <code className="font-mono text-xs bg-muted/40 px-1.5 py-0.5 rounded">bun run db:seed</code> to upsert
+              and sync Stripe in one step. Use <strong className="text-foreground font-medium">Sync</strong> to push
+              individual products without re-seeding.
+            </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={fetchProducts} disabled={loading}>Refresh</Button>
+          <Button asChild variant="outline" size="sm" className="gap-1.5 shrink-0">
+            <Link href={SEED_SCRIPT_URL} target="_blank">
+              <ExternalLink className="h-3 w-3" />
+              Edit on GitHub
+            </Link>
+          </Button>
         </div>
 
-        {loading ? (
-          <div className="rounded-xl border border-border/50 bg-background/30 p-8 text-center text-muted-foreground">
-            Loading products...
-          </div>
-        ) : sortedProducts.length === 0 ? (
-          <div className="rounded-xl border border-border/50 border-dashed bg-background/30 p-12 text-center">
+        {/* Product list */}
+        {!loading && sorted.length === 0 ? (
+          <div className="glass-subtle rounded-xl border border-border/50 border-dashed p-12 text-center">
             <div className="flex justify-center mb-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                 <Package className="h-7 w-7 text-primary" />
               </div>
             </div>
-            <h3 className="text-lg font-medium mb-2">No products yet</h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-              Create your first product to start selling plans and add-ons.
+            <h3 className="text-lg font-semibold mb-2">No products yet</h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+              Add plans to <code className="font-mono text-xs">scripts/seed-plans.ts</code> and run{' '}
+              <code className="font-mono text-xs">bun run db:seed</code>.
             </p>
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <Link href={SEED_SCRIPT_URL} target="_blank">
+                <ExternalLink className="h-3 w-3" />
+                Edit seed script
+              </Link>
+            </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {sortedProducts.map((p) => (
-              <div key={p.id} className="rounded-xl border border-border/50 bg-background/30 p-4 group hover:border-primary/30 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold">{p.name}</span>
-                      {p.popular && <Badge className="bg-chart-4/20 text-chart-4 border-0">Popular</Badge>}
-                      {!p.active && <Badge variant="secondary" className="bg-muted/50">Inactive</Badge>}
-                      <Badge variant="outline" className="font-mono text-xs">{p.type || 'plan'}</Badge>
+          <>
+            <div className="glass-subtle overflow-hidden rounded-xl border border-border/50">
+              <div className="divide-y divide-border/50">
+                {loading
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-36" />
+                          <Skeleton className="h-4 w-14 rounded-full" />
+                        </div>
+                        <div className="flex gap-1">
+                          <Skeleton className="h-7 w-7 rounded-md" />
+                          <Skeleton className="h-7 w-7 rounded-md" />
+                          <Skeleton className="h-7 w-7 rounded-md" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-3 w-28" />
+                      <Skeleton className="h-4 w-64" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground font-mono">{p.slug}</p>
-                    {p.description && <p className="text-sm text-muted-foreground">{p.description}</p>}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span>Stripe: <span className="font-mono">{p.stripeProductId || '—'}</span></span>
-                      <span>Billing: {p.billingInterval || 'n/a'}</span>
-                      <span>Price: {p.defaultPriceCents != null ? `$${(p.defaultPriceCents / 100).toFixed(2)}` : 'n/a'}</span>
+                  ))
+                  : paginated.map((p) => (
+                  <div key={p.id} className="p-5 hover:bg-muted/20 transition-colors">
+                    {/* Header: name + type + status | actions */}
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <span className="font-semibold text-sm">{p.name}</span>
+                        <TypeBadge type={p.type} />
+                        {!p.active && (
+                          <Badge variant="secondary" className="bg-muted/50 text-muted-foreground text-[10px] py-0">Inactive</Badge>
+                        )}
+                        {p.popular && (
+                          <Badge className="bg-amber-500/15 text-amber-500 border border-amber-400/30 text-[10px] py-0">Popular</Badge>
+                        )}
+                      </div>
+                      {/* Always-visible action buttons */}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {p.stripeProductId && (
+                          <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title="Open in Stripe">
+                            <Link href={`https://dashboard.stripe.com/products/${p.stripeProductId}`} target="_blank">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleSync(p.id, p.name)}
+                          disabled={syncing === p.id}
+                          title="Sync to Stripe"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${syncing === p.id ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title="Edit seed script">
+                          <Link href={SEED_SCRIPT_URL} target="_blank">
+                            <FileCode className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(p.id)}
+                          disabled={toggling === `${p.id}:delete`}
+                          title="Delete product"
+                        >
+                          {toggling === `${p.id}:delete`
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <Trash2 className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Slug */}
+                    <p className="text-[11px] font-mono text-muted-foreground/60 mb-2">{p.slug}</p>
+
+                    {/* Description */}
+                    {p.description && (
+                      <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{p.description}</p>
+                    )}
+
+                    {/* Stats */}
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground mb-3">
+                      {p.defaultPriceCents != null && (
+                        <span>
+                          <span className="text-foreground font-medium">${(p.defaultPriceCents / 100).toFixed(2)}</span>
+                          {p.billingInterval && <span className="text-muted-foreground"> / {p.billingInterval}</span>}
+                        </span>
+                      )}
+                      {p.storageQuotaGB != null && (
+                        <span>Storage: <span className="text-foreground font-medium">{p.storageQuotaGB} GB</span></span>
+                      )}
+                      {p.uploadSizeCapMB != null && (
+                        <span>Upload cap: <span className="text-foreground font-medium">{p.uploadSizeCapMB >= 1024 ? `${p.uploadSizeCapMB / 1024} GB` : `${p.uploadSizeCapMB} MB`}</span></span>
+                      )}
+                      {p.customDomainsLimit != null && (
+                        <span>Domains: <span className="text-foreground font-medium">{p.customDomainsLimit}</span></span>
+                      )}
+                      {p.stripeProductId && (
+                        <span className="font-mono text-[10px] text-muted-foreground/50">{p.stripeProductId}</span>
+                      )}
+                    </div>
+
+                    {/* Features */}
                     {Array.isArray(p.features) && p.features.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {p.features.slice(0, 5).map((f: string, i: number) => (
-                          <Badge key={i} variant="outline" className="text-xs font-normal">{f}</Badge>
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {p.features.slice(0, 4).map((f: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-[11px] font-normal max-w-[220px] truncate">{f}</Badge>
                         ))}
-                        {p.features.length > 5 && (
-                          <Badge variant="outline" className="text-xs font-normal">+{p.features.length - 5} more</Badge>
+                        {p.features.length > 4 && (
+                          <Badge variant="outline" className="text-[11px] font-normal">+{p.features.length - 4} more</Badge>
                         )}
                       </div>
                     )}
+
+                    {/* Controls */}
+                    <div className="flex items-center gap-5 pt-3 border-t border-border/30">
+                      <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-muted-foreground">
+                        <Switch
+                          checked={!!p.active}
+                          onCheckedChange={(v) => handleToggle(p.id, 'active', v)}
+                          disabled={toggling === `${p.id}:active`}
+                          aria-label="Active"
+                        />
+                        Active
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-muted-foreground">
+                        <Switch
+                          checked={!!p.popular}
+                          onCheckedChange={(v) => handleToggle(p.id, 'popular', v)}
+                          disabled={toggling === `${p.id}:popular`}
+                          aria-label="Popular"
+                        />
+                        Popular
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {p.stripeProductId && (
-                      <Button asChild variant="ghost" size="sm" className="gap-2 h-8">
-                        <Link href={`https://dashboard.stripe.com/products/${p.stripeProductId}`} target="_blank">
-                          <ExternalLink className="h-3 w-3" />
-                          Stripe
-                        </Link>
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => startEdit(p)} className="h-8">Edit</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(p.id)} disabled={saving} className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10">
-                      <Trash2 className="h-4 w-4" />
+                ))}
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, sorted.length)} of {sorted.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <Button
+                      key={n}
+                      variant={n === page ? 'default' : 'outline'}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
                     </Button>
-                  </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
-      </div>
-    </div>
+      </TabsContent>
+
+      {/* ── Promo Codes tab ── */}
+      <TabsContent value="promo-codes" className="mt-0">
+        <div className="glass-card">
+          <div className="p-6">
+            <PromoCodesManager />
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   )
 }

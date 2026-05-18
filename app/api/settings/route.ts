@@ -5,7 +5,7 @@ import {
 } from '@/packages/types/dto/settings'
 
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
-import { requireAdmin, requireAuth } from '@/packages/lib/auth/api-auth'
+import { requireAdmin, requireAuth, requireSuperAdmin } from '@/packages/lib/auth/api-auth'
 import {
   EmberlyConfig,
   getConfig,
@@ -16,6 +16,29 @@ import { loggers } from '@/packages/lib/logger'
 import { invalidateStorageProvider } from '@/packages/lib/storage'
 
 const logger = loggers.config
+
+/**
+ * Returns a config safe for ADMIN role:
+ * - All non-secret fields preserved so admins can see/test integrations
+ * - Secret/credential fields blanked out (they're not transmitted to the client)
+ */
+function maskSecretsForAdmin(config: EmberlyConfig): EmberlyConfig {
+  const c = structuredClone(config) as any
+  // S3 storage secrets
+  if (c.settings?.general?.storage?.s3) {
+    c.settings.general.storage.s3.secretAccessKey = ''
+    c.settings.general.storage.s3.accessKeyId = ''
+  }
+  // Integrations
+  const i = c.settings?.integrations ?? {}
+  if (i.stripe)     { i.stripe.secretKey = '';     i.stripe.webhookSecret = '' }
+  if (i.resend)     { i.resend.apiKey = '' }
+  if (i.cloudflare) { i.cloudflare.apiToken = '' }
+  if (i.discord)    { i.discord.botToken = '' }
+  if (i.github)     { i.github.pat = '' }
+  if (i.kener)      { i.kener.apiKey = '' }
+  return c as EmberlyConfig
+}
 
 export async function GET(req: Request) {
   try {
@@ -48,32 +71,39 @@ export async function GET(req: Request) {
 
     const config = await getConfig()
 
-    if (user.role !== 'SUPERADMIN') {
-      const publicSettings: PublicSettings = {
-        version: config.version,
-        settings: {
-          general: {
-            registrations: {
-              enabled: config.settings.general.registrations.enabled,
-              disabledMessage:
-                config.settings.general.registrations.disabledMessage,
-            },
-          },
-          appearance: {
-            theme: config.settings.appearance.theme,
-            favicon: config.settings.appearance.favicon,
-            customColors: config.settings.appearance.customColors,
-          },
-          advanced: {
-            customCSS: config.settings.advanced.customCSS,
-            customHead: config.settings.advanced.customHead,
-          },
-        },
-      }
-      return apiResponse<PublicSettings>(publicSettings)
+    if (user.role === 'SUPERADMIN') {
+      // Superadmin gets full config including all secrets
+      return apiResponse<EmberlyConfig>(config)
     }
 
-    return apiResponse<EmberlyConfig>(config)
+    if (user.role === 'ADMIN') {
+      // Admin gets full structure but with secret fields blanked
+      return apiResponse<EmberlyConfig>(maskSecretsForAdmin(config))
+    }
+
+    // Regular users get public settings only
+    const publicSettings: PublicSettings = {
+      version: config.version,
+      settings: {
+        general: {
+          registrations: {
+            enabled: config.settings.general.registrations.enabled,
+            disabledMessage:
+              config.settings.general.registrations.disabledMessage,
+          },
+        },
+        appearance: {
+          theme: config.settings.appearance.theme,
+          favicon: config.settings.appearance.favicon,
+          customColors: config.settings.appearance.customColors,
+        },
+        advanced: {
+          customCSS: config.settings.advanced.customCSS,
+          customHead: config.settings.advanced.customHead,
+        },
+      },
+    }
+    return apiResponse<PublicSettings>(publicSettings)
   } catch (error) {
     logger.error('Failed to get config', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
@@ -84,7 +114,8 @@ type SettingSection = keyof EmberlyConfig['settings']
 
 export async function PATCH(request: Request) {
   try {
-    const { response } = await requireAdmin()
+    // Settings write operations are superadmin-only
+    const { response } = await requireSuperAdmin()
     if (response) return response
 
     const body = await request.json()
@@ -123,7 +154,8 @@ export async function PATCH(request: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { response } = await requireAdmin()
+    // Settings write operations are superadmin-only
+    const { response } = await requireSuperAdmin()
     if (response) return response
 
     const config: EmberlyConfig = await req.json()

@@ -1,12 +1,12 @@
+import { getAuthenticatedUser } from '@/packages/lib/auth/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { compare } from 'bcryptjs'
-import { getServerSession } from 'next-auth'
 
-import { authOptions } from '@/packages/lib/auth'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 import { getStorageProvider } from '@/packages/lib/storage'
+import { handleCORSPreflight, getCORSHeaders } from '@/packages/lib/api/cors'
 
 const logger = loggers.files
 
@@ -15,12 +15,19 @@ function encodeFilename(filename: string): string {
   return `"${encoded.replace(/["\\]/g, '\\$&')}"`
 }
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  const preflightResponse = handleCORSPreflight(request)
+  if (preflightResponse) return preflightResponse
+  return new Response(null, { status: 204 })
+}
+
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const user = await getAuthenticatedUser(request)
     const { id: fileId } = await params
     const url = new URL(request.url)
     const providedPassword = url.searchParams.get('password')
@@ -43,7 +50,7 @@ export async function GET(
       return new Response(null, { status: 404 })
     }
 
-    const isOwner = session?.user?.id === file.userId
+    const isOwner = user.id === file.userId
     const isPrivate = file.visibility === 'PRIVATE' && !isOwner
 
     if (isPrivate) {
@@ -68,14 +75,6 @@ export async function GET(
 
     const storageProvider = await getStorageProvider()
 
-    if ('getDownloadUrl' in storageProvider && storageProvider.getDownloadUrl) {
-      const downloadUrl = await storageProvider.getDownloadUrl(
-        file.path,
-        file.name
-      )
-      return Response.redirect(downloadUrl, 302)
-    }
-
     const range = request.headers.get('range')
     const size = await storageProvider.getFileSize(file.path)
 
@@ -96,6 +95,7 @@ export async function GET(
         'Content-Length': chunkSize.toString(),
         'Content-Type': file.mimeType,
         'Content-Disposition': `attachment; filename=${encodeFilename(file.name)}`,
+        ...getCORSHeaders(),
       }
 
       return new NextResponse(stream as unknown as ReadableStream, {
@@ -110,6 +110,7 @@ export async function GET(
       'Content-Disposition': `attachment; filename=${encodeFilename(file.name)}`,
       'Accept-Ranges': 'bytes',
       'Content-Length': size.toString(),
+      ...getCORSHeaders(),
     }
 
     return new NextResponse(stream as unknown as ReadableStream, { headers })
@@ -124,7 +125,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const user = await getAuthenticatedUser(request)
     const { id: fileId } = await params
 
     let providedPassword: string | null = null
@@ -151,7 +152,7 @@ export async function POST(
       return new Response(null, { status: 404 })
     }
 
-    const isOwner = session?.user?.id === file.userId
+    const isOwner = user.id === file.userId
     const isPrivate = file.visibility === 'PRIVATE' && !isOwner
 
     if (isPrivate) {
@@ -175,14 +176,6 @@ export async function POST(
     })
 
     const storageProvider = await getStorageProvider()
-
-    if ('getDownloadUrl' in storageProvider && storageProvider.getDownloadUrl) {
-      const downloadUrl = await storageProvider.getDownloadUrl(
-        file.path,
-        file.name
-      )
-      return Response.redirect(downloadUrl, 302)
-    }
 
     const size = await storageProvider.getFileSize(file.path)
 

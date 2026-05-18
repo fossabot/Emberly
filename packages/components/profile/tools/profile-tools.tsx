@@ -6,7 +6,7 @@ import { BashTool } from './bash-tool'
 import { FlameshotTool } from './flameshot-tool'
 import { ShareXTool } from './sharex-tool'
 import { SpectacleTool } from './spectacle-tool'
-import { UploadToken } from './upload-token'
+import { UploadHost } from './upload-host'
 
 export function ProfileTools() {
   return (
@@ -19,7 +19,7 @@ export function ProfileTools() {
       </div>
 
       <div className="space-y-6">
-        <UploadToken />
+        <UploadHost />
 
         <Separator />
 

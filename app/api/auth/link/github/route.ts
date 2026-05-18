@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
             `https://github.com/login/oauth/authorize?${new URLSearchParams({
                 client_id: env.GITHUB_OAUTH_CLIENT_ID,
                 redirect_uri: `${baseUrl}/api/auth/link/github/callback`,
-                scope: 'public_repo,repo',
+                scope: 'public_repo,repo,read:org',
                 state,
             }).toString()}`
         )
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         return response
     } catch (error) {
         console.error('[GET /api/auth/link/github]', error)
-        return NextResponse.redirect(new URL('/dashboard/profile?error=github_link_failed', baseUrl))
+        return NextResponse.redirect(new URL('/me?error=github_link_failed', baseUrl))
     }
 }
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
             `https://github.com/login/oauth/authorize?${new URLSearchParams({
                 client_id: env.GITHUB_OAUTH_CLIENT_ID,
                 redirect_uri: `${baseUrl}/api/auth/link/github/callback`,
-                scope: 'public_repo,repo',
+                scope: 'public_repo,repo,read:org',
                 state,
             }).toString()}`
         )

@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -11,9 +14,11 @@ import {
     Github,
     Mail,
     Palette,
+    Play,
     Shield,
     Sparkles,
     Type,
+    Video,
     X,
 } from 'lucide-react'
 
@@ -24,9 +29,8 @@ import HomeShell from '@/packages/components/layout/home-shell'
 // Reusable GlassCard component
 function GlassCard({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
     return (
-        <div id={id} className={`relative rounded-2xl bg-background/60 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5 dark:shadow-black/20 overflow-hidden ${className}`}>
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-            <div className="relative">{children}</div>
+        <div id={id} className={`glass-card overflow-hidden ${className}`}>
+            {children}
         </div>
     )
 }
@@ -62,12 +66,14 @@ const BRAND_ASSETS = [
     },
 ]
 
-const BRAND_COLORS = [
-    { name: 'Ember', value: '#F97316', rgb: '249, 115, 22', usage: 'Primary brand color, CTAs' },
-    { name: 'Amber', value: '#F59E0B', rgb: '245, 158, 11', usage: 'Accents, highlights' },
-    { name: 'Midnight', value: '#0F172A', rgb: '15, 23, 42', usage: 'Dark backgrounds' },
-    { name: 'Slate', value: '#64748B', rgb: '100, 116, 139', usage: 'Body text, muted' },
-    { name: 'Cream', value: '#F8FAFC', rgb: '248, 250, 252', usage: 'Light backgrounds' },
+// Theme-aware colors that pull from CSS variables
+const THEME_COLORS = [
+    { name: 'Primary', cssVar: '--primary', usage: 'Brand color, CTAs, links' },
+    { name: 'Accent', cssVar: '--accent', usage: 'Highlights, badges' },
+    { name: 'Background', cssVar: '--background', usage: 'Page backgrounds' },
+    { name: 'Card', cssVar: '--card', usage: 'Card surfaces' },
+    { name: 'Muted', cssVar: '--muted', usage: 'Subtle backgrounds' },
+    { name: 'Foreground', cssVar: '--foreground', usage: 'Primary text' },
 ]
 
 const TYPOGRAPHY = [
@@ -90,6 +96,21 @@ const USAGE_DONTS = [
     'Use on busy or clashing backgrounds',
 ]
 
+const PROMO_VIDEOS = [
+    {
+        title: 'Site Preview',
+        description: 'Quick overview of the Emberly interface and main features.',
+        src: '/videos/site-preview-ad.mp4',
+        duration: '~15s',
+    },
+    {
+        title: 'Upload Flow',
+        description: 'Demonstration of the seamless file upload experience.',
+        src: '/videos/uploading-ad.mp4',
+        duration: '~10s',
+    },
+]
+
 const CONTACT_POINTS = [
     {
         label: 'Press inquiries',
@@ -98,19 +119,12 @@ const CONTACT_POINTS = [
     },
     {
         label: 'GitHub Issues',
-        href: 'https://github.com/EmberlyOSS/Website/issues',
+        href: 'https://github.com/EmberlyOSS/Emberly/issues',
         icon: Github,
     },
 ]
 
-const KIT_DOWNLOAD = 'https://github.com/EmberlyOSS/Website/releases/latest'
-
-import { buildPageMetadata } from '@/packages/lib/embeds/metadata'
-
-export const metadata = buildPageMetadata({
-    title: 'Media Kit',
-    description: 'Brand assets, logos, colors, and guidelines for press and partners.',
-})
+const KIT_DOWNLOAD = '/emberly-media-kit.zip'
 
 export default function MediaKitPage() {
     return (
@@ -167,35 +181,49 @@ export default function MediaKitPage() {
                     </div>
                 </div>
 
+                {/* Promotional Videos */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Video className="h-5 w-5 text-primary" />
+                        <h2 className="text-xl font-semibold">Promotional Videos</h2>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        Short promotional clips for use in presentations, social media, and press coverage.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {PROMO_VIDEOS.map((video) => (
+                            <GlassCard key={video.title} className="group">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div>
+                                            <h3 className="font-semibold">{video.title}</h3>
+                                            <p className="text-sm text-muted-foreground mt-1">{video.description}</p>
+                                            <p className="text-xs text-muted-foreground/70 mt-1">Duration: {video.duration}</p>
+                                        </div>
+                                        <Button variant="ghost" size="icon" asChild>
+                                            <a href={video.src} download>
+                                                <Download className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </div>
+                                    <VideoPlayer src={video.src} />
+                                </div>
+                            </GlassCard>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Color Palette */}
                 <GlassCard id="guidelines">
                     <div className="p-8">
                         <div className="flex items-center gap-2 mb-6">
                             <Palette className="h-5 w-5 text-primary" />
-                            <h2 className="text-xl font-semibold">Color Palette</h2>
+                            <h2 className="text-xl font-semibold">Theme Color Palette</h2>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                            {BRAND_COLORS.map((color) => (
-                                <div
-                                    key={color.name}
-                                    className="group rounded-xl border border-border/50 bg-background/30 overflow-hidden"
-                                >
-                                    <div
-                                        className="h-24 flex items-end justify-start p-3"
-                                        style={{ backgroundColor: color.value }}
-                                    >
-                                        <span className={`text-xs font-mono ${color.name === 'Midnight' ? 'text-white/70' : 'text-black/50'}`}>
-                                            {color.value}
-                                        </span>
-                                    </div>
-                                    <div className="p-3">
-                                        <div className="font-medium text-sm">{color.name}</div>
-                                        <div className="text-xs text-muted-foreground mt-0.5">RGB: {color.rgb}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">{color.usage}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Colors adapt to the active theme. These are the current theme&apos;s colors.
+                        </p>
+                        <ThemeColorPalette />
                     </div>
                 </GlassCard>
 
@@ -208,7 +236,7 @@ export default function MediaKitPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {TYPOGRAPHY.map((type) => (
-                                <div key={type.name} className="p-4 rounded-xl bg-background/30 border border-border/50">
+                                <div key={type.name} className="p-4 glass-subtle">
                                     <div className="text-2xl font-bold mb-2" style={{ fontFamily: type.family }}>
                                         Aa
                                     </div>
@@ -220,7 +248,7 @@ export default function MediaKitPage() {
                                 </div>
                             ))}
                         </div>
-                        <div className="mt-6 p-4 rounded-xl bg-background/30 border border-border/50">
+                        <div className="mt-6 p-4 glass-subtle">
                             <p className="text-sm text-muted-foreground">
                                 <strong className="text-foreground">Note:</strong> Inter is available for free from{' '}
                                 <a href="https://fonts.google.com/specimen/Inter" target="_blank" rel="noreferrer" className="text-primary hover:underline">
@@ -359,17 +387,18 @@ type AssetPreviewProps = {
 }
 
 function AssetPreview({ variant, theme }: AssetPreviewProps) {
-    const baseClasses = 'flex h-40 w-full items-center justify-center rounded-xl border border-border/50'
+    const baseClasses = 'flex h-40 w-full items-center justify-center rounded-xl border border-border/30'
 
+    // Use theme-aware backgrounds that adapt to the active theme
     const background =
         theme === 'dark'
-            ? 'bg-gradient-to-br from-background via-muted to-background'
-            : 'bg-gradient-to-br from-slate-100 via-white to-slate-50'
+            ? 'bg-gradient-to-br from-background via-muted/30 to-background'
+            : 'bg-gradient-to-br from-card via-accent/10 to-card'
 
     if (variant === 'wordmark') {
         return (
             <div className={`${baseClasses} ${background}`}>
-                <span className={`text-3xl font-bold tracking-wide ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                <span className={`text-3xl font-bold tracking-wide ${theme === 'dark' ? 'text-foreground' : 'text-foreground'}`}>
                     EMBERLY
                 </span>
             </div>
@@ -387,8 +416,8 @@ function AssetPreview({ variant, theme }: AssetPreviewProps) {
     if (variant === 'mono') {
         return (
             <div className={`${baseClasses} ${background}`}>
-                <div className="rounded-full border border-dashed border-slate-300/70 p-6">
-                    <Image src="/icon.svg" alt="Emberly monochrome" width={48} height={48} className={theme === 'light' ? '' : 'invert'} />
+                <div className="rounded-full border border-dashed border-border p-6">
+                    <Image src="/icon.svg" alt="Emberly monochrome" width={48} height={48} className={theme === 'light' ? 'dark:invert-0' : ''} />
                 </div>
             </div>
         )
@@ -399,10 +428,167 @@ function AssetPreview({ variant, theme }: AssetPreviewProps) {
         <div className={`${baseClasses} ${background}`}>
             <div className="flex items-center gap-3">
                 <Image src="/icon.svg" alt="Emberly logo" width={48} height={48} />
-                <span className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                <span className="text-2xl font-bold text-foreground">
                     Emberly
                 </span>
             </div>
+        </div>
+    )
+}
+
+// Helper to convert HSL CSS variable to hex
+function hslToHex(h: number, s: number, l: number): string {
+    s /= 100
+    l /= 100
+    const a = s * Math.min(l, 1 - l)
+    const f = (n: number) => {
+        const k = (n + h / 30) % 12
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+        return Math.round(255 * color).toString(16).padStart(2, '0')
+    }
+    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase()
+}
+
+// Helper to get luminance for contrast calculation
+function getLuminance(hex: string): number {
+    const rgb = hex.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16) / 255) || [0, 0, 0]
+    const [r, g, b] = rgb.map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+// Video player component that only renders on client to avoid hydration issues
+function VideoPlayer({ src }: { src: string }) {
+    const [mounted, setMounted] = useState(false)
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <div className="relative rounded-xl overflow-hidden bg-muted/30 border border-border/30 aspect-video flex items-center justify-center">
+                <Play className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="relative rounded-xl overflow-hidden bg-muted/30 border border-border/30">
+            <video
+                ref={videoRef}
+                src={src}
+                className="w-full aspect-video object-cover"
+                controls
+                preload="metadata"
+                playsInline
+                muted
+            >
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    )
+}
+
+function ThemeColorPalette() {
+    const [colors, setColors] = useState<{ name: string; hex: string; rgb: string; usage: string }[]>([])
+    const [, forceUpdate] = useState(0)
+
+    useEffect(() => {
+        const updateColors = () => {
+            const root = document.documentElement
+            const computed = getComputedStyle(root)
+
+            const resolved = THEME_COLORS.map(color => {
+                const raw = computed.getPropertyValue(color.cssVar).trim()
+                // HSL format: "210 40% 98%" or similar
+                const parts = raw.split(/\s+/).map(p => parseFloat(p))
+                let hex = '#000000'
+                let rgb = '0, 0, 0'
+
+                if (parts.length >= 3) {
+                    hex = hslToHex(parts[0], parts[1], parts[2])
+                    // Convert hex to RGB
+                    const r = parseInt(hex.slice(1, 3), 16)
+                    const g = parseInt(hex.slice(3, 5), 16)
+                    const b = parseInt(hex.slice(5, 7), 16)
+                    rgb = `${r}, ${g}, ${b}`
+                }
+
+                return {
+                    name: color.name,
+                    hex,
+                    rgb,
+                    usage: color.usage,
+                }
+            })
+
+            setColors(resolved)
+        }
+
+        // Initial update
+        updateColors()
+
+        // Watch for theme changes via class or attribute changes on html element
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.attributeName === 'class' || mutation.attributeName === 'style' || mutation.attributeName === 'data-theme') {
+                    // Small delay to let CSS variables update
+                    setTimeout(updateColors, 50)
+                    break
+                }
+            }
+        })
+
+        observer.observe(document.documentElement, { attributes: true })
+
+        return () => observer.disconnect()
+    }, [])
+
+    if (colors.length === 0) {
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                {THEME_COLORS.map(color => (
+                    <div key={color.name} className="glass-subtle overflow-hidden animate-pulse">
+                        <div className="h-24 bg-muted" />
+                        <div className="p-3 space-y-2">
+                            <div className="h-4 bg-muted rounded w-16" />
+                            <div className="h-3 bg-muted rounded w-24" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            {colors.map(color => {
+                const isDark = getLuminance(color.hex) < 0.5
+                return (
+                    <div
+                        key={color.name}
+                        className="group glass-subtle overflow-hidden"
+                    >
+                        <div
+                            className="h-24 flex items-end justify-start p-3"
+                            style={{ backgroundColor: color.hex }}
+                        >
+                            <span
+                                className="text-xs font-mono"
+                                style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)' }}
+                            >
+                                {color.hex}
+                            </span>
+                        </div>
+                        <div className="p-3">
+                            <div className="font-medium text-sm">{color.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">RGB: {color.rgb}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{color.usage}</div>
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }

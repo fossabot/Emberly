@@ -1,14 +1,13 @@
-import { redirect } from 'next/navigation'
-
-import { getServerSession } from 'next-auth'
-
 import { UploadForm } from '@/packages/components/file/upload-form'
+import { DashboardShell } from '@/packages/components/dashboard/dashboard-shell'
 
-import { authOptions } from '@/packages/lib/auth'
 import { buildPageMetadata } from '@/packages/lib/embeds/metadata'
 import { getConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
 import { formatBytes } from '@/packages/lib/utils'
+
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/packages/lib/auth'
 
 export const metadata = buildPageMetadata({
   title: 'Upload Files',
@@ -18,12 +17,8 @@ export const metadata = buildPageMetadata({
 export default async function UploadPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
-    redirect('/auth/login')
-  }
-
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session!.user.id },
     select: {
       id: true,
       defaultFileExpirationAction: true,
@@ -42,21 +37,19 @@ export default async function UploadPage() {
   const formattedMaxSize = formatBytes(maxSizeBytes)
 
   return (
-    <div className="container space-y-6">
-      <div className="relative rounded-2xl bg-white/10 dark:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-black/20">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:via-transparent dark:to-black/10" />
-        <div className="relative p-8">
-          <h1 className="text-3xl font-bold">Upload Files</h1>
-          <p className="text-muted-foreground mt-2">
-            Upload and share files with optional password protection
-          </p>
+    <DashboardShell
+      header={
+        <div className="glass-card">
+          <div className="p-8">
+            <h1 className="text-3xl font-bold tracking-tight">Upload Files</h1>
+            <p className="text-muted-foreground mt-2">
+              Upload and share files with optional password protection
+            </p>
+          </div>
         </div>
-      </div>
-
-      <div className="relative rounded-2xl bg-white/10 dark:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-black/20">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:via-transparent dark:to-black/10" />
-        <div className="relative p-8">
-          <UploadForm
+      }
+    >
+      <UploadForm
             user={{
               id: user.id,
               defaultFileExpiration: user.defaultFileExpiration,
@@ -65,8 +58,6 @@ export default async function UploadPage() {
             maxSize={maxSizeBytes}
             formattedMaxSize={formattedMaxSize}
           />
-        </div>
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

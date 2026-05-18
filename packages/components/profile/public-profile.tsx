@@ -3,17 +3,24 @@
 import { useState, useEffect } from 'react'
 import { Badge } from '@/packages/components/ui/badge'
 import { Button } from '@/packages/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/packages/components/ui/tabs'
 import { Skeleton } from '@/packages/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/packages/components/ui/tabs'
 import { format } from 'date-fns'
 import Image from 'next/image'
 import Link from 'next/link'
+import { GRANT_META, ALL_GRANTS } from '@/packages/lib/grants/constants'
 import HomeShell from '@/packages/components/layout/home-shell'
+import { type NexiumPublicProfileData } from './nexium-public-section'
+import { SignalCard } from './signal-card'
+import {
+  NEXIUM_AVAILABILITY_LABELS,
+  NEXIUM_SKILL_LEVEL_LABELS,
+  NEXIUM_SIGNAL_TYPE_LABELS,
+} from '@/packages/lib/nexium/constants'
 import {
   Star,
   Github,
   Zap,
-  Award,
   Calendar,
   Trophy,
   Sparkles,
@@ -23,17 +30,33 @@ import {
   FileText,
   Download,
   Eye,
-  Code,
   Check,
   Shield,
+  Flag,
+  CheckCircle,
+  MapPin,
+  Clock,
+  BarChart2,
+  Code2,
+  GitMerge,
+  Package,
+  Users,
+  Layers,
+  Award,
+  HeartHandshake,
+  Headset,
+  ShieldCheck,
+  Palette,
+  Handshake,
 } from 'lucide-react'
+import { SiDiscord, SiGithub as SiGithubIcon } from 'react-icons/si'
+import { SkillIcon } from './skill-icons'
+import { ReportUserDialog } from './report-user-dialog'
 
-// Reusable GlassCard component (consistent with other pages)
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`relative rounded-2xl bg-background/60 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5 dark:shadow-black/20 overflow-hidden ${className}`}>
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-      <div className="relative">{children}</div>
+    <div className={`glass-card overflow-hidden ${className}`}>
+      {children}
     </div>
   )
 }
@@ -44,17 +67,80 @@ const PERK_ROLES = {
   AFFILIATE: 'AFFILIATE',
 }
 
+const skillLevelStyle: Record<string, string> = {
+  BEGINNER: 'text-blue-500 border-blue-500/30 bg-blue-500/10',
+  INTERMEDIATE: 'text-green-500 border-green-500/30 bg-green-500/10',
+  ADVANCED: 'text-orange-500 border-orange-500/30 bg-orange-500/10',
+  EXPERT: 'text-purple-500 border-purple-500/30 bg-purple-500/10',
+}
+
+const availabilityStyle: Record<string, string> = {
+  OPEN: 'text-green-600 border-green-500/30 bg-green-500/10',
+  LIMITED: 'text-yellow-600 border-yellow-500/30 bg-yellow-500/10',
+  CLOSED: 'text-muted-foreground',
+}
+
+function SkillLevelBar({ level }: { level: string }) {
+  const levels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']
+  const rank = levels.indexOf(level)
+  const colorMap: Record<string, string> = {
+    BEGINNER: 'bg-blue-500',
+    INTERMEDIATE: 'bg-green-500',
+    ADVANCED: 'bg-orange-500',
+    EXPERT: 'bg-purple-500',
+  }
+  return (
+    <div className="flex items-center gap-0.5" title={NEXIUM_SKILL_LEVEL_LABELS[level as keyof typeof NEXIUM_SKILL_LEVEL_LABELS]}>
+      {levels.map((_, i) => (
+        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= rank ? colorMap[level] : 'bg-muted-foreground/20'}`} />
+      ))}
+    </div>
+  )
+}
+
+const signalTypeIcons: Record<string, React.ReactNode> = {
+  GITHUB_REPO: <SiGithubIcon className="w-3.5 h-3.5" />,
+  DEPLOYED_APP: <Globe className="w-3.5 h-3.5" />,
+  OPEN_SOURCE_CONTRIBUTION: <GitMerge className="w-3.5 h-3.5" />,
+  SHIPPED_PRODUCT: <Package className="w-3.5 h-3.5" />,
+  COMMUNITY_IMPACT: <Users className="w-3.5 h-3.5" />,
+  ASSET_PACK: <Layers className="w-3.5 h-3.5" />,
+  CERTIFICATION: <Award className="w-3.5 h-3.5" />,
+  OTHER: <FileText className="w-3.5 h-3.5" />,
+}
+
+const signalTypeColors: Record<string, string> = {
+  GITHUB_REPO: 'bg-zinc-500/15 text-zinc-400',
+  DEPLOYED_APP: 'bg-blue-500/15 text-blue-400',
+  OPEN_SOURCE_CONTRIBUTION: 'bg-emerald-500/15 text-emerald-400',
+  SHIPPED_PRODUCT: 'bg-orange-500/15 text-orange-400',
+  COMMUNITY_IMPACT: 'bg-pink-500/15 text-pink-400',
+  ASSET_PACK: 'bg-purple-500/15 text-purple-400',
+  CERTIFICATION: 'bg-amber-500/15 text-amber-400',
+  OTHER: 'bg-muted/50 text-muted-foreground',
+}
+
 interface PublicProfileProps {
   user: {
     id: string
     name: string | null
+    fullName: string | null
     image: string | null
+    banner: string | null
+    avatarDecoration: string | null
+    isVerified: boolean
     bio: string | null
     website: string | null
+    twitter: string | null
+    github: string | null
+    discord: string | null
     createdAt: Date
     urlId: string
     vanityId: string | null
     perkRoles: string[]
+    grants: string[]
+    role: string
+    alphaUser: boolean
     _count: {
       files: number
     }
@@ -79,656 +165,505 @@ interface PublicProfileProps {
     storageGB: number
     domainSlots: number
   }
+  leaderboardRank?: number | null
+  nexiumProfile?: NexiumPublicProfileData | null
+  currentUserId?: string | null
 }
 
-export function PublicProfile({ user, storageBonus, domainBonus, linkedAccounts, contributorInfo, boosterInfo }: PublicProfileProps) {
+export function PublicProfile({ user, storageBonus, domainBonus, linkedAccounts, contributorInfo, boosterInfo, leaderboardRank, nexiumProfile, currentUserId }: PublicProfileProps) {
   const displayName = user.name || 'Anonymous User'
   const memberSince = format(user.createdAt, 'MMMM yyyy')
-  const [activeTab, setActiveTab] = useState('overview')
   const [contributions, setContributions] = useState<any>(null)
   const [files, setFiles] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loadingContribs, setLoadingContribs] = useState(false)
+  const [loadingFiles, setLoadingFiles] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
 
-  // Get perk information
+  const isOwnProfile = !!currentUserId && currentUserId === user.id
+  const canReport = !!currentUserId && !isOwnProfile
+
   const hasContributor = user.perkRoles.some((p) => p.startsWith('CONTRIBUTOR'))
   const hasDiscordBooster = user.perkRoles.some((p) => p.startsWith('DISCORD_BOOSTER'))
   const hasAffiliate = user.perkRoles.includes(PERK_ROLES.AFFILIATE)
 
-  // Fetch contributions when tab changes
+  const hasGitHub = !!(linkedAccounts?.github || user.github)
+  const hasNexium = !!nexiumProfile
+
+  const [activeTab, setActiveTab] = useState('overview')
+  const [contribsLoaded, setContribsLoaded] = useState(false)
+
+  // Lazy-load contributions only when the tab is first opened
   useEffect(() => {
-    if (activeTab === 'contributions' && !contributions && linkedAccounts?.github) {
-      setLoading(true)
+    if (activeTab === 'contributions' && !contribsLoaded && hasGitHub) {
+      setContribsLoaded(true)
+      setLoadingContribs(true)
       fetch(`/api/users/${user.id}/contributions`)
         .then(r => r.json())
         .then(data => setContributions(data))
         .catch(console.error)
-        .finally(() => setLoading(false))
+        .finally(() => setLoadingContribs(false))
     }
-  }, [activeTab, contributions, user.id, linkedAccounts])
+  }, [activeTab, contribsLoaded, hasGitHub, user.id])
 
-  // Fetch files when tab changes
+  // Auto-load public files
   useEffect(() => {
-    if (activeTab === 'files' && files.length === 0) {
-      setLoading(true)
-      fetch(`/api/users/${user.id}/public-files`)
-        .then(r => r.json())
-        .then(data => setFiles(data.files || []))
-        .catch(console.error)
-        .finally(() => setLoading(false))
+    setLoadingFiles(true)
+    fetch(`/api/users/${user.id}/public-files`)
+      .then(r => r.json())
+      .then(data => setFiles(data.files || []))
+      .catch(console.error)
+      .finally(() => setLoadingFiles(false))
+  }, [user.id])
+
+  // Collect all badges
+  const badges: Array<{ label: string; icon: React.ReactNode; className: string; gradient?: string }> = []
+
+  const CONTRIBUTOR_TIER_STYLES: Record<string, { className: string; gradient: string }> = {
+    Bronze:   { className: 'text-amber-700 dark:text-amber-500 border-amber-600/40',   gradient: 'from-amber-800/30 via-amber-700/20 to-amber-600/10' },
+    Silver:   { className: 'text-slate-400 dark:text-slate-300 border-slate-400/40',   gradient: 'from-slate-500/30 via-slate-400/20 to-slate-300/10' },
+    Gold:     { className: 'text-yellow-500 dark:text-yellow-400 border-yellow-500/40', gradient: 'from-yellow-600/30 via-yellow-500/20 to-yellow-300/10' },
+    Platinum: { className: 'text-cyan-400 dark:text-cyan-300 border-cyan-400/40',      gradient: 'from-cyan-500/30 via-cyan-400/20 to-cyan-300/10' },
+    Diamond:  { className: 'text-sky-300 dark:text-sky-200 border-sky-400/50',         gradient: 'from-sky-500/40 via-indigo-400/25 to-violet-400/15' },
+  }
+
+  const BOOSTER_TIER_STYLES: Record<string, { className: string; gradient: string }> = {
+    Bronze:   { className: 'text-amber-700 dark:text-amber-500 border-amber-600/40',   gradient: 'from-amber-800/30 via-amber-700/20 to-amber-600/10' },
+    Silver:   { className: 'text-slate-400 dark:text-slate-300 border-slate-400/40',   gradient: 'from-slate-500/30 via-slate-400/20 to-slate-300/10' },
+    Gold:     { className: 'text-yellow-500 dark:text-yellow-400 border-yellow-500/40', gradient: 'from-yellow-600/30 via-yellow-500/20 to-yellow-300/10' },
+    Platinum: { className: 'text-fuchsia-400 dark:text-fuchsia-300 border-fuchsia-400/40', gradient: 'from-fuchsia-600/30 via-purple-500/20 to-pink-400/10' },
+    Diamond:  { className: 'text-purple-300 dark:text-purple-200 border-purple-400/50',    gradient: 'from-purple-600/40 via-fuchsia-500/25 to-pink-400/15' },
+  }
+
+  if (hasContributor && contributorInfo) {
+    const style = CONTRIBUTOR_TIER_STYLES[contributorInfo.tier] ?? CONTRIBUTOR_TIER_STYLES.Bronze
+    badges.push({
+      label: `${contributorInfo.tier} Contributor`,
+      icon: <SiGithubIcon className="w-3 h-3" />,
+      className: style.className,
+      gradient: style.gradient,
+    })
+  }
+  if (hasDiscordBooster && boosterInfo) {
+    const style = BOOSTER_TIER_STYLES[boosterInfo.tier] ?? BOOSTER_TIER_STYLES.Bronze
+    badges.push({
+      label: `${boosterInfo.tier} Booster`,
+      icon: <SiDiscord className="w-3 h-3" />,
+      className: style.className,
+      gradient: style.gradient,
+    })
+  }
+  if (hasAffiliate) {
+    badges.push({ label: 'Affiliate', icon: <Star className="w-3 h-3" />, className: 'text-blue-500 dark:text-blue-400 border-blue-500/40', gradient: 'from-blue-600/25 via-blue-500/15 to-blue-400/5' })
+  }
+  if (user.role === 'SUPERADMIN') {
+    badges.push({ label: 'Super Admin', icon: <Shield className="w-3 h-3" />, className: 'text-red-500 dark:text-red-400 border-red-500/40', gradient: 'from-red-600/25 via-red-500/15 to-orange-400/5' })
+  } else if (user.role === 'ADMIN') {
+    badges.push({ label: 'Admin', icon: <Shield className="w-3 h-3" />, className: 'text-orange-500 dark:text-orange-400 border-orange-500/40', gradient: 'from-orange-600/25 via-orange-500/15 to-amber-400/5' })
+  }
+  if (user.alphaUser) {
+    badges.push({ label: 'Alpha Member', icon: <Sparkles className="w-3 h-3" />, className: 'text-amber-400 dark:text-amber-300 border-amber-400/40', gradient: 'from-amber-500/25 via-yellow-400/15 to-amber-300/5' })
+  }
+
+  // Grant badges — awarded via applications or manually by superadmin
+  const GRANT_ICON_MAP: Record<string, React.ReactNode> = {
+    HeartHandshake: <HeartHandshake className="w-3 h-3" />,
+    Headset:        <Headset className="w-3 h-3" />,
+    Code2:          <Code2 className="w-3 h-3" />,
+    ShieldCheck:    <ShieldCheck className="w-3 h-3" />,
+    Palette:        <Palette className="w-3 h-3" />,
+    Handshake:      <Handshake className="w-3 h-3" />,
+  }
+  for (const grant of ALL_GRANTS) {
+    if (user.grants.includes(grant)) {
+      const meta = GRANT_META[grant]
+      badges.push({
+        label: meta.label,
+        icon: GRANT_ICON_MAP[meta.icon] ?? <Award className="w-3 h-3" />,
+        className: meta.className,
+        gradient: meta.gradient,
+      })
     }
-  }, [activeTab, files, user.id])
+  }
+
+  // Determine which tabs to show
+  const showContributions = hasGitHub
+  const showFiles = user._count.files > 0 || loadingFiles
+
+  const defaultTab = 'overview'
 
   return (
     <HomeShell>
-      <div className="max-w-4xl mx-auto">
-        {/* Profile Header */}
-        <GlassCard className="mb-6">
-          <div className="p-8">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
+      <div className="space-y-4 sm:space-y-6">
+
+        {/* â”€â”€ Hero Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <GlassCard>
+          {user.banner && (
+            <div className="relative w-full h-36 md:h-52">
+              <Image src={user.banner} alt="" fill className="object-cover" priority />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+            </div>
+          )}
+
+          <div className={`px-6 md:px-8 pb-6 ${user.banner ? '-mt-16 relative z-10' : 'pt-6'}`}>
+            <div className="flex flex-col sm:flex-row gap-5 items-start">
               {/* Avatar */}
-              <div className="flex-shrink-0">
+              <div className="relative shrink-0">
                 {user.image ? (
-                  <div className="relative w-24 h-24 md:w-32 md:h-32">
-                    <Image
-                      src={user.image}
-                      alt={displayName}
-                      fill
-                      className="rounded-full object-cover border-2 border-primary/30"
-                      priority
-                    />
+                  <div className="rounded-2xl border-4 border-background shadow-xl overflow-hidden w-28 h-28 md:w-36 md:h-36">
+                    <div className="relative w-full h-full">
+                      <Image src={user.image} alt={displayName} fill className="object-cover" priority />
+                      {user.avatarDecoration && (
+                        <Image src={user.avatarDecoration} alt="" fill className="object-cover pointer-events-none" />
+                      )}
+                    </div>
                   </div>
                 ) : (
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center border-2 border-primary/30">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">
-                      {displayName.charAt(0).toUpperCase()}
-                    </span>
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center border-4 border-background shadow-xl">
+                    <span className="text-4xl md:text-5xl font-bold text-primary">{displayName.charAt(0).toUpperCase()}</span>
                   </div>
                 )}
               </div>
 
-              {/* Profile Info */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{displayName}</h1>
-                
-                <p className="text-muted-foreground flex items-center gap-2 mb-4">
-                  <Calendar className="w-4 h-4" />
-                  Member since {memberSince}
-                </p>
-
-                {/* Bio */}
-                {user.bio && (
-                  <p className="text-foreground/80 mb-4 text-sm md:text-base">{user.bio}</p>
-                )}
-
-                {/* Website & Social Links */}
-                <div className="flex flex-wrap gap-3 items-center">
-                  {user.website && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={user.website} target="_blank" rel="noopener noreferrer">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Website
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </Button>
+              {/* Name + Meta */}
+              <div className="flex-1 min-w-0 pt-2">
+                <div className="flex items-center gap-2.5 flex-wrap mb-1">
+                  <h1 className="text-2xl md:text-3xl font-bold leading-tight">{displayName}</h1>
+                  {user.isVerified && (
+                    <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10 gap-1 py-0.5 px-2 text-xs">
+                      <Check className="w-3 h-3" /> Verified
+                    </Badge>
                   )}
-                  {linkedAccounts?.github && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`https://github.com/${linkedAccounts.github}`} target="_blank" rel="noopener noreferrer">
-                        <Github className="w-4 h-4 mr-2" />
-                        GitHub
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </Button>
+                  {leaderboardRank && (
+                    <Link href="/leaderboard">
+                      <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 cursor-pointer gap-1 py-0.5 px-2 text-xs">
+                        <Trophy className="w-3 h-3" /> #{leaderboardRank}
+                      </Badge>
+                    </Link>
                   )}
                 </div>
+
+                {user.fullName && <p className="text-sm text-muted-foreground">{user.fullName}</p>}
+                {nexiumProfile?.title && (
+                  <p className="text-sm font-medium text-foreground/70 mt-0.5">{nexiumProfile.title}</p>
+                )}
+
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2 flex-wrap">
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {memberSince}</span>
+                  {nexiumProfile?.location && (
+                    <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {nexiumProfile.location}</span>
+                  )}
+                  {nexiumProfile?.timezone && (
+                    <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> {nexiumProfile.timezone}</span>
+                  )}
+                  {nexiumProfile?.activeHours && (
+                    <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {nexiumProfile.activeHours}</span>
+                  )}
+                  {nexiumProfile && (
+                    <Badge variant="outline" className={`text-xs gap-1 py-0 px-2 ${availabilityStyle[nexiumProfile.availability] ?? ''}`}>
+                      {NEXIUM_AVAILABILITY_LABELS[nexiumProfile.availability as keyof typeof NEXIUM_AVAILABILITY_LABELS]}
+                    </Badge>
+                  )}
+                </div>
+
+                {user.bio && <p className="text-sm text-foreground/80 mt-3 leading-relaxed">{user.bio}</p>}
+                {nexiumProfile?.headline && !user.bio && <p className="text-sm text-foreground/80 mt-3 leading-relaxed">{nexiumProfile.headline}</p>}
               </div>
+
+              {canReport && (
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 hidden sm:flex" onClick={() => setReportOpen(true)}>
+                  <Flag className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Social links */}
+            <div className="mt-4 flex flex-wrap gap-2 items-center">
+              {user.website && (
+                <a href={user.website} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 bg-background/50 text-xs hover:border-primary/30 transition-colors">
+                  <Globe className="w-3.5 h-3.5" /> {user.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              )}
+              {(linkedAccounts?.github || user.github) && (
+                <a href={`https://github.com/${linkedAccounts?.github || user.github}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 bg-background/50 text-xs hover:border-primary/30 transition-colors">
+                  <Github className="w-3.5 h-3.5" /> {linkedAccounts?.github || user.github}
+                </a>
+              )}
+              {user.twitter && (
+                <a href={`https://x.com/${user.twitter.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 bg-background/50 text-xs hover:border-primary/30 transition-colors">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  {user.twitter}
+                </a>
+              )}
+              {(linkedAccounts?.discord || user.discord) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 bg-background/50 text-xs">
+                  <SiDiscord className="w-3.5 h-3.5" style={{ color: '#5865F2' }} /> {linkedAccounts?.discord || user.discord}
+                </span>
+              )}
+              {nexiumProfile && nexiumProfile.lookingFor.length > 0 && (
+                <>
+                  <span className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
+                  {nexiumProfile.lookingFor.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs py-0.5 px-2">{tag}</Badge>
+                  ))}
+                </>
+              )}
             </div>
 
             {/* Badges */}
-            {user.perkRoles.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-primary/10">
-                <div className="flex flex-wrap gap-2">
-                  {hasContributor && contributorInfo && (
-                    <Badge
-                      variant="outline"
-                      className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1"
-                    >
-                      <Github className="w-3 h-3" />
-                      {contributorInfo.icon} {contributorInfo.tier} Contributor
-                    </Badge>
-                  )}
-                  {hasDiscordBooster && boosterInfo && (
-                    <Badge
-                      variant="outline"
-                      className="bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/30 gap-1"
-                    >
-                      <Zap className="w-3 h-3" />
-                      {boosterInfo.icon} {boosterInfo.tier} Booster
-                    </Badge>
-                  )}
-                  {hasAffiliate && (
-                    <Badge
-                      variant="outline"
-                      className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30 gap-1"
-                    >
-                      <Star className="w-3 h-3" />
-                      Affiliate
-                    </Badge>
-                  )}
-                  {user.role === 'SUPERADMIN' && (
-                    <Badge
-                      variant="outline"
-                      className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30 gap-1"
-                    >
-                      <Shield className="w-3 h-3" />
-                      Super Admin
-                    </Badge>
-                  )}
-                  {user.role === 'ADMIN' && (
-                    <Badge
-                      variant="outline"
-                      className="bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30 gap-1"
-                    >
-                      <Shield className="w-3 h-3" />
-                      Admin
-                    </Badge>
-                  )}
-                  {user.alphaUser && (
-                    <Badge
-                      variant="outline"
-                      className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      Alpha Member
-                    </Badge>
-                  )}
-                </div>
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {badges.map((b) => (
+                  <div key={b.label} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium bg-gradient-to-r ${b.gradient ?? ''} ${b.className}`}>
+                    {b.icon}
+                    <span>{b.label}</span>
+                  </div>
+                ))}
               </div>
+            )}
+
+            {canReport && (
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive sm:hidden mt-3" onClick={() => setReportOpen(true)}>
+                <Flag className="w-3.5 h-3.5 mr-1.5" /> Report
+              </Button>
             )}
           </div>
         </GlassCard>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="contributions">Contributions</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
+        {/* â”€â”€ Stats Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <GlassCard>
+            <div className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">{user._count.files}</div>
+              <p className="text-xs text-muted-foreground mt-0.5">Public Files</p>
+            </div>
+          </GlassCard>
+          {contributorInfo && (
+            <GlassCard>
+              <div className="p-4 text-center">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{contributorInfo.linesOfCode.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Lines Contributed</p>
+              </div>
+            </GlassCard>
+          )}
+          {storageBonus > 0 && (
+            <GlassCard>
+              <div className="p-4 text-center">
+                <div className="text-2xl font-bold text-primary">{storageBonus}GB</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Storage Bonus</p>
+              </div>
+            </GlassCard>
+          )}
+          {domainBonus > 0 && (
+            <GlassCard>
+              <div className="p-4 text-center">
+                <div className="text-2xl font-bold text-primary">{domainBonus}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Custom Domains</p>
+              </div>
+            </GlassCard>
+          )}
+        </div>
+
+        {/* â”€â”€ Tabbed Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <Tabs defaultValue={defaultTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full sm:w-auto inline-flex gap-1 glass-subtle p-1 rounded-xl h-auto">
+            <TabsTrigger
+              value="overview"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2 text-sm"
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="files"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2 text-sm"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Files
+              {user._count.files > 0 && (
+                <span className="text-xs bg-muted/80 data-[state=active]:bg-primary-foreground/20 px-1.5 py-0.5 rounded-full">
+                  {user._count.files}
+                </span>
+              )}
+            </TabsTrigger>
+            {showContributions && (
+              <TabsTrigger
+                value="contributions"
+                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2 text-sm"
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                Contributions
+              </TabsTrigger>
+            )}
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">{renderOverviewTab()}</TabsContent>
+          {/* â”€â”€ Overview Tab â”€â”€ */}
+          <TabsContent value="overview" className="mt-4 space-y-4">
+            {/* Skills */}
+            {hasNexium && nexiumProfile!.skills.length > 0 && (
+              <GlassCard>
+                <div className="p-5">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Skills</h2>
+                  <div className="space-y-4">
+                    {Object.entries(
+                      nexiumProfile!.skills.reduce<Record<string, typeof nexiumProfile.skills>>((acc, s) => {
+                        const cat = s.category || 'General'
+                        acc[cat] = [...(acc[cat] ?? []), s]
+                        return acc
+                      }, {})
+                    ).map(([cat, catSkills]) => (
+                      <div key={cat}>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-2">{cat}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {catSkills.map((skill) => (
+                            <div key={skill.id} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/50 bg-background/40 hover:bg-background/60 transition-colors">
+                              <SkillIcon name={skill.name} className="w-3.5 h-3.5 shrink-0" />
+                              <span className="text-sm font-medium">{skill.name}</span>
+                              <SkillLevelBar level={skill.level} />
+                              {skill.yearsExperience != null && (
+                                <span className="text-[10px] text-muted-foreground border-l border-border/50 pl-1.5">{skill.yearsExperience}y</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </GlassCard>
+            )}
 
-          {/* Contributions Tab */}
-          <TabsContent value="contributions" className="space-y-6">{renderContributionsTab()}</TabsContent>
+            {/* Proof of Skill / Signals */}
+            {hasNexium && nexiumProfile!.signals.length > 0 && (
+              <GlassCard>
+                <div className="p-5">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Proof of Skill</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {nexiumProfile!.signals.map((signal) => (
+                      <SignalCard key={signal.id} signal={signal} />
+                    ))}
+                  </div>
+                </div>
+              </GlassCard>
+            )}
 
-          {/* Files Tab */}
-          <TabsContent value="files" className="space-y-6">{renderFilesTab()}</TabsContent>
+            {/* Empty overview state */}
+            {!hasNexium && (
+              <GlassCard>
+                <div className="p-8 text-center text-muted-foreground">
+                  <p className="text-sm">No additional profile info available.</p>
+                </div>
+              </GlassCard>
+            )}
+          </TabsContent>
+
+          {/* â”€â”€ Files Tab â”€â”€ */}
+          <TabsContent value="files" className="mt-4">
+            <GlassCard>
+              <div className="p-5">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                  Public Files <span className="text-muted-foreground/50">({files.length})</span>
+                </h2>
+
+                {loadingFiles && files.length === 0 ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : files.length > 0 ? (
+                  <div className="space-y-1">
+                    {files.slice(0, 20).map((file) => (
+                      <a key={file.id} href={`https://embrly.ca/${file.url}`} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/30 transition-colors group">
+                        <FileText className="w-4 h-4 text-primary/60 shrink-0 group-hover:text-primary transition-colors" />
+                        <span className="text-sm font-medium truncate flex-1 group-hover:text-primary transition-colors">{file.name}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{file.views.toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-0.5"><Download className="w-2.5 h-2.5" />{file.downloads.toLocaleString()}</span>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">No public files yet.</p>
+                )}
+              </div>
+            </GlassCard>
+          </TabsContent>
+
+          {/* â”€â”€ Contributions Tab â”€â”€ */}
+          {showContributions && (
+            <TabsContent value="contributions" className="mt-4 space-y-4">
+              {loadingContribs && !contributions ? (
+                <GlassCard>
+                  <div className="p-5 space-y-3">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                </GlassCard>
+              ) : contributions && contributions.linesOfCode > 0 ? (
+                <GlassCard>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contributions</h2>
+                      {contributions.stats && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="text-emerald-600 dark:text-emerald-400">+{contributions.stats.totalAdditions.toLocaleString()}</span>
+                          <span className="text-red-500">-{contributions.stats.totalDeletions.toLocaleString()}</span>
+                          <span>{contributions.stats.totalRepos} repo{contributions.stats.totalRepos !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {contributions.repos && contributions.repos.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {contributions.repos.map((repo: any) => (
+                          <a key={repo.url} href={repo.url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 bg-background/50 text-xs hover:border-primary/30 transition-colors group">
+                            <Github className="w-3 h-3" />
+                            <span className="font-medium group-hover:text-primary transition-colors">{repo.name}</span>
+                            {repo.language && <span className="text-muted-foreground">Â· {repo.language}</span>}
+                            {repo.stars > 0 && <span className="text-muted-foreground flex items-center gap-0.5"><Star className="w-2.5 h-2.5" />{repo.stars}</span>}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {contributions.recentCommits && contributions.recentCommits.length > 0 && (
+                      <div className="space-y-1">
+                        {contributions.recentCommits.slice(0, 8).map((commit: any) => (
+                          <a key={commit.sha} href={commit.url} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors group">
+                            <code className="text-[10px] font-mono text-muted-foreground shrink-0 group-hover:text-primary transition-colors">{commit.sha}</code>
+                            <span className="text-sm truncate flex-1 group-hover:text-primary transition-colors">{commit.message}</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{commit.repo}</span>
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0">+{commit.additions}</span>
+                            <span className="text-[10px] text-red-500 shrink-0">-{commit.deletions}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </GlassCard>
+              ) : (
+                <GlassCard>
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Github className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No contribution data available.</p>
+                  </div>
+                </GlassCard>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </div>
+
+      {canReport && (
+        <ReportUserDialog userId={user.id} userName={displayName} open={reportOpen} onOpenChange={setReportOpen} />
+      )}
     </HomeShell>
   )
-
-  function renderOverviewTab() {
-    return (
-      <>
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <GlassCard>
-            <div className="p-6 text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{user._count.files}</div>
-              <p className="text-sm text-muted-foreground">Public Files</p>
-            </div>
-          </GlassCard>
-          <GlassCard>
-            <div className="p-6 text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{storageBonus}GB</div>
-              <p className="text-sm text-muted-foreground">Storage Bonus</p>
-            </div>
-          </GlassCard>
-          <GlassCard>
-            <div className="p-6 text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{domainBonus}</div>
-              <p className="text-sm text-muted-foreground">Custom Domains</p>
-            </div>
-          </GlassCard>
-        </div>
-
-        {/* Perk Benefits Card */}
-        {user.perkRoles.length > 0 && (
-          <GlassCard className="mb-6">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-500" />
-                Active Perks & Benefits
-              </h2>
-
-              <div className="space-y-4">
-                {hasContributor && contributorInfo && (
-                  <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="flex items-start gap-3">
-                      <Github className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 flex items-center gap-2">
-                          <span>{contributorInfo.icon}</span>
-                          GitHub Contributor - {contributorInfo.tier}
-                        </h3>
-                        <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
-                          Contributed {contributorInfo.linesOfCode.toLocaleString()} lines of code to EmberlyOSS projects
-                        </p>
-                        <ul className="text-xs text-emerald-600 dark:text-emerald-400 space-y-1">
-                          <li>✓ +{contributorInfo.storageGB >= 1 ? `${contributorInfo.storageGB}GB` : `${contributorInfo.storageGB * 1000}MB`} bonus storage ({contributorInfo.tier} tier)</li>
-                          <li>✓ +{contributorInfo.domainSlots} custom domain slot{contributorInfo.domainSlots > 1 ? 's' : ''}</li>
-                          <li>✓ Priority support and bug reports</li>
-                          <li>✓ Early access to beta features</li>
-                          <li>✓ Contributor badge and community recognition</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {hasDiscordBooster && boosterInfo && (
-                  <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                    <div className="flex items-start gap-3">
-                      <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-1 flex items-center gap-2">
-                          <span>{boosterInfo.icon}</span>
-                          Discord Booster - {boosterInfo.tier}
-                        </h3>
-                        <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">
-                          Boosting for {boosterInfo.months} month{boosterInfo.months !== 1 ? 's' : ''} - Thank you for supporting the community!
-                        </p>
-                        <ul className="text-xs text-purple-600 dark:text-purple-400 space-y-1">
-                          <li>✓ +{boosterInfo.storageGB}GB bonus storage ({boosterInfo.tier} tier)</li>
-                          <li>✓ +{boosterInfo.domainSlots} custom domain slot{boosterInfo.domainSlots > 1 ? 's' : ''}</li>
-                          <li>✓ Exclusive Discord role and server perks</li>
-                          <li>✓ Priority support in Discord</li>
-                          <li>✓ Booster badge and recognition</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {hasAffiliate && (
-                  <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                    <div className="flex items-start gap-3">
-                      <Star className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                          Affiliate Partner
-                        </h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-                          Official Emberly affiliate partner promoting the platform
-                        </p>
-                        <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                          <li>✓ Earn commission on successful referrals</li>
-                          <li>✓ Custom referral codes and tracking</li>
-                          <li>✓ Marketing materials and support</li>
-                          <li>✓ Partner badge on profile</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* How to Earn Perks Card */}
-        <GlassCard>
-          <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              How to Earn Perks
-            </h2>
-
-            <div className="space-y-3">
-              <div className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <h3 className="font-medium flex items-center gap-2 mb-2">
-                  <Github className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  Contribute to Open Source
-                </h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Contribute 1000+ lines of code to EmberlyOSS repositories to unlock the Contributor perk and earn storage bonuses.
-                </p>
-                <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                  <a href="https://github.com/EmberlyOSS" target="_blank" rel="noopener noreferrer">
-                    View GitHub →
-                  </a>
-                </Button>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <h3 className="font-medium flex items-center gap-2 mb-2">
-                  <Zap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  Boost on Discord
-                </h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Boost the Emberly Discord server to earn 5GB extra storage and an additional custom domain slot.
-                </p>
-                <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                  <a href="/discord" target="_blank" rel="noopener noreferrer">
-                    Join Discord →
-                  </a>
-                </Button>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <h3 className="font-medium flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  Become an Affiliate
-                </h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Refer friends and earn billing credits for each successful referral. No limits on earnings!
-                </p>
-                <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                  <Link href="/dashboard/profile?tab=referrals">
-                    Learn More →
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-      </>
-    )
-  }
-
-  function renderContributionsTab() {
-    if (!linkedAccounts?.github) {
-      return (
-        <GlassCard>
-          <div className="p-8 text-center">
-            <Github className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No GitHub Account Connected</h3>
-            <p className="text-muted-foreground">
-              This user hasn't connected their GitHub account yet.
-            </p>
-          </div>
-        </GlassCard>
-      )
-    }
-
-    if (loading && !contributions) {
-      return (
-        <GlassCard>
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        </GlassCard>
-      )
-    }
-
-    if (!contributions || !contributions.linesOfCode) {
-      return (
-        <GlassCard>
-          <div className="p-8 text-center">
-            <Code className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Contributions Yet</h3>
-            <p className="text-muted-foreground">
-              This user hasn't contributed to any Emberly repositories yet.
-            </p>
-          </div>
-        </GlassCard>
-      )
-    }
-
-    return (
-      <>
-        {/* Contribution Stats */}
-        <GlassCard>
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-lg bg-emerald-500/10">
-                <Code className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold">GitHub Contributions</h2>
-                <p className="text-sm text-muted-foreground">
-                  Total lines of code contributed to Emberly
-                </p>
-              </div>
-            </div>
-            <div className="text-4xl font-bold text-primary">
-              {contributions.linesOfCode.toLocaleString()}
-            </div>
-            {contributorInfo && (
-              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                <span className="text-lg">{contributorInfo.icon}</span>
-                <span className="text-sm font-medium">{contributorInfo.tier} Contributor</span>
-              </div>
-            )}
-          </div>
-        </GlassCard>
-
-        {/* Repositories */}
-        {contributions.repos && contributions.repos.length > 0 && (
-          <GlassCard>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Contributed Repositories</h3>
-              <div className="space-y-4">
-                {contributions.repos.map((repo: any) => (
-                  <div
-                    key={repo.url}
-                    className="p-4 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <a
-                          href={repo.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-base font-semibold text-primary hover:underline flex items-center gap-2"
-                        >
-                          {repo.name}
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                        {repo.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {repo.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          {repo.language && (
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-primary"></span>
-                              {repo.language}
-                            </span>
-                          )}
-                          {repo.stars > 0 && (
-                            <span className="flex items-center gap-1">
-                              <Star className="w-3 h-3" />
-                              {repo.stars.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* Contribution Stats */}
-        {contributions.stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <GlassCard>
-              <div className="p-6 text-center">
-                <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">
-                  {contributions.stats.totalAdditions.toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">Lines Added</p>
-              </div>
-            </GlassCard>
-            <GlassCard>
-              <div className="p-6 text-center">
-                <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
-                  {contributions.stats.totalDeletions.toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">Lines Deleted</p>
-              </div>
-            </GlassCard>
-            <GlassCard>
-              <div className="p-6 text-center">
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                  {contributions.stats.totalFilesChanged.toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">Files Changed</p>
-              </div>
-            </GlassCard>
-          </div>
-        )}
-
-        {/* Recent Commits */}
-        {contributions.recentCommits && contributions.recentCommits.length > 0 && (
-          <GlassCard>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Commits</h3>
-              <div className="space-y-3">
-                {contributions.recentCommits.map((commit: any) => (
-                  <a
-                    key={commit.sha}
-                    href={commit.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block p-4 rounded-lg border border-primary/10 hover:border-primary/30 hover:bg-primary/5 transition-all group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <code className="text-xs font-mono bg-muted px-2 py-1 rounded flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                        {commit.sha}
-                      </code>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                          {commit.message}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Github className="w-3 h-3" />
-                            {commit.repo}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            {commit.filesChanged} file{commit.filesChanged !== 1 ? 's' : ''}
-                          </span>
-                          <span className="text-emerald-600 dark:text-emerald-400">
-                            +{commit.additions}
-                          </span>
-                          <span className="text-red-600 dark:text-red-400">
-                            -{commit.deletions}
-                          </span>
-                          <span>
-                            {new Date(commit.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </GlassCard>
-        )}
-      </>
-    )
-  }
-
-  function renderFilesTab() {
-    if (loading && files.length === 0) {
-      return (
-        <GlassCard>
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-        </GlassCard>
-      )
-    }
-
-    if (files.length === 0) {
-      return (
-        <GlassCard>
-          <div className="p-8 text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Public Files</h3>
-            <p className="text-muted-foreground">
-              This user hasn't uploaded any public files yet.
-            </p>
-          </div>
-        </GlassCard>
-      )
-    }
-
-    return (
-      <GlassCard>
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 rounded-lg bg-blue-500/10">
-              <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">Public Files</h2>
-              <p className="text-sm text-muted-foreground">
-                {files.length} file{files.length !== 1 ? 's' : ''} shared publicly
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {files.map((file) => (
-              <a
-                key={file.id}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-4 rounded-lg border border-primary/10 hover:border-primary/30 hover:bg-primary/5 transition-all group"
-              >
-                <div className="flex items-center gap-4">
-                  {/* File Icon */}
-                  <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-
-                  {/* File Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                        {file.name}
-                      </h3>
-                      <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>{(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {file.views.toLocaleString()} views
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Download className="w-3 h-3" />
-                        {file.downloads.toLocaleString()} downloads
-                      </span>
-                      <span>
-                        {new Date(file.uploadedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </GlassCard>
-    )
-  }
 }

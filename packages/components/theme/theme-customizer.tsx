@@ -12,6 +12,8 @@ import {
 } from '@/packages/components/ui/collapsible'
 import { Input } from '@/packages/components/ui/input'
 import { Label } from '@/packages/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/packages/components/ui/tabs'
+import { sortCategories, getCategoryLabel, getCategoryIcon } from '@/packages/lib/theme/theme-categories'
 
 interface ColorConfig {
   background: string
@@ -37,6 +39,7 @@ interface ColorConfig {
 
 interface ThemeCustomizerProps {
   onColorChange: (colors: Partial<ColorConfig>) => void
+  onThemePresetChange?: (themeId: string, backgroundEffect: string, animationSpeed: string) => void
   initialColors?: Partial<ColorConfig>
 }
 
@@ -152,6 +155,50 @@ const STRANGER_THINGS_THEME: ColorConfig = {
   ring: '354 82% 56%',
 }
 
+const UPSIDE_DOWN_THEME: ColorConfig = {
+  background: '270 30% 4%',
+  foreground: '280 15% 85%',
+  card: '270 28% 6%',
+  cardForeground: '280 15% 85%',
+  popover: '270 28% 6%',
+  popoverForeground: '280 15% 85%',
+  primary: '354 70% 45%',
+  primaryForeground: '280 15% 95%',
+  secondary: '270 25% 12%',
+  secondaryForeground: '280 15% 85%',
+  muted: '270 20% 18%',
+  mutedForeground: '280 10% 60%',
+  accent: '200 60% 35%',
+  accentForeground: '280 15% 95%',
+  destructive: '0 55% 40%',
+  destructiveForeground: '280 15% 95%',
+  border: '270 20% 14%',
+  input: '270 20% 14%',
+  ring: '354 70% 50%',
+}
+
+const TALES_FROM_86_THEME: ColorConfig = {
+  background: '232 38% 5%',
+  foreground: '52 90% 94%',
+  card: '232 34% 8%',
+  cardForeground: '52 90% 94%',
+  popover: '232 34% 8%',
+  popoverForeground: '52 90% 94%',
+  primary: '326 96% 58%',
+  primaryForeground: '232 38% 8%',
+  secondary: '38 98% 54%',
+  secondaryForeground: '232 38% 8%',
+  muted: '232 26% 16%',
+  mutedForeground: '80 34% 74%',
+  accent: '78 92% 50%',
+  accentForeground: '232 38% 8%',
+  destructive: '0 80% 52%',
+  destructiveForeground: '210 40% 98%',
+  border: '232 24% 18%',
+  input: '232 24% 18%',
+  ring: '326 96% 62%',
+}
+
 const CHRISTMAS_THEME: ColorConfig = {
   background: '140 40% 6%',
   foreground: '210 40% 98%',
@@ -240,40 +287,308 @@ const REMEMBRANCE_THEME: ColorConfig = {
   ring: '345 82% 56%',
 }
 
+const RETRO_ARCADE_THEME: ColorConfig = {
+  background: '280 25% 8%',
+  foreground: '210 40% 98%',
+  card: '280 30% 10%',
+  cardForeground: '210 40% 98%',
+  popover: '280 30% 10%',
+  popoverForeground: '210 40% 98%',
+  primary: '300 100% 50%',
+  primaryForeground: '280 25% 8%',
+  secondary: '45 100% 50%',
+  secondaryForeground: '280 25% 8%',
+  muted: '280 20% 20%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '0 100% 50%',
+  accentForeground: '280 25% 8%',
+  destructive: '0 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '280 20% 16%',
+  input: '280 20% 16%',
+  ring: '300 100% 60%',
+}
+
+const CYBERPUNK_NEON_THEME: ColorConfig = {
+  background: '270 20% 5%',
+  foreground: '210 40% 98%',
+  card: '270 25% 8%',
+  cardForeground: '210 40% 98%',
+  popover: '270 25% 8%',
+  popoverForeground: '210 40% 98%',
+  primary: '180 100% 45%',
+  primaryForeground: '270 20% 5%',
+  secondary: '300 100% 48%',
+  secondaryForeground: '270 20% 5%',
+  muted: '270 20% 18%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '0 100% 50%',
+  accentForeground: '270 20% 5%',
+  destructive: '0 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '270 20% 14%',
+  input: '270 20% 14%',
+  ring: '180 100% 55%',
+}
+
+const VAPORWAVE_THEME: ColorConfig = {
+  background: '300 40% 8%',
+  foreground: '210 40% 98%',
+  card: '300 35% 10%',
+  cardForeground: '210 40% 98%',
+  popover: '300 35% 10%',
+  popoverForeground: '210 40% 98%',
+  primary: '280 80% 50%',
+  primaryForeground: '300 40% 8%',
+  secondary: '40 100% 50%',
+  secondaryForeground: '300 40% 8%',
+  muted: '300 30% 20%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '200 100% 50%',
+  accentForeground: '300 40% 8%',
+  destructive: '20 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '300 30% 16%',
+  input: '300 30% 16%',
+  ring: '280 80% 60%',
+}
+
+const DARK_MATRIX_THEME: ColorConfig = {
+  background: '120 40% 5%',
+  foreground: '120 100% 90%',
+  card: '120 35% 7%',
+  cardForeground: '120 100% 90%',
+  popover: '120 35% 7%',
+  popoverForeground: '120 100% 90%',
+  primary: '120 100% 50%',
+  primaryForeground: '120 40% 5%',
+  secondary: '220 30% 15%',
+  secondaryForeground: '120 100% 90%',
+  muted: '120 30% 16%',
+  mutedForeground: '120 80% 70%',
+  accent: '60 100% 50%',
+  accentForeground: '120 40% 5%',
+  destructive: '0 100% 45%',
+  destructiveForeground: '120 100% 90%',
+  border: '120 30% 12%',
+  input: '120 30% 12%',
+  ring: '120 100% 60%',
+}
+
+const NEON_GRID_THEME: ColorConfig = {
+  background: '200 30% 6%',
+  foreground: '210 40% 98%',
+  card: '200 35% 8%',
+  cardForeground: '210 40% 98%',
+  popover: '200 35% 8%',
+  popoverForeground: '210 40% 98%',
+  primary: '180 100% 45%',
+  primaryForeground: '200 30% 6%',
+  secondary: '280 100% 50%',
+  secondaryForeground: '200 30% 6%',
+  muted: '200 25% 18%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '60 100% 50%',
+  accentForeground: '200 30% 6%',
+  destructive: '0 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '200 25% 14%',
+  input: '200 25% 14%',
+  ring: '180 100% 55%',
+}
+
+const COSMIC_SPACE_THEME: ColorConfig = {
+  background: '260 40% 6%',
+  foreground: '210 40% 98%',
+  card: '260 35% 8%',
+  cardForeground: '210 40% 98%',
+  popover: '260 35% 8%',
+  popoverForeground: '210 40% 98%',
+  primary: '270 100% 50%',
+  primaryForeground: '260 40% 6%',
+  secondary: '280 80% 45%',
+  secondaryForeground: '210 40% 98%',
+  muted: '260 30% 18%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '50 100% 50%',
+  accentForeground: '260 40% 6%',
+  destructive: '0 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '260 30% 14%',
+  input: '260 30% 14%',
+  ring: '270 100% 60%',
+}
+
+const AURORA_BOREALIS_THEME: ColorConfig = {
+  background: '240 40% 6%',
+  foreground: '210 40% 98%',
+  card: '240 38% 8%',
+  cardForeground: '210 40% 98%',
+  popover: '240 38% 8%',
+  popoverForeground: '210 40% 98%',
+  primary: '180 100% 45%',
+  primaryForeground: '240 40% 6%',
+  secondary: '120 100% 48%',
+  secondaryForeground: '240 40% 6%',
+  muted: '240 30% 18%',
+  mutedForeground: '215 20% 65.1%',
+  accent: '300 100% 50%',
+  accentForeground: '240 40% 6%',
+  destructive: '0 100% 50%',
+  destructiveForeground: '210 40% 98%',
+  border: '240 30% 14%',
+  input: '240 30% 14%',
+  ring: '180 100% 55%',
+}
+
 export const THEME_PRESETS: Array<{
   name: string
   colors: ColorConfig
   description: string
+  category?: 'basic' | 'animated' | 'gaming' | 'seasonal' | 'special'
+  isGaming?: boolean
+  themeId?: string
+  backgroundEffect?: string
+  animationSpeed?: string
 }> = [
+    // Basic themes
     {
       name: 'Default Dark',
       colors: DEFAULT_COLORS,
       description: 'Baseline Emberly palette with balanced contrast.',
+      category: 'basic',
+      themeId: 'default-dark',
     },
     {
       name: 'Hawkins Neon',
       colors: STRANGER_THINGS_THEME,
       description: 'Stranger Things-inspired deep midnight with neon red + blue.',
+      category: 'basic',
+      themeId: 'hawkins-neon',
+      backgroundEffect: 'glitch',
+      animationSpeed: 'slow',
     },
+    {
+      name: '🙃 The Upside Down',
+      colors: UPSIDE_DOWN_THEME,
+      description: 'Enter the shadow realm where everything is reversed.',
+      category: 'animated',
+      isGaming: false,
+      themeId: 'upside-down',
+      backgroundEffect: 'particles',
+      animationSpeed: 'slow',
+    },
+    {
+      name: '📼 Tales from 86',
+      colors: TALES_FROM_86_THEME,
+      description: 'Retro horror neon inspired by 80s title-card glow gradients.',
+      category: 'animated',
+      isGaming: false,
+      themeId: 'tales-from-86',
+      backgroundEffect: 'gradient-shift',
+      animationSpeed: 'slow',
+    },
+    // Seasonal themes
     {
       name: 'Holly Jolly (Christmas)',
       colors: CHRISTMAS_THEME,
       description: 'Festive green + red with gold accents for the holidays.',
+      category: 'seasonal',
+      themeId: 'holly-jolly',
     },
+    // Special cause themes
     {
       name: 'Pride Bright',
       colors: PRIDE_THEME,
       description: 'Vibrant accents inspired by the Pride rainbow.',
+      category: 'special',
+      themeId: 'pride-bright',
     },
     {
       name: 'Every Child Matters',
       colors: EVERY_CHILD_THEME,
       description: 'A respectful orange-themed palette to mark awareness and remembrance.',
+      category: 'special',
+      themeId: 'every-child-matters',
     },
     {
       name: 'Remembrance',
       colors: REMEMBRANCE_THEME,
       description: 'A muted palette with remembrance red highlights.',
+      category: 'special',
+      themeId: 'remembrance',
+    },
+    // Gaming themes
+    {
+      name: '🕹️ Retro Arcade',
+      colors: RETRO_ARCADE_THEME,
+      description: 'Classic 80s arcade aesthetic with magenta and yellow neon.',
+      category: 'gaming',
+      isGaming: true,
+      themeId: 'retro-arcade',
+      backgroundEffect: 'scanlines',
+      animationSpeed: 'medium',
+    },
+    {
+      name: '🤖 Cyberpunk Neon',
+      colors: CYBERPUNK_NEON_THEME,
+      description: 'Futuristic cyberpunk with cyan and magenta chroma aberration.',
+      category: 'gaming',
+      isGaming: true,
+      themeId: 'cyberpunk-neon',
+      backgroundEffect: 'glitch',
+      animationSpeed: 'fast',
+    },
+    {
+      name: '💜 Vaporwave',
+      colors: VAPORWAVE_THEME,
+      description: 'Aesthetic vaporwave with purple, pink, and cyan pastels.',
+      category: 'gaming',
+      isGaming: false,
+      themeId: 'vaporwave',
+      backgroundEffect: 'gradient-shift',
+      animationSpeed: 'slow',
+    },
+    {
+      name: '💚 Dark Matrix',
+      colors: DARK_MATRIX_THEME,
+      description: 'The Matrix inspired with green code rain effects.',
+      category: 'gaming',
+      isGaming: true,
+      themeId: 'dark-matrix',
+      backgroundEffect: 'matrix',
+      animationSpeed: 'slow',
+    },
+    {
+      name: '📊 Neon Grid',
+      colors: NEON_GRID_THEME,
+      description: 'Grid-based interface with cyan and magenta neon accents.',
+      category: 'gaming',
+      isGaming: true,
+      themeId: 'neon-grid',
+      backgroundEffect: 'grid',
+      animationSpeed: 'medium',
+    },
+    {
+      name: '🌠 Cosmic Space',
+      colors: COSMIC_SPACE_THEME,
+      description: 'Space exploration theme with purple and gold starfield.',
+      category: 'gaming',
+      isGaming: true,
+      themeId: 'cosmic-space',
+      backgroundEffect: 'parallax',
+      animationSpeed: 'slow',
+    },
+    // Animated themes
+    {
+      name: '🌌 Aurora Borealis',
+      colors: AURORA_BOREALIS_THEME,
+      description: 'Northern lights inspired theme with cyan and purple aurora effects.',
+      category: 'animated',
+      isGaming: false,
+      themeId: 'aurora-borealis',
+      backgroundEffect: 'aurora',
+      animationSpeed: 'slow',
     },
   ]
 
@@ -294,6 +609,7 @@ export const PRESET_HUES = [
 
 function SimpleThemeCustomizer({
   onColorChange,
+  onThemePresetChange,
   initialColors,
 }: ThemeCustomizerProps) {
   const [baseHue, setBaseHue] = useState(222.2)
@@ -363,7 +679,7 @@ function SimpleThemeCustomizer({
 
     // mark theme name on document so site-level features can react (e.g., snowfall)
     try {
-      document.documentElement.setAttribute('data-theme', 'Default Dark')
+      document.documentElement.setAttribute('data-theme', 'default-dark')
     } catch (e) {
       // noop
     }
@@ -391,26 +707,34 @@ function SimpleThemeCustomizer({
     onColorChange({ [key]: value })
   }
 
-  const applyPresetTheme = (preset: ColorConfig) => {
-    Object.entries(preset).forEach(([key, value]) => {
+  const applyPresetTheme = (preset: typeof THEME_PRESETS[0]) => {
+    Object.entries(preset.colors).forEach(([key, value]) => {
       const cssKey = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)
       document.documentElement.style.setProperty(`--${cssKey}`, value)
     })
 
-    const hue = parseFloat(preset.background.split(' ')[0] || `${baseHue}`)
+    const hue = parseFloat(preset.colors.background.split(' ')[0] || `${baseHue}`)
     if (!Number.isNaN(hue)) {
       setBaseHue(hue)
     }
 
-    setColors(preset)
+    setColors(preset.colors)
     // set a document attribute naming the preset so global UI can react
     try {
-      // use a short name safe for attributes
-      document.documentElement.setAttribute('data-theme', preset.name)
+      // use themeId if available, otherwise use preset name
+      const themeIdentifier = preset.themeId || preset.name.replace(/[^\w-]/g, '').toLowerCase()
+      document.documentElement.setAttribute('data-theme', themeIdentifier)
     } catch (e) {
       // noop in environments that restrict DOM
     }
-    onColorChange(preset)
+    onColorChange(preset.colors)
+    
+    // Call theme preset change callback if provided
+    if (onThemePresetChange && preset.themeId) {
+      const backgroundEffect = (preset as any).backgroundEffect || 'none'
+      const animationSpeed = (preset as any).animationSpeed || 'medium'
+      onThemePresetChange(preset.themeId, backgroundEffect, animationSpeed)
+    }
   }
 
   const handleColorChange = (key: keyof ColorConfig, value: string) => {
@@ -439,32 +763,61 @@ function SimpleThemeCustomizer({
 
   return (
     <div className="space-y-4">
+      {/* Categorized Presets with Tabs */}
       <div className="space-y-2">
         <div className="text-sm font-semibold">Curated themes</div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {THEME_PRESETS.map((preset) => (
-            <button
-              key={preset.name}
-              onClick={() => applyPresetTheme(preset.colors)}
-              className="relative overflow-hidden rounded-md border bg-card/60 p-4 text-left transition hover:border-primary/70 hover:shadow-md"
-            >
-              <div
-                className="absolute inset-0 opacity-60"
-                style={{
-                  background: `linear-gradient(120deg, hsl(${preset.colors.primary}), hsl(${preset.colors.accent}))`,
-                }}
-              />
-              <div className="relative space-y-1">
-                <div className="text-sm font-semibold leading-tight">
-                  {preset.name}
-                </div>
-                <p className="text-xs text-muted-foreground leading-snug">
-                  {preset.description}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
+        {(() => {
+          const themesByCategory = THEME_PRESETS.reduce((acc, preset) => {
+            const category = (preset as any).category || 'basic'
+            if (!acc[category]) {
+              acc[category] = []
+            }
+            acc[category].push(preset)
+            return acc
+          }, {} as Record<string, any[]>)
+
+          return (
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid grid-cols-5 w-full bg-background/80 p-1 rounded-lg">
+                {sortCategories(Object.keys(themesByCategory) as any[]).map((category) => (
+                  <TabsTrigger key={category} value={category} className="text-xs sm:text-sm">
+                    <span className="mr-1">{getCategoryIcon(category)}</span>
+                    <span className="hidden sm:inline">{getCategoryLabel(category)}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {sortCategories(Object.keys(themesByCategory) as any[]).map((category) => (
+                <TabsContent key={category} value={category} className="mt-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {themesByCategory[category].map((preset) => (
+                      <button
+                        key={preset.name}
+                        onClick={() => applyPresetTheme(preset)}
+                        className="relative overflow-hidden rounded-md border bg-background/80 p-4 text-left transition hover:border-primary/70 hover:shadow-md"
+                      >
+                        <div
+                          className="absolute inset-0 opacity-60"
+                          style={{
+                            background: `linear-gradient(120deg, hsl(${preset.colors.primary}), hsl(${preset.colors.accent}))`,
+                          }}
+                        />
+                        <div className="relative space-y-1">
+                          <div className="text-sm font-semibold leading-tight">
+                            {preset.name}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-snug">
+                            {preset.description}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )
+        })()}
       </div>
 
       <div className="grid grid-cols-4 gap-4">
@@ -533,11 +886,13 @@ function SimpleThemeCustomizer({
 
 export function ThemeCustomizer({
   onColorChange,
+  onThemePresetChange,
   initialColors,
 }: ThemeCustomizerProps) {
   return (
     <SimpleThemeCustomizer
       onColorChange={onColorChange}
+      onThemePresetChange={onThemePresetChange}
       initialColors={initialColors}
     />
   )

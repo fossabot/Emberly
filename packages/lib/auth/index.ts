@@ -6,8 +6,9 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 
 import { prisma } from '@/packages/lib/database/prisma'
 import { sendTemplateEmail, NewLoginEmail } from '@/packages/lib/emails'
+import { events } from '@/packages/lib/events'
 import { detectNewLogin, recordLogin } from './login-detection'
-import { validateAndConsumeRecoveryCode } from './recovery-codes'
+import { verify2FACode } from './service'
 import { ensurePasswordInHistory } from '@/packages/lib/security/password-reuse-checker'
 import { checkPasswordBreach } from '@/packages/lib/security/password-breach-checker'
 
@@ -26,6 +27,8 @@ const userSelect = {
   twoFactorEnabled: true,
   twoFactorSecret: true,
   passwordBreachDetectedAt: true,
+  bannedAt: true,
+  banExpiresAt: true,
 } as const
 
 // Optional: allow configuring a shared cookie domain for NextAuth via
@@ -40,6 +43,15 @@ const NEXTAUTH_TRUSTED_ORIGINS = (process.env.NEXTAUTH_TRUSTED_ORIGINS || '')
   .split(',')
   .map(origin => origin.trim())
   .filter(origin => origin.length > 0)
+
+// Keep JWT/JWE decryption stable in local dev even when env vars are missing.
+// In production, this must come from AUTH_SECRET or NEXTAUTH_SECRET.
+const NEXTAUTH_SECRET =
+  process.env.AUTH_SECRET ||
+  process.env.NEXTAUTH_SECRET ||
+  (process.env.NODE_ENV !== 'production'
+    ? 'emberly-dev-nextauth-secret-please-set-auth-secret-in-env'
+    : undefined)
 
 type UserWithSession = Prisma.UserGetPayload<{ select: typeof userSelect }>
 
@@ -76,6 +88,7 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -110,6 +123,28 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // Check if user is banned
+        if (user.bannedAt) {
+          const now = new Date()
+          if (user.banExpiresAt && user.banExpiresAt <= now) {
+            // Temporary ban has expired — auto-lift it
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                bannedAt: null,
+                banReason: null,
+                banType: null,
+                banExpiresAt: null,
+              },
+            })
+          } else {
+            throw Object.assign(
+              new Error('AccountSuspended'),
+              { name: 'AccountSuspended' }
+            )
+          }
+        }
+
         // Safety check: warn if username looks like an email
         if (user.name && user.name.includes('@')) {
           console.warn(`[Auth] WARNING: User ${user.id} has email-like username: "${user.name}". This should not happen in production.`)
@@ -118,6 +153,13 @@ export const authOptions: NextAuthOptions = {
         // Magic link auth: requires valid token
         if (credentials.token) {
            const hashedToken = (await import('crypto')).createHash('sha256').update(credentials.token).digest('hex')
+
+           console.log('[Auth] Magic link validation:', {
+             userId: user.id,
+             email: user.email,
+             hashedToken: hashedToken.substring(0, 10) + '...',
+             now: new Date().toISOString()
+           })
 
            // Verify token and expiry, and ensure it matches the user
            const validUser = await prisma.user.findFirst({
@@ -128,10 +170,27 @@ export const authOptions: NextAuthOptions = {
              },
              select: userSelect
            })
-           
+
            if (!validUser) {
+             // Debug info
+             const dbUser = await prisma.user.findUnique({
+               where: { id: user.id },
+               select: {
+                 email: true,
+                 magicLinkToken: true,
+                 magicLinkExpires: true
+               }
+             })
+             console.log('[Auth] Magic link validation failed:', {
+               userId: user.id,
+               storedToken: dbUser?.magicLinkToken ? dbUser.magicLinkToken.substring(0, 10) + '...' : 'null',
+               storedExpires: dbUser?.magicLinkExpires,
+               isExpired: dbUser?.magicLinkExpires ? new Date() > dbUser.magicLinkExpires : 'unknown'
+             })
              return null
            }
+
+           console.log('[Auth] Magic link token validated successfully')
 
            // Check if user has 2FA enabled and code not provided
            if (validUser.twoFactorEnabled && !credentials.twoFactorCode) {
@@ -146,19 +205,9 @@ export const authOptions: NextAuthOptions = {
              if (!validUser.twoFactorSecret) {
                return null
              }
-             const { authenticator } = await import('otplib')
-             
-             // Try TOTP code first
-             const isValidCode = authenticator.check(credentials.twoFactorCode, validUser.twoFactorSecret)
-             if (!isValidCode) {
-               // Try recovery code
-               const isValidRecoveryCode = await validateAndConsumeRecoveryCode(
-                 validUser.id,
-                 credentials.twoFactorCode
-               )
-               if (!isValidRecoveryCode) {
-                 return null
-               }
+             const isValid = await verify2FACode(validUser.id, validUser.twoFactorSecret, credentials.twoFactorCode)
+             if (!isValid) {
+               return null
              }
            }
 
@@ -237,19 +286,9 @@ export const authOptions: NextAuthOptions = {
           if (!user.twoFactorSecret) {
             return null
           }
-          const { authenticator } = await import('otplib')
-          
-          // Try TOTP code first
-          const isValidCode = authenticator.check(credentials.twoFactorCode, user.twoFactorSecret)
-          if (!isValidCode) {
-            // Try recovery code
-            const isValidRecoveryCode = await validateAndConsumeRecoveryCode(
-              user.id,
-              credentials.twoFactorCode
-            )
-            if (!isValidRecoveryCode) {
-              return null
-            }
+          const isValid = await verify2FACode(user.id, user.twoFactorSecret, credentials.twoFactorCode)
+          if (!isValid) {
+            return null
           }
         }
 
@@ -320,9 +359,9 @@ export const authOptions: NextAuthOptions = {
         const manageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'}/profile?tab=security`
 
         const loginContext = {
-          ip,
-          userAgent,
-          geo: (country || city) ? { country, city } : null
+          ip: ip ?? undefined,
+          userAgent: userAgent ?? undefined,
+          geo: (country || city) ? { country: country ?? undefined, city: city ?? undefined } : undefined,
         }
 
         void prisma.user
@@ -367,6 +406,16 @@ export const authOptions: NextAuthOptions = {
             // Record this login in history
             await recordLogin(user.id as string, loginContext, true)
 
+            // Emit auditable auth.login event so audit logs capture every sign-in
+            await events.emit('auth.login', {
+              userId: user.id as string,
+              email: userEmail,
+              method: credentials ? 'credentials' : 'oauth',
+              success: true,
+              isNewDevice: detection.isNewDevice,
+              context: loginContext,
+            })
+
             // Only send alert if detection says we should
             if (detection.shouldAlert) {
               await sendTemplateEmail({
@@ -374,12 +423,10 @@ export const authOptions: NextAuthOptions = {
                 subject: '⚠️ New device sign-in to your Emberly account',
                 template: NewLoginEmail,
                 props: {
-                  userName: user.name || undefined,
-                  time,
-                  location: detection.reason,
-                  ipAddress: ip,
-                  device: userAgent,
-                  manageUrl,
+                  loginTime: time,
+                  loginLocation: detection.reason,
+                  loginDevice: userAgent,
+                  reviewUrl: manageUrl,
                 },
               })
             }

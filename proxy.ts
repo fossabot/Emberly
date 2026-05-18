@@ -3,9 +3,12 @@ import type { NextRequest } from 'next/server'
 
 import { getToken } from 'next-auth/jwt'
 
-import { checkAuthentication } from './packages/lib/middleware/auth-checker'
 import { handleBotRequest } from './packages/lib/middleware/bot-handler'
-import { ADMIN_PATHS, PUBLIC_PATHS, SUPERADMIN_PATHS } from './packages/lib/middleware/constants'
+import {
+  PROTECTED_PAGE_PATHS,
+  SUPERADMIN_PATHS,
+} from './packages/lib/middleware/constants'
+import { Permission, hasPermission } from './packages/lib/permissions'
 
 // Global store for login context (IP, UserAgent, Geo)
 // Used to pass request context to NextAuth callbacks
@@ -61,8 +64,47 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
 
+  // ── Custom Domain Routing ──────────────────────────────────────────────
+  // If the incoming host differs from the main domain, check if it's a
+  // verified custom domain. If the visitor is on the root path ("/"),
+  // rewrite to the domain owner's public profile. All other paths
+  // (file views, short URLs, etc.) pass through normally.
+  const incomingHost = request.headers.get('host')?.replace(/:\d+$/, '')
+  const mainHost = new URL(baseUrl).hostname
+
+  if (
+    incomingHost &&
+    incomingHost !== mainHost &&
+    incomingHost !== 'localhost'
+  ) {
+    // Only rewrite the root path — everything else (files, short URLs, assets) passes through
+    if (pathname === '/') {
+      try {
+        const lookupUrl = new URL('/api/internal/domain-lookup', request.url)
+        lookupUrl.searchParams.set('hostname', incomingHost)
+
+        const res = await fetch(lookupUrl.toString())
+
+        if (res.ok) {
+          const data = await res.json()
+          if (data.found && data.profileSlug) {
+            return NextResponse.rewrite(
+              new URL(`/user/${data.profileSlug}`, request.url)
+            )
+          }
+        }
+      } catch (e) {
+        // Lookup failed — fall through to normal routing
+        console.error('[Proxy] Custom domain lookup failed:', e)
+      }
+    }
+  }
+
   // Capture login context for auth tracking
-  if (pathname === '/api/auth/callback/credentials' && request.method === 'POST') {
+  if (
+    pathname === '/api/auth/callback/credentials' &&
+    request.method === 'POST'
+  ) {
     const ip = getClientIP(request)
     const { country, city } = getGeoInfo(request)
     const userAgent = request.headers.get('user-agent')
@@ -80,7 +122,8 @@ export async function proxy(request: NextRequest) {
     for (const key in globalThis.__nextAuthLoginContext) {
       try {
         const ts = parseInt(key.split(':')[1])
-        if (now - ts > 60000) { // Keep for 1 minute
+        if (now - ts > 60000) {
+          // Keep for 1 minute
           delete globalThis.__nextAuthLoginContext[key]
         }
       } catch {
@@ -93,7 +136,10 @@ export async function proxy(request: NextRequest) {
   let tokenPromise: Promise<null | Record<string, any>> | null = null
   const getAuthToken = () => {
     if (!tokenPromise) {
-      tokenPromise = getToken({ req: request }) as Promise<null | Record<string, any>>
+      tokenPromise = getToken({ req: request }) as Promise<null | Record<
+        string,
+        any
+      >>
     }
     return tokenPromise
   }
@@ -119,7 +165,13 @@ export async function proxy(request: NextRequest) {
     // - The migration API
     // - NextAuth routes (for logout, session refresh)
     // - Other API routes (they should handle auth themselves)
-    if (needsMigration && !isAlphaMigrationPage && !isAlphaMigrationApi && !isNextAuthRoute && !isApiRoute) {
+    if (
+      needsMigration &&
+      !isAlphaMigrationPage &&
+      !isAlphaMigrationApi &&
+      !isNextAuthRoute &&
+      !isApiRoute
+    ) {
       return NextResponse.redirect(new URL('/auth/alpha-migration', baseUrl))
     }
   }
@@ -136,16 +188,26 @@ export async function proxy(request: NextRequest) {
   if (token) {
     const isEmailVerified = token.emailVerified ? true : false
 
-    if (!isEmailVerified && !isVerifyEmailPage && !isVerifyEmailApi && !isAuthPage && !isNextAuthRoute && !isApiRoute) {
-      console.log(`[Proxy] Unverified user ${token.email} blocked from ${pathname}`)
+    if (
+      !isEmailVerified &&
+      !isVerifyEmailPage &&
+      !isVerifyEmailApi &&
+      !isAuthPage &&
+      !isNextAuthRoute &&
+      !isApiRoute
+    ) {
+      console.log(
+        `[Proxy] Unverified user ${token.email} blocked from ${pathname}`
+      )
       return NextResponse.redirect(new URL('/auth/verify-email', baseUrl))
     }
   }
 
   // PASSWORD BREACH CHECK - Redirect to security tab if breach detected
   // Users with detected password breaches are redirected to profile security tab
-  const isProfileSecurityTab = pathname === '/dashboard/profile' && request.nextUrl.searchParams.get('tab') === 'security'
-  const isProfilePath = pathname === '/dashboard/profile'
+  const isProfileSecurityTab =
+    pathname === '/me' && request.nextUrl.searchParams.get('tab') === 'security'
+  const isProfilePath = pathname === '/me'
   const isDashboardRoot = pathname === '/dashboard'
 
   if (token && token.passwordBreachDetectedAt) {
@@ -155,35 +217,36 @@ export async function proxy(request: NextRequest) {
     }
     // If on dashboard root, redirect to profile security
     if (isDashboardRoot) {
-      console.log(`[Proxy] User ${token.email} with password breach detected, redirecting from dashboard to profile security`)
-      return NextResponse.redirect(new URL('/dashboard/profile?tab=security', baseUrl))
+      console.log(
+        `[Proxy] User ${token.email} with password breach detected, redirecting from dashboard to profile security`
+      )
+      return NextResponse.redirect(new URL('/me?tab=security', baseUrl))
     }
     // If on profile but not security tab, redirect to security tab
     if (isProfilePath && !request.nextUrl.searchParams.get('tab')) {
-      console.log(`[Proxy] User ${token.email} with password breach detected, redirecting to security tab`)
-      return NextResponse.redirect(new URL('/dashboard/profile?tab=security', baseUrl))
+      console.log(
+        `[Proxy] User ${token.email} with password breach detected, redirecting to security tab`
+      )
+      return NextResponse.redirect(new URL('/me?tab=security', baseUrl))
     }
   }
 
-  // Continue with normal routing
+  // Pass through raw/direct file paths and short URL redirects
   if (
     pathname.endsWith('/raw') ||
-    pathname.endsWith('/direct')
+    pathname.endsWith('/direct') ||
+    pathname.startsWith('/u/')
   ) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/u/')) {
+  // API routes manage their own authentication — skip middleware auth checks
+  if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
-  if (
-    PUBLIC_PATHS.some((path: string) =>
-      path === '/'
-        ? pathname === '/' // only allow exact root match
-        : pathname.startsWith(path)
-    )
-  ) {
+  // Auth, setup, and email verification flows are always public
+  if (pathname.startsWith('/auth/') || pathname.startsWith('/setup')) {
     return NextResponse.next()
   }
 
@@ -195,52 +258,37 @@ export async function proxy(request: NextRequest) {
     return { token: t }
   }
 
-  const isSuperAdminRoute = SUPERADMIN_PATHS.some((path) => pathname.startsWith(path))
-  if (isSuperAdminRoute) {
-    const auth = await ensureAuthenticated()
-    if (auth instanceof NextResponse) return auth
-    const role = auth.token?.role
-    if (role !== 'SUPERADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', baseUrl))
-    }
-  }
-
-  const isAdminRoute = ADMIN_PATHS.some((path) => pathname.startsWith(path))
-  if (isAdminRoute) {
+  // All /admin/* routes require at minimum ADMIN access.
+  // Specific superadmin-only paths require elevated permissions.
+  if (pathname.startsWith('/admin/') || pathname === '/admin') {
     const auth = await ensureAuthenticated()
     if (auth instanceof NextResponse) return auth
     const role = auth.token?.role
 
-    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+    const isSuperAdminRoute = SUPERADMIN_PATHS.some((path) =>
+      pathname.startsWith(path)
+    )
+    if (isSuperAdminRoute) {
+      if (!hasPermission(role as any, Permission.PERFORM_SUPERADMIN_ACTIONS)) {
+        return NextResponse.redirect(new URL('/dashboard', baseUrl))
+      }
+    } else if (!hasPermission(role as any, Permission.ACCESS_ADMIN_PANEL)) {
       return NextResponse.redirect(new URL('/dashboard', baseUrl))
     }
   }
 
-  const botResponse = handleBotRequest(request)
+  // Protected pages require a valid session
+  if (PROTECTED_PAGE_PATHS.some((p) => pathname.startsWith(p))) {
+    const t = await getAuthToken()
+    if (!t) {
+      return NextResponse.redirect(new URL('/auth/login', baseUrl))
+    }
+  }
+
+  const botResponse = await handleBotRequest(request)
   if (botResponse) return botResponse
 
-  // Allow unauthenticated access to email verification and resend pages
-  // (users registering need to access these without a token yet)
-  const isEmailVerificationFlow = 
-    pathname === '/auth/verify-email' ||
-    pathname === '/auth/resend-verification' ||
-    pathname === '/api/auth/verify-email' ||
-    pathname === '/api/auth/resend-verification'
-  
-  if (isEmailVerificationFlow) {
-    return NextResponse.next()
-  }
-
-  if (
-    request.nextUrl.pathname.startsWith('/setup') ||
-    request.nextUrl.pathname.startsWith('/api/setup')
-  ) {
-    return NextResponse.next()
-  }
-
-  const authResponse = await checkAuthentication(request)
-  if (authResponse) return authResponse
-
+  // Everything else is public (marketing pages, user profiles, file viewer, etc.)
   return NextResponse.next()
 }
 

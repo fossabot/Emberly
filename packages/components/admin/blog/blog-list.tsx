@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/packages/components/ui/table'
 import { useToast } from '@/packages/hooks/use-toast'
+import { ToastAction } from '@/packages/components/ui/toast'
 
 type Post = {
   id: string
@@ -27,7 +28,7 @@ type Post = {
 
 function PostTableSkeleton() {
   return (
-    <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
+    <div className="glass-subtle overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-border/50 hover:bg-transparent">
@@ -105,32 +106,45 @@ export function BlogList({ onEdit }: { onEdit?: (id: string) => void }) {
   }, [])
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this post?')) return
-    try {
-      const res = await fetch(`/api/posts/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      if (!res.ok) throw new Error('Delete failed')
-      toast({
-        title: 'Post deleted',
-        description: 'The post has been deleted successfully.',
-      })
-      await load()
-    } catch (e) {
-      toast({
-        title: 'Error',
-        description: String(e),
-        variant: 'destructive',
-      })
-    }
+    toast({
+      title: 'Delete this post?',
+      description: 'This cannot be undone.',
+      variant: 'destructive',
+      action: (
+        <ToastAction
+          altText="Confirm delete"
+          onClick={async () => {
+            try {
+              const res = await fetch(`/api/posts/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+              })
+              if (!res.ok) throw new Error('Delete failed')
+              toast({
+                title: 'Post deleted',
+                description: 'The post has been deleted successfully.',
+              })
+              await load()
+            } catch (e) {
+              toast({
+                title: 'Error',
+                description: String(e),
+                variant: 'destructive',
+              })
+            }
+          }}
+        >
+          Delete
+        </ToastAction>
+      ),
+    })
   }
 
   if (loading) return <PostTableSkeleton />
 
   if (!loading && posts.length === 0) {
     return (
-      <div className="rounded-xl border border-border/50 border-dashed bg-background/30 p-12 text-center">
+      <div className="glass-subtle border-dashed p-12 text-center">
         <div className="flex justify-center mb-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <FileText className="h-7 w-7 text-primary" />
@@ -145,7 +159,7 @@ export function BlogList({ onEdit }: { onEdit?: (id: string) => void }) {
   }
 
   return (
-    <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
+    <div className="glass-subtle overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-border/50 hover:bg-transparent">

@@ -21,7 +21,8 @@ export default {
             a: {
               color: 'hsl(var(--primary))',
               '&:hover': {
-                color: 'hsl(var(--primary-foreground))',
+                color: 'hsl(var(--primary))',
+                textDecoration: 'underline',
               },
             },
             h1: { color: 'hsl(var(--foreground))' },
@@ -37,7 +38,8 @@ export default {
             a: {
               color: 'hsl(var(--primary))',
               '&:hover': {
-                color: 'hsl(var(--primary-foreground))',
+                color: 'hsl(var(--primary))',
+                textDecoration: 'underline',
               },
             },
             h1: { color: 'hsl(var(--foreground))' },
@@ -99,6 +101,15 @@ export default {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'radial-gradient':
           'radial-gradient(circle at center, var(--tw-gradient-stops))',
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 30s linear infinite',
       },
     },
   },

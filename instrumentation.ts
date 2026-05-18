@@ -1,5 +1,12 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Only initialize Sentry when a DSN is configured.
+    // Without this guard, @sentry/nextjs v10 sets up OpenTelemetry providers
+    // (even with `enabled: false`) which patches async_hooks and hangs requests.
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      await import('./sentry.server.config')
+    }
+
     const { runStartupTasks } = await import('./packages/lib/startup/index')
     const { loggers } = await import('./packages/lib/logger')
     const logger = loggers.startup
@@ -25,4 +32,12 @@ export async function register() {
       }, 60000) // Check every minute
     }
   }
+
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      await import('./sentry.edge.config')
+    }
+  }
 }
+
+export { captureRequestError as onRequestError } from '@sentry/nextjs'

@@ -1,20 +1,28 @@
-import { NextResponse } from 'next/server'
+import { apiResponse } from '@/packages/lib/api/response'
+import { getKenerStatus } from '@/packages/lib/kener'
 
+/**
+ * GET /api/status
+ * Returns aggregated status from the Kener instance at emberlystat.us
+ */
 export async function GET() {
     try {
-        const res = await fetch('https://status.emberly.site/summary.json', {
-            // prevent Vercel/Next caching
-            cache: 'no-store',
-        })
-
-        if (!res.ok) {
-            return NextResponse.json({ error: 'Failed to fetch upstream' }, { status: 500 })
+        const summary = await getKenerStatus()
+        if (!summary) {
+            // Kener unreachable — return a graceful UNKNOWN state rather than a hard 503
+            return apiResponse({
+                page: { name: 'Emberly Status', url: 'https://emberlystat.us', status: 'UNKNOWN' },
+                activeIncidents: [],
+                activeMaintenances: [],
+            })
         }
-
-        const data = await res.json()
-        return NextResponse.json(data)
+        return apiResponse(summary)
     } catch (err) {
         console.error('Error fetching status:', err)
-        return NextResponse.json({ error: 'Internal' }, { status: 500 })
+        return apiResponse({
+            page: { name: 'Emberly Status', url: 'https://emberlystat.us', status: 'UNKNOWN' },
+            activeIncidents: [],
+            activeMaintenances: [],
+        })
     }
 }

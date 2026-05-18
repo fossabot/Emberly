@@ -12,6 +12,11 @@
 
 import { prisma } from '@/packages/lib/database/prisma'
 import { calculateStorageBonusGB, calculateDomainSlotBonus } from '@/packages/lib/perks'
+import { syncUserSubscriptionsFromStripe } from '@/packages/lib/stripe/billing'
+
+// Per-user TTL cache: only attempt one Stripe sync per user per 5-minute window
+const stripeSyncCache = new Map<string, number>()
+const STRIPE_SYNC_TTL_MS = 5 * 60 * 1000
 
 export interface QuotaInfo {
     quotaMB: number
@@ -23,17 +28,42 @@ export interface QuotaInfo {
 }
 
 export interface PlanLimits {
-    storageQuotaGB: number
-    uploadSizeCapMB: number
-    customDomainsLimit: number
+    /** null = unlimited (Ember / Enterprise) */
+    storageQuotaGB: number | null
+    /** null = unlimited (Ember / Enterprise) */
+    uploadSizeCapMB: number | null
+    /** null = unlimited (Ember / Enterprise) */
+    customDomainsLimit: number | null
     planName: string
 }
 
 /**
  * Get the user's current plan limits.
  * Returns plan limits or defaults if no active subscription.
+ * 
+ * Note: an active `storage-bucket` subscription removes ALL limits.
+ * A `past_due` bucket subscription reinstates normal plan quotas.
  */
 export async function getPlanLimits(userId: string): Promise<PlanLimits> {
+    // Check for an active storage-bucket-* subscription first — it removes all limits
+    const bucketSub = await prisma.subscription.findFirst({
+        where: {
+            userId,
+            status: 'active',
+            product: { slug: { startsWith: 'storage-bucket' } },
+        },
+        select: { id: true },
+    })
+
+    if (bucketSub) {
+        return {
+            storageQuotaGB: null,   // unlimited
+            uploadSizeCapMB: null,  // unlimited
+            customDomainsLimit: null,
+            planName: 'Storage Bucket (Unlimited)',
+        }
+    }
+
     // Get user's active subscription with product details
     const subscription = await prisma.subscription.findFirst({
         where: {
@@ -50,10 +80,44 @@ export async function getPlanLimits(userId: string): Promise<PlanLimits> {
 
     if (subscription && subscription.product) {
         return {
-            storageQuotaGB: subscription.product.storageQuotaGB || 10, // Default to Spark (10GB)
-            uploadSizeCapMB: subscription.product.uploadSizeCapMB || 500, // Default to Spark (500MB)
-            customDomainsLimit: subscription.product.customDomainsLimit || 3, // Default to Spark (3 domains)
+            // null means unlimited — preserved as-is for Ember/Enterprise plans
+            storageQuotaGB: subscription.product.storageQuotaGB ?? null,
+            uploadSizeCapMB: subscription.product.uploadSizeCapMB ?? null,
+            customDomainsLimit: subscription.product.customDomainsLimit ?? null,
             planName: subscription.product.name,
+        }
+    }
+
+    // No active subscription in DB — attempt a one-time Stripe sync to self-heal
+    // (covers cases where the webhook was missed or not yet configured)
+    const now = Date.now()
+    const lastSync = stripeSyncCache.get(userId) ?? 0
+    if (now - lastSync > STRIPE_SYNC_TTL_MS) {
+        stripeSyncCache.set(userId, now)
+        try {
+            const userRecord = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { stripeCustomerId: true },
+            })
+            if (userRecord?.stripeCustomerId) {
+                await syncUserSubscriptionsFromStripe(userId, userRecord.stripeCustomerId)
+                // Re-check after sync
+                const syncedSub = await prisma.subscription.findFirst({
+                    where: { userId, status: 'active' },
+                    include: { product: true },
+                    orderBy: { createdAt: 'desc' },
+                })
+                if (syncedSub?.product) {
+                    return {
+                        storageQuotaGB: syncedSub.product.storageQuotaGB ?? null,
+                        uploadSizeCapMB: syncedSub.product.uploadSizeCapMB ?? null,
+                        customDomainsLimit: syncedSub.product.customDomainsLimit ?? null,
+                        planName: syncedSub.product.name,
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('[getPlanLimits] Stripe subscription sync failed:', err)
         }
     }
 
@@ -77,8 +141,36 @@ export async function getUserDomainCount(userId: string): Promise<number> {
 }
 
 /**
+ * Get the number of purchased domain slots for a user.
+ * Counts legacy one-off purchases as well as active yearly subscriptions.
+ */
+export async function getPurchasedDomainSlots(userId: string): Promise<number> {
+    const [oneOffResult, subscriptionCount] = await Promise.all([
+        prisma.oneOffPurchase.aggregate({
+            where: {
+                userId,
+                type: 'custom_domain',
+            },
+            _sum: {
+                quantity: true,
+            },
+        }),
+        prisma.subscription.count({
+            where: {
+                userId,
+                status: { in: ['active', 'trialing'] },
+                product: {
+                    slug: { in: ['extra-domain-slot', 'extra-domain-slot-squad'] },
+                },
+            },
+        }),
+    ])
+    return (oneOffResult._sum?.quantity || 0) + subscriptionCount
+}
+
+/**
  * Check if user can add more custom domains.
- * Takes perk bonuses into account.
+ * Takes perk bonuses and purchased slots into account.
  */
 export async function canAddCustomDomain(userId: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
@@ -87,9 +179,12 @@ export async function canAddCustomDomain(userId: string): Promise<boolean> {
     })
 
     const limits = await getPlanLimits(userId)
+    // null = unlimited plan
+    if (limits.customDomainsLimit === null) return true
     const currentCount = await getUserDomainCount(userId)
     const domainBonus = calculateDomainSlotBonus(user?.perkRoles || [])
-    const totalLimit = limits.customDomainsLimit + domainBonus
+    const purchasedSlots = await getPurchasedDomainSlots(userId)
+    const totalLimit = limits.customDomainsLimit + domainBonus + purchasedSlots
     
     return currentCount < totalLimit
 }
@@ -145,7 +240,12 @@ export async function getEffectiveQuotaMB(userId: string, defaultQuotaMB?: numbe
     // Priority: admin override > plan quota + perks > default quota
     let baseQuotaMB = user.storageQuotaMB
     if (!baseQuotaMB) {
-        baseQuotaMB = (planLimits.storageQuotaGB + perkStorageBonusGB) * 1024
+        if (planLimits.storageQuotaGB === null) {
+            // Unlimited plan — use a 100 TB sentinel so arithmetic still works
+            baseQuotaMB = 100 * 1024 * 1024
+        } else {
+            baseQuotaMB = (planLimits.storageQuotaGB + perkStorageBonusGB) * 1024
+        }
     }
     if (!baseQuotaMB && defaultQuotaMB) {
         baseQuotaMB = defaultQuotaMB
@@ -177,8 +277,8 @@ export async function canUploadSize(
 ): Promise<{ allowed: boolean; reason?: string }> {
     const planLimits = await getPlanLimits(userId)
     
-    // Check upload size cap
-    if (fileSizeMB > planLimits.uploadSizeCapMB) {
+    // Check upload size cap (null = unlimited)
+    if (planLimits.uploadSizeCapMB !== null && fileSizeMB > planLimits.uploadSizeCapMB) {
         return {
             allowed: false,
             reason: `File exceeds ${planLimits.planName} plan limit of ${planLimits.uploadSizeCapMB}MB. Upgrade your plan or purchase larger file size add-on.`,

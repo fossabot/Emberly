@@ -41,6 +41,8 @@ const EVENT_TO_PREFERENCE_MAP: Record<string, keyof EmailPreferences> = {
     'user.perk-gained': 'productUpdates',
     'user.quota-reached': 'account',
     'user.storage-assigned': 'productUpdates',
+    'user.bucket-provisioned': 'productUpdates',
+    'user.bucket-deprovisioned': 'productUpdates',
 
     // Billing events
     'billing.subscription-created': 'billing',

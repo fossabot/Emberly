@@ -1,20 +1,13 @@
 import { NextResponse } from 'next/server'
-import { randomBytes, createHash } from 'crypto'
 import { z } from 'zod'
 
 import { prisma } from '@/packages/lib/database/prisma'
 import { sendTemplateEmail, MagicLinkEmail } from '@/packages/lib/emails'
+import { getBaseUrl, generateSecureToken } from '@/packages/lib/auth/service'
 
 const schema = z.object({
     email: z.string().email('Invalid email address'),
 })
-
-function getBaseUrl() {
-    if (process.env.APP_BASE_URL) return process.env.APP_BASE_URL
-    if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-    return 'http://localhost:3000'
-}
 
 export async function POST(req: Request) {
     try {
@@ -38,20 +31,37 @@ export async function POST(req: Request) {
         }
 
         // Generate secure token
-        const token = randomBytes(32).toString('hex')
-        const hashedToken = createHash('sha256').update(token).digest('hex')
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+        const { token, hashedToken, expiresAt } = generateSecureToken(15 * 60 * 1000)
+
+        console.log('[Magic Link Send] Generated token:', {
+          email: user.email,
+          tokenLength: token.length,
+          hashedTokenPrefix: hashedToken.substring(0, 10) + '...',
+          expiresAt
+        })
 
         // Store hashed token
-        await prisma.user.update({
+        const updateResult = await prisma.user.update({
             where: { id: user.id },
             data: {
                 magicLinkToken: hashedToken,
                 magicLinkExpires: expiresAt,
             },
+            select: {
+              id: true,
+              email: true,
+              magicLinkToken: true,
+              magicLinkExpires: true
+            }
         })
 
-        const baseUrl = getBaseUrl().replace(/\/$/, '')
+        console.log('[Magic Link Send] Token stored in DB:', {
+          email: updateResult.email,
+          storedToken: updateResult.magicLinkToken ? updateResult.magicLinkToken.substring(0, 10) + '...' : 'null',
+          storedExpires: updateResult.magicLinkExpires
+        })
+
+        const baseUrl = getBaseUrl()
         const magicUrl = `${baseUrl}/auth/magic?token=${token}&email=${encodeURIComponent(email)}`
 
         try {
@@ -60,9 +70,9 @@ export async function POST(req: Request) {
                 subject: 'Your Emberly sign-in link',
                 template: MagicLinkEmail,
                 props: {
-                    signInUrl: magicUrl,
-                    expiresMinutes: 15,
-                    userName: user.name || undefined,
+                    magicLink: magicUrl,
+                    email,
+                    expiresInMinutes: 15,
                 },
             })
         } catch (error) {

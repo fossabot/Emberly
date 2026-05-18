@@ -24,7 +24,7 @@ interface StorageAssignedEmailProps {
 export function StorageAssignedEmail({
   storageAmount,
   reason = 'as part of your subscription',
-  usageUrl = 'https://emberly.dev/dashboard/uploads',
+  usageUrl = 'https://embrly.ca/dashboard/',
 }: StorageAssignedEmailProps) {
   return (
     <Html>
@@ -38,7 +38,7 @@ export function StorageAssignedEmail({
             <Section className="mb-8">
               <Row>
                 <Column align="left">
-                  <Link href="https://emberly.dev" className="inline-block">
+                  <Link href="https://embrly.ca" className="inline-block">
                     <Text className="m-0 text-xl font-bold text-orange-600">
                       Emberly
                     </Text>
@@ -147,7 +147,7 @@ export function StorageAssignedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © 2025 Emberly. All rights reserved.
+                    © {new Date().getFullYear()} Emberly. All rights reserved.
                   </Text>
                 </Column>
               </Row>

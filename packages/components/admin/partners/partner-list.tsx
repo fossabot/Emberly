@@ -9,11 +9,12 @@ import { Badge } from '@/packages/components/ui/badge'
 import { Skeleton } from '@/packages/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/packages/components/ui/dialog'
 import { useToast } from '@/packages/hooks/use-toast'
+import { ToastAction } from '@/packages/components/ui/toast'
 import PartnerForm from './partner-form'
 
 function PartnerTableSkeleton() {
     return (
-        <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
+        <div className="glass-subtle overflow-hidden">
             <Table>
                 <TableHeader>
                     <TableRow className="border-border/50 hover:bg-transparent">
@@ -79,29 +80,34 @@ export function PartnerList() {
     }
 
     async function handleDelete(id: string, name: string) {
-        if (!confirm('Delete partner?')) return
-        try {
-            const res = await fetch(`/api/partners/${id}`, { method: 'DELETE' })
-            if (res.ok) {
-                toast({
-                    title: 'Partner deleted',
-                    description: `Successfully deleted ${name}`,
-                })
-                load()
-            } else {
-                toast({
-                    title: 'Error',
-                    description: 'Failed to delete partner',
-                    variant: 'destructive',
-                })
-            }
-        } catch (err) {
-            toast({
-                title: 'Error',
-                description: 'Request failed',
-                variant: 'destructive',
-            })
-        }
+        toast({
+            title: `Delete "${name}"?`,
+            description: 'This cannot be undone.',
+            variant: 'destructive',
+            action: (
+                <ToastAction
+                    altText="Confirm delete"
+                    onClick={async () => {
+                        try {
+                            const res = await fetch(`/api/partners/${id}`, { method: 'DELETE' })
+                            if (res.ok) {
+                                toast({
+                                    title: 'Partner deleted',
+                                    description: `Successfully deleted ${name}`,
+                                })
+                                load()
+                            } else {
+                                toast({ title: 'Error', description: 'Failed to delete partner', variant: 'destructive' })
+                            }
+                        } catch (err) {
+                            toast({ title: 'Error', description: 'Request failed', variant: 'destructive' })
+                        }
+                    }}
+                >
+                    Delete
+                </ToastAction>
+            ),
+        })
     }
 
     return (
@@ -123,7 +129,7 @@ export function PartnerList() {
                             New Partner
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[85vh] overflow-auto bg-background/95 backdrop-blur-xl border-border/50">
+                    <DialogContent className="max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>{editing ? 'Edit Partner' : 'New Partner'}</DialogTitle>
                         </DialogHeader>
@@ -135,7 +141,7 @@ export function PartnerList() {
             {loading ? (
                 <PartnerTableSkeleton />
             ) : partners.length === 0 ? (
-                <div className="rounded-xl border border-border/50 border-dashed bg-background/30 p-12 text-center">
+                <div className="rounded-xl border border-border/50 border-dashed bg-background/80 p-12 text-center">
                     <div className="flex justify-center mb-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                             <Users className="h-7 w-7 text-primary" />
@@ -151,7 +157,7 @@ export function PartnerList() {
                     </Button>
                 </div>
             ) : (
-                <div className="rounded-xl border border-border/50 bg-background/30 overflow-hidden">
+                <div className="glass-subtle overflow-hidden">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-border/50 hover:bg-transparent">

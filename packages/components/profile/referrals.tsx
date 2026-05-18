@@ -127,7 +127,7 @@ export function ProfileReferrals() {
   const shareReferral = async () => {
     if (!stats?.referralCode) return
 
-    const referralUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://emberly.dev'}/auth/register?ref=${stats.referralCode}`
+    const referralUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://embrly.ca'}/auth/register?ref=${stats.referralCode}`
     const shareText = `Join Emberly and get $10 in billing credits! Use my referral link: ${referralUrl}`
 
     if (navigator.share) {
@@ -149,7 +149,7 @@ export function ProfileReferrals() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-40 bg-white/5 dark:bg-black/5 rounded-lg animate-pulse" />
+        <div className="h-40 bg-muted/30 dark:bg-black/5 rounded-lg animate-pulse" />
       </div>
     )
   }
@@ -173,7 +173,7 @@ export function ProfileReferrals() {
           </p>
 
           <form onSubmit={handleCreateCode} className="space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 placeholder="e.g., yourname, john-doe, jsmith123"
@@ -182,12 +182,12 @@ export function ProfileReferrals() {
                   setCustomCode(e.target.value)
                   setCodeError('')
                 }}
-                className="flex-1 px-3 py-2 rounded-lg bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 text-sm placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/50"
+                className="flex-1 px-3 py-2 rounded-lg bg-muted/50 border border-border/40 text-sm placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/50"
               />
               <Button
                 type="submit"
                 disabled={submitting || !customCode.trim()}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 {submitting ? (
                   <>
@@ -201,8 +201,8 @@ export function ProfileReferrals() {
             </div>
 
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>• 3-30 characters (letters, numbers, dashes, underscores)</p>
-              <p>• Example: my-name or username123</p>
+              <p className="break-words">• 3-30 characters (letters, numbers, dashes, underscores)</p>
+              <p className="break-words">• Example: my-name or username123</p>
             </div>
 
             {codeError && (
@@ -213,14 +213,14 @@ export function ProfileReferrals() {
           </form>
         </div>
 
-        <div className="p-4 rounded-lg bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10">
+        <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10">
           <div className="text-sm space-y-2">
             <div className="font-semibold text-blue-600 dark:text-blue-400">How Billing Credits Work</div>
-            <ul className="space-y-1 text-muted-foreground text-xs ml-4 list-disc">
-              <li>Credits are automatically applied to your next purchase</li>
-              <li>They reduce the amount you owe on subscriptions or add-ons</li>
-              <li>Credits are applied at checkout before payment</li>
-              <li>Any remaining balance is charged to your payment method</li>
+            <ul className="space-y-1.5 text-muted-foreground text-xs ml-3 sm:ml-4 list-disc">
+              <li className="break-words">Credits are automatically applied to your next purchase</li>
+              <li className="break-words">They reduce the amount you owe on subscriptions or add-ons</li>
+              <li className="break-words">Credits are applied at checkout before payment</li>
+              <li className="break-words">Any remaining balance is charged to your payment method</li>
             </ul>
           </div>
         </div>
@@ -275,7 +275,7 @@ export function ProfileReferrals() {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5">
+        <div className="p-4 rounded-lg bg-muted/30 dark:bg-black/5 border border-border/50 dark:border-border/20">
           <div className="text-sm text-muted-foreground mb-1">Billing Credits</div>
           <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 break-all">${stats.totalCredits.toFixed(2)}
           </div>
@@ -284,7 +284,7 @@ export function ProfileReferrals() {
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5">
+        <div className="p-4 rounded-lg bg-muted/30 dark:bg-black/5 border border-border/50 dark:border-border/20">
           <div className="text-sm text-muted-foreground mb-1">Total Referrals</div>
           <div className="text-3xl font-bold">{stats.referralCount}</div>
           <div className="text-xs text-muted-foreground mt-1">
@@ -292,7 +292,7 @@ export function ProfileReferrals() {
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5">
+        <div className="p-4 rounded-lg bg-muted/30 dark:bg-black/5 border border-border/50 dark:border-border/20">
           <div className="text-sm text-muted-foreground mb-1">Credited</div>
           <div className="text-3xl font-bold">{stats.creditedCount}</div>
           <div className="text-xs text-muted-foreground mt-1">
@@ -305,14 +305,14 @@ export function ProfileReferrals() {
       </div>
 
       {/* How it Works Section */}
-      <div className="p-4 rounded-lg bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10">
+      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10">
         <div className="text-sm space-y-2">
           <div className="font-semibold text-blue-600 dark:text-blue-400">How Billing Credits Work</div>
-          <ul className="space-y-1 text-muted-foreground text-xs ml-4 list-disc">
-            <li>Credits are automatically applied to your next purchase</li>
-            <li>They reduce the amount you owe on subscriptions or add-ons</li>
-            <li>Credits are applied at checkout before payment</li>
-            <li>Any remaining balance is charged to your payment method</li>
+          <ul className="space-y-1.5 text-muted-foreground text-xs ml-3 sm:ml-4 list-disc">
+            <li className="break-words">Credits are automatically applied to your next purchase</li>
+            <li className="break-words">They reduce the amount you owe on subscriptions or add-ons</li>
+            <li className="break-words">Credits are applied at checkout before payment</li>
+            <li className="break-words">Any remaining balance is charged to your payment method</li>
           </ul>
         </div>
       </div>
@@ -325,7 +325,7 @@ export function ProfileReferrals() {
             {history.map((referral) => (
               <div
                 key={referral.id}
-                className="p-3 rounded-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 flex items-center justify-between"
+                className="p-3 rounded-lg bg-muted/30 dark:bg-black/5 border border-border/50 dark:border-border/20 flex items-center justify-between"
               >
                 <div>
                   <div className="font-medium">{referral.name || 'Unknown'}</div>
@@ -341,7 +341,7 @@ export function ProfileReferrals() {
       )}
 
       {history.length === 0 && (
-        <div className="p-6 rounded-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 text-center">
+        <div className="p-6 rounded-lg bg-muted/30 dark:bg-black/5 border border-border/50 dark:border-border/20 text-center">
           <p className="text-muted-foreground">
             No referrals yet. Share your code to start earning credits!
           </p>

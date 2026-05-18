@@ -25,8 +25,8 @@ interface AccountChangeEmailProps {
 export function AccountChangeEmail({
   userName,
   changes,
-  manageUrl = 'https://emberly.dev/dashboard/profile',
-  supportUrl = 'https://emberly.dev/contact',
+  manageUrl = 'https://embrly.ca/me',
+  supportUrl = 'https://embrly.ca/contact',
 }: AccountChangeEmailProps) {
   return (
     <Html>
@@ -40,7 +40,7 @@ export function AccountChangeEmail({
             <Section className="mb-8">
               <Row>
                 <Column align="left">
-                  <Link href="https://emberly.dev" className="inline-block">
+                  <Link href="https://embrly.ca" className="inline-block">
                     <Text className="m-0 text-xl font-bold text-orange-600">
                       Emberly
                     </Text>
@@ -134,7 +134,7 @@ export function AccountChangeEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © 2025 Emberly. All rights reserved.
+                    © {new Date().getFullYear()} Emberly. All rights reserved.
                   </Text>
                 </Column>
               </Row>

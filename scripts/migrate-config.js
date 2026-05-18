@@ -43,7 +43,7 @@ const DEFAULT_CONFIG = {
       },
     },
     appearance: {
-      theme: 'dark',
+      theme: 'default-dark',
       favicon: null,
       customColors: {
         card: '222.2 84% 4.9%',

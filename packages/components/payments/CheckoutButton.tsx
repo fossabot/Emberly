@@ -10,9 +10,15 @@ type Props = {
     label?: string
     type?: string
     quantity?: number
+    metadata?: Record<string, string>
+    className?: string
+    variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'destructive' | 'link'
+    size?: 'default' | 'sm' | 'lg' | 'icon'
+    disabled?: boolean
+    title?: string
 }
 
-export default function CheckoutButton({ priceId, mode = 'subscription', label, type, quantity }: Props) {
+export default function CheckoutButton({ priceId, mode = 'subscription', label, type, quantity, metadata, className, variant, size, disabled: disabledProp, title }: Props) {
     const [loading, setLoading] = useState(false)
     const { toast } = useToast()
 
@@ -29,7 +35,7 @@ export default function CheckoutButton({ priceId, mode = 'subscription', label, 
             const res = await fetch(route, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ priceId, type, quantity }),
+                body: JSON.stringify({ priceId, type, quantity, metadata }),
             })
 
             if (!res.ok) {
@@ -63,7 +69,7 @@ export default function CheckoutButton({ priceId, mode = 'subscription', label, 
     }
 
     return (
-        <Button onClick={handle} disabled={loading} className="w-full" aria-label={label || (mode === 'subscription' ? 'Start subscription' : 'Buy')}>
+        <Button onClick={handle} disabled={loading || disabledProp} variant={variant} size={size} className={className ?? 'w-full'} title={title} aria-label={label || (mode === 'subscription' ? 'Start subscription' : 'Buy')}>
             {loading ? 'Redirecting...' : label || (mode === 'subscription' ? 'Start' : 'Buy')}
         </Button>
     )

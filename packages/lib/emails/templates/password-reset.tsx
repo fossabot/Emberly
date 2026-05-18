@@ -17,12 +17,12 @@ import { Tailwind } from '@react-email/tailwind'
 
 interface PasswordResetEmailProps {
   resetUrl: string
-  expiresInHours?: number
+  expiresInMinutes?: number
 }
 
 export function PasswordResetEmail({
   resetUrl,
-  expiresInHours = 1,
+  expiresInMinutes = 30,
 }: PasswordResetEmailProps) {
   return (
     <Html>
@@ -36,7 +36,7 @@ export function PasswordResetEmail({
             <Section className="mb-8">
               <Row>
                 <Column align="left">
-                  <Link href="https://emberly.dev" className="inline-block">
+                  <Link href="https://embrly.ca" className="inline-block">
                     <Text className="m-0 text-xl font-bold text-orange-600">
                       Emberly
                     </Text>
@@ -86,7 +86,7 @@ export function PasswordResetEmail({
               <Row className="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                 <Column align="center">
                   <Text className="m-0 text-sm text-yellow-800">
-                    <strong>⏰ This link expires in {expiresInHours} hour{expiresInHours > 1 ? 's' : ''}</strong>
+                    <strong>⏰ This link expires in {expiresInMinutes} minutes</strong>
                   </Text>
                 </Column>
               </Row>
@@ -112,7 +112,7 @@ export function PasswordResetEmail({
                   <Text className="m-0 text-sm text-blue-900">
                     <strong>Didn't request this?</strong> If you didn't request a password reset, you can safely ignore this email or{' '}
                     <Link
-                      href="https://emberly.dev/contact"
+                      href="https://embrly.ca/contact"
                       className="text-blue-700 font-semibold no-underline"
                     >
                       contact support
@@ -147,7 +147,7 @@ export function PasswordResetEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © 2025 Emberly. All rights reserved.
+                    © {new Date().getFullYear()} Emberly. All rights reserved.
                   </Text>
                 </Column>
               </Row>

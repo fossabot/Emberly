@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
-
 import { getServerSession } from 'next-auth'
 
 import { SuggestEditForm } from '@/packages/components/dashboard/suggest-edit-form'
+import { DashboardShell } from '@/packages/components/dashboard/dashboard-shell'
 
 import { authOptions } from '@/packages/lib/auth'
 import { prisma } from '@/packages/lib/database/prisma'
@@ -15,10 +15,7 @@ interface SuggestEditPageProps {
 export default async function SuggestEditPage({ params }: SuggestEditPageProps) {
     const { id } = await params
     const session = await getServerSession(authOptions)
-
-    if (!session?.user) {
-        redirect('/auth/login')
-    }
+    if (!session?.user?.id) redirect('/auth/login')
 
     // Get file with collaboration info
     const file = await prisma.file.findUnique({
@@ -65,9 +62,9 @@ export default async function SuggestEditPage({ params }: SuggestEditPageProps) 
     }
 
     return (
-        <div className="container max-w-5xl space-y-6 py-6">
-            <div className="rounded-xl border border-border/50 bg-background/30 backdrop-blur-md overflow-hidden">
-                <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-background/50">
+        <DashboardShell>
+            <div className="glass-card overflow-hidden">
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
                     <div>
                         <h1 className="text-xl font-semibold">Suggest Edit</h1>
                         <p className="text-sm text-muted-foreground">
@@ -79,6 +76,6 @@ export default async function SuggestEditPage({ params }: SuggestEditPageProps) 
                     <SuggestEditForm file={file} initialContent={content} />
                 </div>
             </div>
-        </div>
+        </DashboardShell>
     )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp, Package } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp, Package } from 'lucide-react'
 
 import CheckoutButton from '@/packages/components/payments/CheckoutButton'
 import { Button } from '@/packages/components/ui/button'
@@ -9,9 +9,8 @@ import { Button } from '@/packages/components/ui/button'
 // Reusable GlassCard component
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className={`relative rounded-2xl bg-background/60 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5 dark:shadow-black/20 overflow-hidden ${className}`}>
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-            <div className="relative">{children}</div>
+        <div className={`glass-card overflow-hidden ${className}`}>
+            {children}
         </div>
     )
 }
@@ -39,11 +38,13 @@ interface AddOnSelectorProps {
     priceId: string
     mode?: 'subscription' | 'payment'
     type?: string
-    billingPeriod?: 'one-time' | 'monthly'
+    billingPeriod?: 'one-time' | 'monthly' | 'yearly'
     min?: number
     max?: number
     step?: number
     defaultValue?: number
+    /** Optional amber alert shown at the top of the card (e.g. setup notice) */
+    setupAlert?: string
 }
 
 export default function AddOnSelector({
@@ -52,14 +53,17 @@ export default function AddOnSelector({
     pricePerUnit,
     unitLabel,
     priceId,
-    mode = 'payment',
+    mode: modeProp,
     type,
     billingPeriod = 'one-time',
     min = 1,
     max = 50,
     step = 1,
     defaultValue = 1,
+    setupAlert,
 }: AddOnSelectorProps) {
+    const mode = modeProp ?? (billingPeriod === 'yearly' ? 'subscription' : 'payment')
+    const isFixed = min === max
     const [open, setOpen] = useState(false)
     const [qty, setQty] = useState(defaultValue)
 
@@ -87,6 +91,12 @@ export default function AddOnSelector({
     return (
         <GlassCard>
             <div className="p-6">
+                {setupAlert && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400 mb-4">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span><strong>Setup required:</strong> {setupAlert}</span>
+                    </div>
+                )}
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
                         <div className="p-2.5 rounded-xl bg-primary/20 shrink-0">
@@ -100,25 +110,38 @@ export default function AddOnSelector({
                                     {pricePerUnit != null ? `$${pricePerUnit.toFixed(2)}` : '—'}
                                 </span>
                                 <span className="text-sm text-muted-foreground">
-                                    / {unitLabel} ({billingPeriod === 'monthly' ? 'per month' : 'one-time'})
+                                    / {unitLabel} ({billingPeriod === 'monthly' ? 'per month' : billingPeriod === 'yearly' ? 'per year' : 'one-time'})
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)} className="shrink-0 bg-background/50">
-                        {open ? (
-                            <>
-                                Hide <ChevronUp className="w-4 h-4 ml-2" />
-                            </>
-                        ) : (
-                            <>
-                                Configure <ChevronDown className="w-4 h-4 ml-2" />
-                            </>
-                        )}
-                    </Button>
+                    {isFixed ? (
+                        <CheckoutButton
+                            priceId={priceId}
+                            mode={mode}
+                            label="Purchase"
+                            type={type}
+                            quantity={1}
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 bg-background/50"
+                        />
+                    ) : (
+                        <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)} className="shrink-0 bg-background/50">
+                            {open ? (
+                                <>
+                                    Hide <ChevronUp className="w-4 h-4 ml-2" />
+                                </>
+                            ) : (
+                                <>
+                                    Configure <ChevronDown className="w-4 h-4 ml-2" />
+                                </>
+                            )}
+                        </Button>
+                    )}
                 </div>
 
-                {open && (
+                {!isFixed && open && (
                     <div className="mt-6 pt-6 border-t border-border/50 space-y-4">
                         {pricePerUnit == null || !priceId ? (
                             <p className="text-sm text-muted-foreground">Pricing not set for this add-on.</p>
@@ -144,7 +167,7 @@ export default function AddOnSelector({
                                         )
                                     })}
                                 </div>
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-background/80 border border-border/50">
+                                <div className="flex items-center justify-between p-4 glass-subtle">
                                     <span className="text-sm font-medium">Total</span>
                                     <span className="text-xl font-bold">${total}</span>
                                 </div>

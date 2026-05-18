@@ -23,11 +23,16 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  // Experimental performance optimizations
   experimental: {
+    proxyClientMaxBodySize: '2gb',
+    serverActions: {
+      bodySizeLimit: '2gb',
+    },
 
     optimizePackageImports: [
+      'devicons',
       'lucide-react',
+      'react-icons',
       '@radix-ui/react-alert-dialog',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
@@ -44,4 +49,26 @@ const nextConfig: NextConfig = {
   }
 }
 
-export default nextConfig
+// withSentryConfig wraps webpack — it is incompatible with Turbopack and causes
+// native panics in the turbo-tasks-backend module graph. Only apply it during
+// production builds (next build), never in the dev server (next dev --turbopack).
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
+
+let exportedConfig: NextConfig = nextConfig
+
+if (isBuild) {
+  // Dynamic require avoids the import being processed by Turbopack at all
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { withSentryConfig } = require('@sentry/nextjs')
+  exportedConfig = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    silent: !process.env.CI,
+    sourcemaps: {
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+    },
+  }) as NextConfig
+}
+
+export default exportedConfig

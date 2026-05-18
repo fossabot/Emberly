@@ -48,15 +48,15 @@ export function StorageMetrics() {
     if (loading) return <div className="p-4">Loading storage metrics…</div>
     if (!data) return <div className="p-4 text-destructive">Failed to load storage metrics.</div>
 
-    const latestBytes = data.totalBytes ?? 0
-    const snapshots = (data.daily || []).map((s: any) => s.bytes)
+    const latestMB = data.totalMB ?? 0
+    const snapshots = (data.daily || []).map((s: any) => s.mb)
 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-sm text-muted-foreground">Storage used</div>
-                    <div className="text-2xl font-semibold">{(latestBytes / 1024 / 1024).toFixed(2)} MB</div>
+                    <div className="text-2xl font-semibold">{formatFileSize(latestMB)}</div>
                 </div>
                 <div className="w-48">
                     <Sparkline points={snapshots} />
@@ -69,7 +69,7 @@ export function StorageMetrics() {
                     {(data.breakdown || []).map((b: any) => (
                         <div key={b.mimeType} className="flex items-center justify-between text-sm">
                             <div className="truncate max-w-[70%]">{b.mimeType}</div>
-                            <div className="text-xs text-muted-foreground">{(b.bytes / 1024 / 1024).toFixed(2)} MB</div>
+                            <div className="text-xs text-muted-foreground">{formatFileSize(b.mb)}</div>
                         </div>
                     ))}
                 </div>

@@ -66,16 +66,22 @@ const transport = isDevelopment
           .toISOString()
           .replace('T', ' ')
           .slice(0, -5)
+        // Handle both numeric levels (pino default) and string levels (from formatter)
+        const rawLevel = obj.level
         const level = (
-          obj.level === 30
+          rawLevel === 30 || rawLevel === 'INFO'
             ? 'INFO'
-            : obj.level === 40
+            : rawLevel === 40 || rawLevel === 'WARN'
               ? 'WARN'
-              : obj.level === 50
+              : rawLevel === 50 || rawLevel === 'ERROR'
                 ? 'ERROR'
-                : obj.level === 20
-                  ? 'DEBUG'
-                  : 'TRACE'
+                : rawLevel === 60 || rawLevel === 'FATAL'
+                  ? 'FATAL'
+                  : rawLevel === 20 || rawLevel === 'DEBUG'
+                    ? 'DEBUG'
+                    : rawLevel === 10 || rawLevel === 'TRACE'
+                      ? 'TRACE'
+                      : String(rawLevel).toUpperCase()
         ).padEnd(5)
         const name = obj.name ? `[${obj.name}]`.padEnd(12) : ''
         const message = obj.msg || ''

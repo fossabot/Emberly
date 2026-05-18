@@ -1,27 +1,22 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/packages/lib/auth'
+import { requireAuth } from '@/packages/lib/auth/api-auth'
 import { prisma } from '@/packages/lib/database/prisma'
 
 export async function GET(req: Request) {
     try {
-        const session = await getServerSession(authOptions)
-        if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { user, response } = await requireAuth(req)
+    if (response) return response
 
-        let userId = (session.user as any).id
-        if (!userId && session.user?.email) {
-            const u = await prisma.user.findUnique({ where: { email: session.user.email }, select: { id: true } })
-            if (u) userId = u.id
-        }
+        const userId = user.id
 
-        // total bytes (current)
+        // total storage used (sum of File.size, which is stored in MB)
         const totalAgg = await prisma.file.aggregate({ where: { userId }, _sum: { size: true } })
-        const totalBytes = totalAgg._sum.size ?? 0
+        const totalMB = totalAgg._sum.size ?? 0
 
         // daily uploads (sum of sizes per day) for last 14 days
         const days = 14
         const now = new Date()
-        const daily: Array<{ date: string; bytes: number }> = []
+        const daily: Array<{ date: string; mb: number }> = []
         for (let i = days - 1; i >= 0; i--) {
             const start = new Date(now)
             start.setHours(0, 0, 0, 0)
@@ -31,14 +26,14 @@ export async function GET(req: Request) {
 
             // eslint-disable-next-line no-await-in-loop
             const sum = await prisma.file.aggregate({ where: { userId, uploadedAt: { gte: start, lt: end } }, _sum: { size: true } })
-            daily.push({ date: start.toISOString().slice(0, 10), bytes: sum._sum.size ?? 0 })
+            daily.push({ date: start.toISOString().slice(0, 10), mb: sum._sum.size ?? 0 })
         }
 
         // breakdown by mime type from files table (current state)
         const byType = await prisma.file.groupBy({ by: ['mimeType'], where: { userId }, _sum: { size: true }, orderBy: { _sum: { size: 'desc' } }, take: 10 })
-        const breakdown = byType.map((b) => ({ mimeType: b.mimeType, bytes: b._sum.size ?? 0 }))
+        const breakdown = byType.map((b) => ({ mimeType: b.mimeType, mb: b._sum.size ?? 0 }))
 
-        return NextResponse.json({ totalBytes, daily, breakdown })
+        return NextResponse.json({ totalMB, daily, breakdown })
     } catch (err) {
         console.error('analytics/storage error', err)
         return NextResponse.json({ error: 'Failed to fetch storage metrics' }, { status: 500 })

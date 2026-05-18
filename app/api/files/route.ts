@@ -13,7 +13,7 @@ import {
   apiResponse,
   paginatedResponse,
 } from '@/packages/lib/api/response'
-import { requireAuth } from '@/packages/lib/auth/api-auth'
+import { getSquadFromBearerToken, requireAuth } from '@/packages/lib/auth/api-auth'
 import { getConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
 import {
@@ -35,11 +35,45 @@ export async function POST(req: Request) {
   let userId: string | undefined
 
   try {
-    const { user, response } = await requireAuth(req)
-    userId = user?.id
-    if (response) return response
+    // ── Auth: try squad token/API key first, then fall back to user session ──
+    const squad = await getSquadFromBearerToken(req)
 
-    const formData = await req.formData()
+    let user: Awaited<ReturnType<typeof requireAuth>>['user'] | null = null
+    let squadContext: typeof squad = null
+
+    if (squad) {
+      // Authenticated as a squad — load the owner as the acting user
+      const ownerUser = await prisma.user.findUnique({
+        where: { id: squad.ownerUserId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          storageUsed: true,
+          storageQuotaMB: true,
+          urlId: true,
+          role: true,
+          randomizeFileUrls: true,
+          preferredUploadDomain: true,
+        },
+      })
+      if (!ownerUser) return apiError('Squad owner not found', HTTP_STATUS.UNAUTHORIZED)
+      user = ownerUser
+      squadContext = squad
+    } else {
+      const auth = await requireAuth(req)
+      if (auth.response) return auth.response
+      user = auth.user
+    }
+    userId = user?.id
+    if (!user) return apiError('Unauthorized', HTTP_STATUS.UNAUTHORIZED)
+
+    let formData: FormData
+    try {
+      formData = await req.formData()
+    } catch {
+      return apiError('Failed to parse request body as multipart/form-data. Ensure Content-Type is multipart/form-data with a valid boundary.', HTTP_STATUS.BAD_REQUEST)
+    }
 
     const uploadedFile = formData.get('file') as File
     const requestedDomainRaw = (formData.get('domain') as string) || null
@@ -79,22 +113,38 @@ export async function POST(req: Request) {
       const planLimits = await getPlanLimits(user.id)
       const fileSizeMB = bytesToMB(uploadedFile.size)
       
-      // Check plan upload size cap
-      const maxUploadBytes = planLimits.uploadSizeCapMB * 1024 * 1024
-      if (uploadedFile.size > maxUploadBytes) {
-        return apiError(
-          `File exceeds ${planLimits.planName} plan limit of ${planLimits.uploadSizeCapMB}MB. Upgrade your plan to upload larger files.`,
-          HTTP_STATUS.PAYLOAD_TOO_LARGE
-        )
+      // Check plan upload size cap (null = unlimited for Ember/Enterprise)
+      if (planLimits.uploadSizeCapMB !== null) {
+        const maxUploadBytes = planLimits.uploadSizeCapMB * 1024 * 1024
+        if (uploadedFile.size > maxUploadBytes) {
+          return apiError(
+            `File exceeds ${planLimits.planName} plan limit of ${planLimits.uploadSizeCapMB}MB. Upgrade your plan to upload larger files.`,
+            HTTP_STATUS.PAYLOAD_TOO_LARGE
+          )
+        }
       }
       
-      // Check storage quota
-      const uploadCheck = await canUploadSize(user.id, fileSizeMB)
-      if (!uploadCheck.allowed) {
-        return apiError(
-          uploadCheck.reason || 'Storage quota exceeded. Purchase additional storage to continue uploading.',
-          HTTP_STATUS.PAYLOAD_TOO_LARGE
-        )
+      // For squad uploads, also check squad storage quota
+      if (squadContext) {
+        const squadQuotaMB = squadContext.storageQuotaMB
+        if (squadQuotaMB !== null) {
+          const squadUsedMB = bytesToMB(squadContext.storageUsed)
+          if (squadUsedMB + fileSizeMB > squadQuotaMB) {
+            return apiError(
+              'Squad storage quota exceeded.',
+              HTTP_STATUS.PAYLOAD_TOO_LARGE
+            )
+          }
+        }
+      } else {
+        // Check individual user storage quota
+        const uploadCheck = await canUploadSize(user.id, fileSizeMB)
+        if (!uploadCheck.allowed) {
+          return apiError(
+            uploadCheck.reason || 'Storage quota exceeded. Purchase additional storage to continue uploading.',
+            HTTP_STATUS.PAYLOAD_TOO_LARGE
+          )
+        }
       }
     }
 
@@ -192,12 +242,16 @@ export async function POST(req: Request) {
 
       await tx.user.update({
         where: { id: user.id },
-        data: {
-          storageUsed: {
-            increment: bytesToMB(uploadedFile.size),
-          },
-        },
+        data: { storageUsed: { increment: bytesToMB(uploadedFile.size) } },
       })
+
+      // Track squad storage usage when uploaded via squad token/API key
+      if (squadContext) {
+        await tx.nexiumSquad.update({
+          where: { id: squadContext.squadId },
+          data: { storageUsed: { increment: bytesToMB(uploadedFile.size) } },
+        })
+      }
 
       return file
     })
@@ -343,11 +397,88 @@ export async function GET(request: Request) {
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
     const visibilityFilters = searchParams.get('visibility')?.split(',') || []
+    const squadId = searchParams.get('squadId') || null
     const offset = (page - 1) * limit
 
-    const where: Prisma.FileWhereInput = {
-      userId: user.id,
+    // ── Squad view: verify membership then return squad-owned files ──
+    if (squadId) {
+      const membership = await prisma.nexiumSquadMember.findFirst({
+        where: { squadId, userId: user.id },
+      })
+      if (!membership) {
+        return apiError('Not a member of this squad', HTTP_STATUS.FORBIDDEN)
+      }
+
+      const where: Prisma.FileWhereInput = { squadId }
+      const conditions: Prisma.FileWhereInput[] = []
+
+      if (search) {
+        conditions.push({
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { ocrText: { contains: search, mode: 'insensitive' } },
+          ],
+        })
+      }
+      if (types.length > 0) conditions.push({ mimeType: { in: types } })
+      if (dateFrom || dateTo) {
+        const dateFilter: Prisma.DateTimeFilter = {}
+        if (dateFrom) dateFilter.gte = new Date(dateFrom)
+        if (dateTo) { const e = new Date(dateTo); e.setHours(23,59,59,999); dateFilter.lte = e }
+        conditions.push({ uploadedAt: dateFilter })
+      }
+      if (visibilityFilters.length > 0) {
+        const visConds = visibilityFilters.map((f) =>
+          f === 'hasPassword' ? { password: { not: null } } : { visibility: f.toUpperCase() as 'PUBLIC' | 'PRIVATE' }
+        )
+        conditions.push({ OR: visConds })
+      }
+      if (conditions.length > 0) where.AND = conditions
+
+      const orderBy: Prisma.FileOrderByWithRelationInput = {}
+      if (sortBy === 'oldest') orderBy.uploadedAt = 'asc'
+      else if (sortBy === 'largest') orderBy.size = 'desc'
+      else if (sortBy === 'smallest') orderBy.size = 'asc'
+      else if (sortBy === 'name') orderBy.name = 'asc'
+      else orderBy.uploadedAt = 'desc'
+
+      const [total, files] = await Promise.all([
+        prisma.file.count({ where }),
+        prisma.file.findMany({
+          where,
+          orderBy,
+          take: limit,
+          skip: offset,
+          select: {
+            id: true,
+            name: true,
+            urlPath: true,
+            mimeType: true,
+            size: true,
+            uploadedAt: true,
+            visibility: true,
+            password: true,
+            views: true,
+            downloads: true,
+            user: { select: { urlId: true } },
+          },
+        }),
+      ])
+
+      const filesList = await Promise.all(
+        files.map(async (file) => {
+          const expiresAt = await getFileExpirationInfo(file.id)
+          return { ...file, hasPassword: Boolean(file.password), expiresAt }
+        })
+      )
+
+      return paginatedResponse<FileMetadata[]>(filesList as (FileMetadata & { expiresAt: Date | null })[],
+        { total, pageCount: Math.ceil(total / limit), page, limit }
+      )
     }
+
+    // ── Personal files ──
+    const where: Prisma.FileWhereInput = { userId: user.id }
 
     const conditions: Prisma.FileWhereInput[] = []
 

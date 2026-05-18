@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 
-import { getStorageProvider } from '@/packages/lib/storage'
 import { formatFileSize } from '@/packages/lib/utils'
 import { getFileDescription } from '@/packages/lib/utils/metadata'
 
 import { classifyMimeType } from './file-classification'
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface BuildMetadataOptions {
   baseUrl: string
@@ -15,10 +18,27 @@ interface BuildMetadataOptions {
   size: number
   uploadedAt: Date
   uploaderName: string
-  filePath: string
-  fileId?: string
 }
 
+// ============================================================================
+// Main Metadata Builders
+// ============================================================================
+
+/**
+ * Build rich metadata for file embeds with proper strategy per file type.
+ *
+ * Strategy per type:
+ * - Images  → og:image = raw URL (Discord/Twitter display the actual image)
+ * - Videos  → og:video = raw URL for inline playback (Discord/Telegram/Slack);
+ *              og:image = opengraph-image URL as poster thumbnail;
+ *              twitter:player = /player iframe for Twitter
+ * - Audio   → og:audio = raw URL; og:image = opengraph-image URL
+ * - Other   → og:image = opengraph-image branded card
+ *
+ * Twitter `player` card requires a dedicated HTML iframe page at /player and
+ * HTTPS with a whitelisted domain. For development/unwhitelisted domains it
+ * silently degrades — Twitter will fall back to summary_large_image.
+ */
 export async function buildRichMetadata({
   baseUrl,
   fileUrlPath,
@@ -28,151 +48,252 @@ export async function buildRichMetadata({
   size,
   uploadedAt,
   uploaderName,
-  filePath,
-  fileId,
 }: BuildMetadataOptions): Promise<Metadata> {
-  // Validate required inputs
-  if (!baseUrl || !fileUrlPath || !rawUrl || !fileName || !fileId) {
-    return buildMinimalMetadata(fileName || 'Emberly file')
-  }
-
-  let metadataBase: URL
-  try {
-    metadataBase = new URL(baseUrl)
-  } catch {
-    return buildMinimalMetadata(fileName)
-  }
-
   const classification = classifyMimeType(mimeType)
   const fileUrl = new URL(fileUrlPath, baseUrl).toString()
-  const formattedSize = formatFileSize(size)
+  const ogImageUrl = new URL(
+    `${fileUrlPath}/opengraph-image`,
+    baseUrl
+  ).toString()
   const uploadDate = uploadedAt.toISOString()
+  const formattedSize = formatFileSize(size)
 
-  const baseTitle = fileName
-  const baseDescription = getFileDescription({
+  const title = fileName
+  const description = getFileDescription({
     size: formattedSize,
     uploaderName,
     uploadedAt,
   })
 
-  // Build thumbnail URL for images and videos
-  let thumbnailUrl: string | undefined
-  try {
-    // For images and videos, use the thumbnail endpoint
-    if (classification.isImage || classification.isVideo) {
-      thumbnailUrl = new URL(`/api/files/${fileId}/thumbnail`, baseUrl).toString()
-    } else {
-      // For other file types, try to get a generic preview
-      thumbnailUrl = new URL(`/api/files/${fileId}/thumbnail`, baseUrl).toString()
-    }
-  } catch (error) {
-    console.error('Failed to generate thumbnail URL:', error)
-    thumbnailUrl = new URL('/api/og', baseUrl).toString()
+  const other: Record<string, string> = {
+    'theme-color': '#F97316',
+    'article:published_time': uploadDate,
+    'al:ios:url': rawUrl,
+    'al:android:url': rawUrl,
   }
 
-  // Build video URL for Discord/social embeds
-  let videoUrl: string | undefined
+  let ogType = 'website'
+  let openGraphImages: any[] | undefined
+  let openGraphVideos: any[] | undefined
+  let openGraphAudio: any[] | undefined
+  // twitter:player card requires an HTML iframe page + domain whitelisting by Twitter.
+  // We point to /player which is a minimal iframe-compatible video page.
+  // On unwhitelisted domains Twitter silently degrades to summary_large_image.
+  let twitterCard: string = 'summary_large_image'
+  let twitterPlayer:
+    | { playerUrl: string; streamUrl: string; width: number; height: number }
+    | undefined
+
   if (classification.isVideo) {
-    // Default to rawUrl
-    videoUrl = rawUrl
-    try {
-      const storageProvider = await getStorageProvider()
-      if (storageProvider?.getFileUrl) {
-        const providerUrl = await storageProvider.getFileUrl(filePath)
-        if (providerUrl) {
-          videoUrl = providerUrl
-        }
-      }
-    } catch (error) {
-      console.error('Failed to get video URL from storage provider:', error)
-      // Fallback to rawUrl which is already set
+    ogType = 'video.other'
+    // og:video for Discord/Telegram/Slack inline playback.
+    // Do NOT also set other['og:video'] — that creates duplicate tags that confuse crawlers.
+    openGraphVideos = [
+      {
+        url: rawUrl,
+        secureUrl: rawUrl,
+        type: mimeType || 'video/mp4',
+        width: 1280,
+        height: 720,
+      },
+    ]
+    // Poster thumbnail — Discord shows this as the card thumbnail before and during playback.
+    openGraphImages = [
+      {
+        url: ogImageUrl,
+        alt: fileName,
+        width: 1200,
+        height: 630,
+      },
+    ]
+    // Twitter player card: /player is a minimal HTML iframe page with just the <video> element.
+    twitterCard = 'player'
+    const playerUrl = new URL(`${fileUrlPath}/player`, baseUrl).toString()
+    twitterPlayer = {
+      playerUrl,
+      streamUrl: rawUrl,
+      width: 1280,
+      height: 720,
     }
+  } else if (classification.isImage) {
+    // Use the raw image URL directly — Discord and Twitter render the actual image
+    // in the embed rather than a generic branded card, which is far better UX.
+    ogType = 'website'
+    openGraphImages = [
+      {
+        url: rawUrl,
+        alt: fileName,
+      },
+    ]
+    twitterCard = 'summary_large_image'
+  } else if (classification.isAudio || classification.isMusic) {
+    ogType = classification.isMusic ? 'music.song' : 'website'
+    openGraphAudio = [
+      {
+        url: rawUrl,
+        type: mimeType || 'audio/mpeg',
+      },
+    ]
+    // Cover art card so platforms that don't render audio still show something meaningful.
+    openGraphImages = [
+      {
+        url: ogImageUrl,
+        alt: fileName,
+        width: 1200,
+        height: 630,
+      },
+    ]
+    twitterCard = 'summary_large_image'
+  } else {
+    // Generic file — branded preview card
+    openGraphImages = [
+      {
+        url: ogImageUrl,
+        alt: `${fileName} — shared via Emberly`,
+        width: 1200,
+        height: 630,
+      },
+    ]
+    twitterCard = 'summary_large_image'
   }
 
-  const metadata: Metadata = {
-    title: baseTitle,
-    description: baseDescription,
-    metadataBase,
+  return {
+    title,
+    description,
+    metadataBase: new URL(baseUrl),
     openGraph: {
-      title: baseTitle,
-      description: baseDescription,
+      title,
+      description,
       url: fileUrl,
       siteName: 'Emberly',
       locale: 'en_US',
-      type: getOpenGraphType(classification),
-      images: thumbnailUrl ? getOpenGraphImages(classification, thumbnailUrl) : undefined,
-      videos: classification.isVideo && videoUrl ? [
-        {
-          url: videoUrl,
-          secureUrl: videoUrl,
-          type: mimeType || 'video/mp4',
-          width: 1280,
-          height: 720,
+      type: ogType as any,
+      images: openGraphImages,
+      videos: openGraphVideos,
+      audio: openGraphAudio,
+    },
+    twitter: twitterPlayer
+      ? {
+          card: twitterCard as any,
+          title,
+          description,
+          players: [twitterPlayer],
+        }
+      : {
+          card: twitterCard as any,
+          title,
+          description,
+          images: openGraphImages?.map((img: any) => img.url),
         },
-      ] : undefined,
-      audio: classification.isAudio ? [
-        {
-          url: rawUrl,
-          type: mimeType || 'audio/mpeg',
-        },
-      ] : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: baseTitle,
-      description: baseDescription,
-      images: thumbnailUrl ? [thumbnailUrl] : undefined,
-    },
-    other: {
-      'theme-color': '#F97316',
-      'article:published_time': uploadDate,
-      'og:description': baseDescription,
-      'al:ios:url': rawUrl,
-      'al:android:url': rawUrl,
-      ...(classification.isVideo && videoUrl && {
-        'og:video': videoUrl,
-        'og:video:secure_url': videoUrl,
-        'og:video:type': mimeType || 'video/mp4',
-        'og:video:width': '1280',
-        'og:video:height': '720',
-      }),
-      ...(classification.isImage && {
-        'og:image:alt': 'Preview image',
-      }),
-    },
+    other,
   }
-
-  return metadata
 }
 
-function getOpenGraphType(classification: ReturnType<typeof classifyMimeType>) {
-  if (classification.isVideo) return 'video.other'
-  if (classification.isMusic) return 'music.song'
-  if (classification.isImage || classification.isDocument || classification.isCode) {
-    return 'article'
-  }
-  return 'website'
-}
-
-function getOpenGraphImages(
-  classification: ReturnType<typeof classifyMimeType>,
-  thumbnailUrl: string
-) {
-  return [
-    {
-      url: thumbnailUrl,
-      width: 1280,
-      height: 720,
-      alt: classification.isImage ? 'Preview image' : 'File preview',
-      type: 'image/png',
-    },
-  ]
-}
-
-export function buildMinimalMetadata(fileName: string): Metadata {
+/**
+ * Build minimal metadata for files when rich embeds are disabled or inaccessible.
+ * Returns NO embed metadata - no og:image, no twitter cards, no preview cards.
+ * Also adds robots: noindex to prevent crawlers from indexing or embedding this page.
+ * This ensures Discord/Twitter show plain links without any embed preview.
+ */
+export function buildMinimalMetadata(
+  fileName: string,
+  _rawUrl?: string
+): Metadata {
   return {
     title: fileName,
-    description: '',
+    description: 'Shared via Emberly',
+    robots: {
+      index: false,
+      follow: false,
+      noarchive: true,
+      nosnippet: true,
+      noimageindex: true,
+    },
+    other: {
+      googlebot: 'noindex, nofollow',
+      'googlebot-news': 'nosnippet',
+    },
+  }
+}
+
+/**
+ * Build lightweight metadata that mirrors "raw endpoint" behavior for media.
+ * Used when rich embeds are disabled so platforms can still inline media
+ * without branded Open Graph cards.
+ */
+export function buildDirectMediaMetadata(options: {
+  fileName: string
+  rawUrl: string
+  mimeType: string
+}): Metadata {
+  const { fileName, rawUrl, mimeType } = options
+  const normalizedMime = mimeType.toLowerCase().split(';')[0].trim()
+  const isImage = normalizedMime.startsWith('image/')
+  const isVideo = normalizedMime.startsWith('video/')
+  const isAudio = normalizedMime.startsWith('audio/')
+
+  if (!isImage && !isVideo && !isAudio) {
+    return buildMinimalMetadata(fileName)
+  }
+
+  const other: Record<string, string> = {}
+  if (isVideo) {
+    other['og:video'] = rawUrl
+    other['og:video:secure_url'] = rawUrl
+    other['og:video:type'] = normalizedMime || 'video/mp4'
+  } else if (isAudio) {
+    other['og:audio'] = rawUrl
+    other['og:audio:type'] = normalizedMime || 'audio/mpeg'
+  }
+
+  return {
+    title: fileName,
+    description: 'Shared via Emberly',
+    openGraph: {
+      title: fileName,
+      description: 'Shared via Emberly',
+      type: isVideo ? ('video.other' as any) : 'website',
+      images: isImage
+        ? [
+            {
+              url: rawUrl,
+              alt: fileName,
+            },
+          ]
+        : undefined,
+      videos: isVideo
+        ? [
+            {
+              url: rawUrl,
+              secureUrl: rawUrl,
+              type: normalizedMime || 'video/mp4',
+              width: 1280,
+              height: 720,
+            },
+          ]
+        : undefined,
+      audio: isAudio
+        ? [
+            {
+              url: rawUrl,
+              type: normalizedMime || 'audio/mpeg',
+            },
+          ]
+        : undefined,
+    },
+    twitter: isImage
+      ? {
+          card: 'summary_large_image',
+          title: fileName,
+          description: 'Shared via Emberly',
+          images: [rawUrl],
+        }
+      : {
+          card: 'summary',
+          title: fileName,
+          description: 'Shared via Emberly',
+        },
+    other,
   }
 }
 
@@ -191,7 +312,11 @@ export async function getBaseUrl(): Promise<string> {
   } catch {
     // headers() not available outside request context
   }
-  return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    'http://localhost:3000'
+  )
 }
 
 /**
@@ -207,7 +332,7 @@ export async function buildSiteMetadata(overrides?: {
 
   const siteName = 'Emberly'
   const title = overrides?.title || siteName
-  const description = overrides?.description || 'Emberly focuses on a simple, predictable file hosting experience with features that matter: expirations, custom domains, usage controls, and privacy-first defaults.'
+  const description = overrides?.description || SITE_DESCRIPTION
 
   const themeColor = config.settings.appearance.customColors?.primary
     ? `hsl(${config.settings.appearance.customColors.primary})`
@@ -220,6 +345,27 @@ export async function buildSiteMetadata(overrides?: {
       template: `%s | ${siteName}`,
     },
     description,
+    keywords: SITE_KEYWORDS,
+    authors: [{ name: 'Emberly', url: baseUrl }],
+    creator: 'Emberly',
+    publisher: 'Emberly',
+    category: 'technology',
+    classification: 'Software / Developer Tools',
+    referrer: 'origin-when-cross-origin',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    alternates: {
+      canonical: baseUrl,
+    },
     openGraph: {
       type: 'website',
       siteName,
@@ -232,17 +378,65 @@ export async function buildSiteMetadata(overrides?: {
       card: 'summary_large_image',
       title,
       description,
+      site: '@embrlyca',
+      creator: '@embrlyca',
     },
     other: {
       'theme-color': themeColor,
+      'msapplication-TileColor': '#09090b',
+      'msapplication-config': '/browserconfig.xml',
+      'mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-capable': 'yes',
+      'apple-mobile-web-app-status-bar-style': 'black-translucent',
+      'apple-mobile-web-app-title': siteName,
+      'format-detection': 'telephone=no',
+      'X-UA-Compatible': 'IE=edge',
     },
+    manifest: '/manifest.webmanifest',
   }
 }
 
-export function buildPageMetadata(options: { title: string; description?: string }): Metadata {
+const SITE_DESCRIPTION =
+  'Emberly is an open-source platform for file sharing, URL shortening, and talent discovery. Fast, private, and developer-friendly — with custom domains, expiring links, password protection, and squad (team) collaboration.'
+
+const SITE_KEYWORDS = [
+  // Core product
+  'file sharing',
+  'file upload',
+  'url shortener',
+  'link shortener',
+  'short url',
+  'custom domain',
+  'expiring links',
+  'password protected files',
+  // Team / talent
+  'talent discovery',
+  'developer portfolio',
+  'squad collaboration',
+  'team file sharing',
+  'nexium',
+  // Tech descriptors
+  'open source',
+  'self hosted',
+  'privacy focused',
+  'developer tools',
+  's3 storage',
+  'cdn file hosting',
+  // Brand + alternatives
+  'emberly',
+  'embrly',
+  'file manager',
+  'link manager',
+  'cdn hosting',
+  'sharex host',
+]
+
+export function buildPageMetadata(options: {
+  title: string
+  description?: string
+}): Metadata {
   return {
     title: options.title,
-    description: options.description || 'Emberly focuses on a simple, predictable file hosting experience with features that matter: expirations, custom domains, usage controls, and privacy-first defaults.',
+    description: options.description || SITE_DESCRIPTION,
   }
 }
-

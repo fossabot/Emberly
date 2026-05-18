@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 
 import { hash } from 'bcryptjs'
-import { randomBytes } from 'crypto'
 import { nanoid } from 'nanoid'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
@@ -10,7 +9,9 @@ import { rateLimiter } from '@/packages/lib/cache/rate-limit'
 import { getConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
 import { sendTemplateEmail, VerificationCodeEmail } from '@/packages/lib/emails'
+import { events } from '@/packages/lib/events'
 import { processReferralSignup } from '@/packages/lib/referrals'
+import { generateSecureToken, generateShortCode } from '@/packages/lib/auth/service'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -18,13 +19,14 @@ const registerSchema = z.object({
   name: z.string()
     .min(2, 'Username must be at least 2 characters')
     .max(50, 'Username must be at most 50 characters')
+    .trim()
     .refine(
       (name) => !name.includes('@'),
       'Username cannot contain @ symbol (looks like an email)'
     )
     .refine(
-      (name) => name.trim().length >= 2,
-      'Username cannot be only whitespace'
+      (name) => !name.includes(' '),
+      'Username cannot contain spaces'
     ),
   referralCode: z.string().optional(), // Referral code from query/body
 })
@@ -106,8 +108,8 @@ export async function POST(req: Request) {
     const isFirstUser = userCount === 0
 
     // Generate email verification - both a short code and a URL token
-    const verificationToken = randomBytes(32).toString('hex') // For URL verification
-    const shortCode = Math.floor(100000 + Math.random() * 900000).toString() // 6-digit code
+    const { token: verificationToken } = generateSecureToken(60 * 60 * 1000)
+    const shortCode = generateShortCode()
     const verificationExpires = Date.now() + 60 * 60 * 1000 // 1 hour
 
     // Create verification code data - store both token and short code
@@ -182,6 +184,13 @@ export async function POST(req: Request) {
         }
       })()
     }
+
+    // Emit auditable account.created event (fire-and-forget)
+    void events.emit('account.created', {
+      userId: user.id,
+      email: user.email ?? body.email,
+      method: 'signup',
+    }).catch((err) => console.error('[Events] Failed to emit account.created', err))
 
     return NextResponse.json({
       user: {

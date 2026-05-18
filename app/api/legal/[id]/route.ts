@@ -1,5 +1,7 @@
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
+import { auditContentRemoval } from '@/packages/lib/events/audit-helper'
+import { hasPermission, Permission } from '@/packages/lib/permissions'
 import * as legal from '@/packages/lib/legal/service'
 
 export async function GET(
@@ -14,7 +16,7 @@ export async function GET(
         if (adminView) {
             const { user, response } = await requireAuth(request)
             if (response) return response
-            if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
+            if (!user || !hasPermission(user.role as any, Permission.VIEW_AUDIT_LOGS)) {
                 return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
             }
             const page = await legal.getLegalById(id)
@@ -42,7 +44,7 @@ export async function PUT(
     try {
         const { user, response } = await requireAuth(request)
         if (response) return response
-        if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
+        if (!user || !hasPermission(user.role as any, Permission.MANAGE_SETTINGS)) {
             return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
         }
 
@@ -75,12 +77,24 @@ export async function DELETE(
     try {
         const { user, response } = await requireAuth(request)
         if (response) return response
-        if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
+        if (!user || !hasPermission(user.role as any, Permission.MANAGE_SETTINGS)) {
             return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
         }
 
         const { id } = await context.params
+        const doc = await legal.getLegalById(id)
+        if (!doc) return apiError('Legal page not found', HTTP_STATUS.NOT_FOUND)
+
         const deleted = await legal.deleteLegal(id)
+
+        auditContentRemoval(
+            user.id,
+            'post',
+            id,
+            doc.authorId ?? user.id,
+            'Legal document removed'
+        )
+
         return apiResponse(deleted)
     } catch (error) {
         return apiError(
