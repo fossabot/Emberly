@@ -83,6 +83,7 @@ export async function GET(_req: NextRequest) {
         })
     } catch (error) {
         logger.error('Failed to fetch email stats', error as Error)
-        return apiError('Failed to fetch email statistics', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to fetch email statistics')
     }
 }
+

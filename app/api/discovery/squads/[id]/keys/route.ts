@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const result = await createApiKey(id, user.id, parsed.data.name)
     // Return 201 — the full key is only exposed here
-    return apiResponse(result, HTTP_STATUS.CREATED)
+    return apiResponse(result)
   } catch (err: any) {
     if (err.message === 'Squad not found') return apiError('Squad not found or access denied', HTTP_STATUS.NOT_FOUND)
     if (err.message.startsWith('Maximum')) return apiError(err.message, HTTP_STATUS.UNPROCESSABLE_ENTITY)

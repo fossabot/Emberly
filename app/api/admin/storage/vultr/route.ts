@@ -86,7 +86,7 @@ export async function GET(req: Request) {
             ).then(() => {
                 logger.info(`[Admin] Synced ${staleInstances.length} Vultr instance(s) from live Vultr data`)
             }).catch((err) => {
-                logger.warn('[Admin] Failed to sync Vultr instance status/credentials', err as Error)
+                logger.warn('[Admin] Failed to sync Vultr instance status/credentials', { error: err })
             })
         }
 
@@ -114,7 +114,7 @@ export async function GET(req: Request) {
         return apiResponse(result)
     } catch (error) {
         logger.error('Failed to list Vultr Object Storage instances', error as Error)
-        return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Internal server error')
     }
 }
 
@@ -244,12 +244,12 @@ export async function POST(req: Request) {
                 s3Hostname: dbInstance.s3Hostname,
                 s3AccessKey: `${dbInstance.s3AccessKey.slice(0, 6)}••••`,
                 cfHostname,
-            },
-            HTTP_STATUS.CREATED,
+            }
         )
     } catch (error) {
         logger.error('Failed to provision Vultr Object Storage instance', error as Error)
         const message = error instanceof Error ? error.message : 'Internal server error'
-        return apiError(message, HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError(message)
     }
 }
+

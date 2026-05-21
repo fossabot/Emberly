@@ -56,6 +56,7 @@ export async function POST(req: Request) {
 
     return apiResponse({ success: true })
   } catch {
-    return apiError('Failed to send test notification', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Failed to send test notification')
   }
 }
+

@@ -73,6 +73,7 @@ export async function GET() {
     return apiResponse({ plans, addOns })
   } catch (error) {
     logger.error('Error fetching product catalog', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
+

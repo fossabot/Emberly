@@ -176,3 +176,4 @@ echo "URL: $URL"
 echo "URL has been copied to clipboard (if a clipboard tool was available)"
 exit 0`
 }
+

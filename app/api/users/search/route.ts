@@ -34,6 +34,7 @@ export async function GET(req: Request) {
 
     return apiResponse({ users })
   } catch (error) {
-    return apiError('Search failed', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Search failed')
   }
 }
+

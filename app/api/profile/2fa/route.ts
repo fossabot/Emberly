@@ -330,3 +330,4 @@ export async function DELETE(req: Request) {
         return apiError('Internal server error')
     }
 }
+

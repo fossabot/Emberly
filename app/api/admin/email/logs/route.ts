@@ -107,6 +107,7 @@ export async function GET(req: NextRequest) {
         )
     } catch (error) {
         logger.error('Failed to fetch email logs', { error })
-        return apiError('Failed to fetch email logs', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to fetch email logs')
     }
 }
+

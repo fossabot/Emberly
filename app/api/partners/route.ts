@@ -21,7 +21,7 @@ export async function GET(req: Request) {
         return apiResponse(partners)
     } catch (error) {
         logger.error('Error fetching partners', error as Error)
-        return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Internal server error')
     }
 }
 
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
         return apiResponse(partner)
     } catch (error) {
         logger.error('Error creating partner', error as Error)
-        return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Internal server error')
     }
 }
+

@@ -8,6 +8,7 @@ import { formatBytes } from '@/packages/lib/utils'
 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/packages/lib/auth'
+import { redirect } from 'next/navigation'
 
 export const metadata = buildPageMetadata({
   title: 'Upload Files',
@@ -27,7 +28,7 @@ export default async function UploadPage() {
   })
 
   if (!user) {
-    redirect('/auth/login')
+    return redirect('/auth/login')
   }
 
   const config = await getConfig()

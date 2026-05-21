@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     return apiResponse(userData)
   } catch (error) {
     logger.error('Profile fetch error:', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -311,3 +311,4 @@ export async function DELETE(req: Request) {
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

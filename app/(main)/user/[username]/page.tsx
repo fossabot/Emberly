@@ -232,7 +232,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         storageGB: boosterMilestone.storageGB,
         domainSlots: boosterMilestone.domainSlots,
       } : undefined}
-      nexiumProfile={nexiumProfile}
+      nexiumProfile={nexiumProfile as any}
     />
   )
 }

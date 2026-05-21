@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
+      return apiError('Stripe is not configured', HTTP_STATUS.INTERNAL_SERVER_ERROR)
     }
 
     const stripe = await getStripeClient()
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     return apiResponse(result)
   } catch (error) {
     logger.error('Error listing promo codes', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
+      return apiError('Stripe is not configured', HTTP_STATUS.INTERNAL_SERVER_ERROR)
     }
 
     const json = await req.json().catch(() => null)
@@ -150,9 +150,10 @@ export async function POST(req: Request) {
     })
   } catch (error: any) {
     if (error?.type === 'StripeInvalidRequestError') {
-      return apiError(error.message, HTTP_STATUS.BAD_REQUEST)
+      return apiError(error.message)
     }
     logger.error('Error creating promo code', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

@@ -13,3 +13,4 @@ export async function GET(req: Request) {
   const applications = await listMyApplications(profile.id)
   return apiResponse({ applications })
 }
+

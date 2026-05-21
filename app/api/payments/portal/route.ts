@@ -25,3 +25,4 @@ export async function GET(req: Request) {
         return handleApiError(err, 'Portal session creation failed')
     }
 }
+

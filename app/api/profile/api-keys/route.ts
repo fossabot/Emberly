@@ -24,13 +24,14 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}))
   const parsed = CreateKeySchema.safeParse(body)
-  if (!parsed.success) return apiError('name is required (max 64 chars)', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError('name is required (max 64 chars)')
 
   try {
     const result = await createUserApiKey(user!.id, parsed.data.name)
-    return apiResponse(result, HTTP_STATUS.CREATED)
+    return apiResponse(result)
   } catch (err: any) {
     if (err.message.startsWith('Maximum')) return apiError(err.message, HTTP_STATUS.UNPROCESSABLE_ENTITY)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

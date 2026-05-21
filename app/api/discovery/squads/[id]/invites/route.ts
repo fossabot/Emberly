@@ -126,5 +126,5 @@ export async function POST(
     declineUrl: `${BASE_URL}/api/discovery/invites/${invite.token}/decline`,
   })
 
-  return apiResponse({ invite }, HTTP_STATUS.CREATED)
+  return apiResponse({ invite })
 }

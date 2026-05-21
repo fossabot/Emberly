@@ -81,7 +81,7 @@ export default async function PricingPage() {
       name: product.name,
       description: product.description || 'Optional add-on.',
       priceId: pricing.priceId || '',
-      billingPeriod: pricing.billingPeriod,
+      billingPeriod: pricing.billingPeriod as 'monthly' | 'one-time',
       pricePerUnit: pricing.pricePerUnit,
       features: product.features || [],
     }

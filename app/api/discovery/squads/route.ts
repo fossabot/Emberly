@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   const body = await req.json()
   const parsed = CreateSquadSchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   try {
     const squad = await createSquad(user.id, parsed.data)
@@ -60,8 +60,9 @@ export async function POST(req: Request) {
       squadName: parsed.data.name,
     }).catch((err) => console.error('[Events] Failed to emit nexium.squad-created', err))
 
-    return apiResponse(squad, HTTP_STATUS.CREATED)
+    return apiResponse(squad)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to create squad', HTTP_STATUS.BAD_REQUEST)
   }
 }
+

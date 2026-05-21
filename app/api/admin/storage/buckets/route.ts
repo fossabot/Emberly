@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     )
   } catch (error) {
     logger.error('Failed to list storage buckets', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -80,8 +80,7 @@ export async function POST(req: Request) {
       })
 
       return apiResponse(
-        { ...bucket, s3AccessKeyId: bucket.s3AccessKeyId ? `${bucket.s3AccessKeyId.slice(0, 4)}••••` : '', s3SecretKey: '' },
-        HTTP_STATUS.CREATED
+        { ...bucket, s3AccessKeyId: bucket.s3AccessKeyId ? `${bucket.s3AccessKeyId.slice(0, 4)}••••` : '', s3SecretKey: '' }
       )
     }
 
@@ -99,11 +98,11 @@ export async function POST(req: Request) {
     })
 
     return apiResponse(
-      { ...bucket, s3AccessKeyId: bucket.s3AccessKeyId ? `${bucket.s3AccessKeyId.slice(0, 4)}••••` : '', s3SecretKey: '' },
-      HTTP_STATUS.CREATED
+      { ...bucket, s3AccessKeyId: bucket.s3AccessKeyId ? `${bucket.s3AccessKeyId.slice(0, 4)}••••` : '', s3SecretKey: '' }
     )
   } catch (error) {
     logger.error('Failed to create storage bucket', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
+

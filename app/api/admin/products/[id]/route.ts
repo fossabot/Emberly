@@ -37,16 +37,15 @@ export async function DELETE(
             return apiError('Product not found', HTTP_STATUS.NOT_FOUND)
         }
 
-        // Soft delete by setting deletedAt
+        // Soft delete by setting active to false
         const deleted = await prisma.product.update({
             where: { id: productId },
             data: {
-                deletedAt: new Date(),
-                isActive: false,
+                active: false,
             },
         })
 
-        logger.info('Product deleted', {
+        logger.info('Product deactivated', {
             productId: deleted.id,
             actorId: adminUser.id,
             productName: deleted.name,
@@ -55,7 +54,7 @@ export async function DELETE(
         return NextResponse.json({
             success: true,
             id: deleted.id,
-            deletedAt: deleted.deletedAt,
+            active: deleted.active,
         })
     } catch (error) {
         logger.error('Error deleting product', { error })
