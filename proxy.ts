@@ -10,6 +10,7 @@ import {
   SUPERADMIN_PATHS,
   VIDEO_EXTENSIONS,
 } from './packages/lib/middleware/constants'
+
 import { Permission, hasPermission } from './packages/lib/permissions'
 
 // Global store for login context (IP, UserAgent, Geo)
