@@ -10,7 +10,8 @@ export function isBotRequest(userAgent: string): boolean {
     userAgent.includes('telegram') ||
     userAgent.includes('twitter') ||
     userAgent.includes('facebook') ||
-    userAgent.includes('linkedin')
+    userAgent.includes('linkedin') ||
+    userAgent.includes('whatsapp')
   )
 }
 

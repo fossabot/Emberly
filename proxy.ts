@@ -5,8 +5,10 @@ import { getToken } from 'next-auth/jwt'
 
 import { handleBotRequest } from './packages/lib/middleware/bot-handler'
 import {
+  FILE_URL_PATTERN,
   PROTECTED_PAGE_PATHS,
   SUPERADMIN_PATHS,
+  VIDEO_EXTENSIONS,
 } from './packages/lib/middleware/constants'
 import { Permission, hasPermission } from './packages/lib/permissions'
 
@@ -287,6 +289,33 @@ export async function proxy(request: NextRequest) {
 
   const botResponse = await handleBotRequest(request)
   if (botResponse) return botResponse
+
+  // ── Video Media Requests ──────────────────────────────────────────────
+  // Discord (and similar platforms) try to play videos from the original
+  // URL rather than the og:video URL. Their media proxy uses a non-bot
+  // user-agent and sends Range headers or Accept without text/html.
+  // Transparently rewrite these requests to /raw so the raw route handler
+  // serves actual video bytes instead of the HTML preview page.
+  if (
+    FILE_URL_PATTERN.test(pathname) &&
+    !pathname.endsWith('/raw') &&
+    !pathname.endsWith('/direct')
+  ) {
+    const fileExt = pathname.split('.').pop()?.toLowerCase()
+    if (fileExt && VIDEO_EXTENSIONS.includes(fileExt)) {
+      const rangeHeader = request.headers.get('range')
+      const acceptHeader = request.headers.get('accept') || ''
+      const isMediaRequest =
+        rangeHeader != null ||
+        (acceptHeader !== '' && !acceptHeader.includes('text/html'))
+
+      if (isMediaRequest) {
+        const url = new URL(request.url)
+        url.pathname = `${pathname}/raw`
+        return NextResponse.rewrite(url)
+      }
+    }
+  }
 
   // Everything else is public (marketing pages, user profiles, file viewer, etc.)
   return NextResponse.next()
