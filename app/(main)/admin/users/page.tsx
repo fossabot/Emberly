@@ -5,7 +5,7 @@ import { buildPageMetadata } from '@/packages/lib/embeds/metadata'
 
 export const metadata = buildPageMetadata({
   title: 'User Management',
-  description: 'Manage user accounts, roles, and permissions.',
+  description: 'Manage user accounts, roles, and permissions with ease.',
 })
 
 export default async function UsersPage() {
