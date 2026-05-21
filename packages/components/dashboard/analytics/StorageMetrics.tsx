@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatFileSize } from '@/packages/lib/utils'
 
 function Sparkline({ points }: { points: number[] }) {
     if (!points || points.length === 0) return null

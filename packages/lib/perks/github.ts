@@ -38,13 +38,13 @@ export async function getContributorLinesOfCode(
             // Count additions (line additions are more valuable than just commits)
             totalLines += commitDetail?.stats?.additions || 0
           } catch (error) {
-            logger.debug(`Failed to get commit details for ${commit.sha}`, error as Error)
+            logger.debug(`Failed to get commit details for ${commit.sha}`, { error: error instanceof Error ? error.message : String(error) })
             continue
           }
         }
       } catch (error) {
         // Repo might be private or other access issues, continue with next
-        logger.debug(`Failed to get commits for ${repo.name}`, error as Error)
+        logger.debug(`Failed to get commits for ${repo.name}`, { error: error instanceof Error ? error.message : String(error) })
         continue
       }
     }
@@ -97,7 +97,7 @@ export async function verifyContributorStatus(
             perkName: 'GitHub Contributor',
             perkDescription: 'Unlock exclusive perks for contributing to the Emberly open source project',
             perkIcon: '⭐',
-            expiresAt: null, // Contributor perk doesn't expire
+            expiresAt: undefined, // Contributor perk doesn't expire
             viewUrl: '/profile?tab=security#linked-accounts',
           })
         }
@@ -165,7 +165,7 @@ export async function getGitHubUserInfo(
         },
       })
       if (!res.ok) {
-        logger.error('Failed to get GitHub user info via token', new Error(`HTTP ${res.status}`), {})
+        logger.error('Failed to get GitHub user info via token', new Error(`HTTP ${res.status}`))
         return null
       }
       user = await res.json()

@@ -11,7 +11,7 @@ export default function MarkdownRenderer({ children }: { children: string }) {
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]}
       components={{
-        img: ({ src, alt }) => (
+        img: ({ src, alt }: { src?: string; alt?: string }) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt={alt || ''} className="rounded-md mx-auto my-4 max-w-full" />
         ),
@@ -35,7 +35,7 @@ export default function MarkdownRenderer({ children }: { children: string }) {
             {children}
           </thead>
         ),
-        th: ({ children, ...props }) => (
+        th: ({ children, isHeader: _isHeader, ...props }) => (
           <th className="px-3 py-2 text-left text-sm font-semibold border-b border-border/50 dark:border-border/20 whitespace-nowrap" {...props}>
             {children}
           </th>

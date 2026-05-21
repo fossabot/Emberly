@@ -332,7 +332,7 @@ export const authOptions: NextAuthOptions = {
             select: { emailVerified: true },
           })
           if (dbUser) {
-            token.emailVerified = dbUser.emailVerified
+            token.emailVerified = dbUser.emailVerified ? true : false
             console.log(`[JWT] Refreshed emailVerified from DB for ${token.email}: ${token.emailVerified}`)
           }
         } catch (error) {
@@ -419,7 +419,7 @@ export const authOptions: NextAuthOptions = {
             // Only send alert if detection says we should
             if (detection.shouldAlert) {
               await sendTemplateEmail({
-                to: email,
+                to: email!,
                 subject: '⚠️ New device sign-in to your Emberly account',
                 template: NewLoginEmail,
                 props: {

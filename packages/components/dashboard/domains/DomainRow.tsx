@@ -264,8 +264,8 @@ export default function DomainRow({
                           <p className="text-xs text-muted-foreground mb-1">Name</p>
                           <div className="flex items-center gap-2">
                             <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
-                              {d.cfMeta.ownership_verification?.txt_name ||
-                                d.cfMeta.ownership_verification?.name ||
+                              {d.cfMeta?.ownership_verification?.txt_name ||
+                                d.cfMeta?.ownership_verification?.name ||
                                 '@'}
                             </code>
                             <Button
@@ -274,8 +274,8 @@ export default function DomainRow({
                               className="h-7 w-7 shrink-0"
                               onClick={() =>
                                 copy(
-                                  d.cfMeta.ownership_verification?.txt_name ||
-                                  d.cfMeta.ownership_verification?.name ||
+                                    d.cfMeta?.ownership_verification?.txt_name ||
+                                  d.cfMeta?.ownership_verification?.name ||
                                   '@',
                                   'Name copied'
                                 )
@@ -289,8 +289,8 @@ export default function DomainRow({
                           <p className="text-xs text-muted-foreground mb-1">Value</p>
                           <div className="flex items-center gap-2">
                             <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
-                              {d.cfMeta.ownership_verification?.txt_value ||
-                                d.cfMeta.ownership_verification?.value ||
+                              {d.cfMeta?.ownership_verification?.txt_value ||
+                                d.cfMeta?.ownership_verification?.value ||
                                 ''}
                             </code>
                             <Button
@@ -299,8 +299,8 @@ export default function DomainRow({
                               className="h-7 w-7 shrink-0"
                               onClick={() =>
                                 copy(
-                                  d.cfMeta.ownership_verification?.txt_value ||
-                                  d.cfMeta.ownership_verification?.value ||
+                                  d.cfMeta?.ownership_verification?.txt_value ||
+                                  d.cfMeta?.ownership_verification?.value ||
                                   '',
                                   'Value copied'
                                 )

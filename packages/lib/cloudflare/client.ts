@@ -1,7 +1,7 @@
 import { loggers } from '@/packages/lib/logger'
 import { getIntegrations } from '@/packages/lib/config'
 
-const logger = loggers.app
+const logger = loggers.config
 
 class CloudflareError extends Error {
     status: number

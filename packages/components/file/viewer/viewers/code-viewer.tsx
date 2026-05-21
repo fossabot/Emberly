@@ -87,7 +87,7 @@ export function CodeViewer() {
           <div className="glass-subtle p-4 sm:p-6 max-h-[50vh] sm:max-h-[60vh] overflow-auto prose prose-sm sm:prose-base prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50 prose-pre:overflow-x-auto prose-code:text-primary prose-code:before:content-none prose-code:after:content-none prose-p:break-words prose-a:break-all">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
+              rehypePlugins={[rehypeHighlight as any]}
             >
               {state.content}
             </ReactMarkdown>

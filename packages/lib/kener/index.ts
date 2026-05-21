@@ -111,8 +111,7 @@ function aggregateStatus(monitors: KenerMonitor[]): KenerMonitorStatus {
   const visible = monitors.filter(
     (m) =>
       m.is_hidden !== 'YES' &&
-      m.is_hidden !== 'true' &&
-      m.is_hidden !== true,
+      m.is_hidden !== 'true',
   )
   // Kener v4 returns "ACTIVE"/"INACTIVE" as workflow state, not health status
   // Map to health status: ACTIVE means UP, and we'll assume INACTIVE means DOWN

@@ -161,7 +161,7 @@ export async function isDiscordBooster(discordUserId: string): Promise<{
     const errorMessage = (error as Error).message
     if (errorMessage.includes('404')) {
       // Member not found in guild
-      logger.debug(`Discord user ${discordUserId} not in server`, error as Error)
+      logger.debug(`Discord user ${discordUserId} not in server`, { error: error instanceof Error ? error.message : String(error) })
       return { isBooster: false, premiumSince: null, avatarDecorationUrl: null }
     }
     logger.error('Failed to check Discord booster status', error as Error, {
@@ -221,7 +221,7 @@ export async function verifyDiscordBoosterStatus(
             perkName: 'Discord Booster',
             perkDescription: 'Unlock exclusive perks for boosting the Emberly Discord server',
             perkIcon: '🚀',
-            expiresAt: null,
+            expiresAt: undefined,
             viewUrl: '/profile?tab=security#linked-accounts',
           })
         }
@@ -268,8 +268,9 @@ export async function getDiscordUserInfo(discordUserId: string): Promise<{
       avatar: user.avatar,
     }
   } catch (error) {
-    logger.debug('Failed to get Discord user info', error as Error, {
+    logger.debug('Failed to get Discord user info', {
       discordUserId,
+      error: error instanceof Error ? error.message : String(error),
     })
     return null
   }

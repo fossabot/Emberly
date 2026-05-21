@@ -8,7 +8,7 @@ export type CreatePostInput = {
   content: string
   excerpt?: string | null
   authorId?: string | null
-  status?: Prisma.PostStatus | string
+  status?: 'DRAFT' | 'PUBLISHED' | string
   publishedAt?: Date | null
 }
 

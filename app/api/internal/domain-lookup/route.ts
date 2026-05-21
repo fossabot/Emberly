@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const user = domain.user
-    const profileSlug = user.vanityId || user.urlId || user.name
+    const profileSlug = user.vanityId || user.urlId || user.name || ''
 
     return NextResponse.json({
       found: true,

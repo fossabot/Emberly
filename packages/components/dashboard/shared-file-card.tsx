@@ -70,7 +70,7 @@ export function SharedFileCard({ file }: SharedFileCardProps) {
     }
 
     const isImage = file.mimeType.startsWith('image/')
-    const Icon = file.isPaste ? FileCode : getFileIcon(file.mimeType)
+    const fileIcon = file.isPaste ? <FileCode className="h-16 w-16 text-muted-foreground/50" /> : getFileIcon(file.mimeType)
 
     const roleLabel = file.role === 'EDITOR' ? 'Editor' : 'Suggester'
     const roleVariant = file.role === 'EDITOR' ? 'default' : 'secondary'
@@ -93,7 +93,7 @@ export function SharedFileCard({ file }: SharedFileCardProps) {
                         />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <Icon className="h-16 w-16 text-muted-foreground/50" />
+                            {fileIcon}
                         </div>
                     )}
 

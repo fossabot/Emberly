@@ -335,7 +335,7 @@ export function SuggestionManager({
                                                     <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
                                                         <ReactMarkdown
                                                             remarkPlugins={[remarkGfm]}
-                                                            rehypePlugins={[rehypeHighlight]}
+                                                            rehypePlugins={[rehypeHighlight as any]}
                                                         >
                                                             {suggestion.content}
                                                         </ReactMarkdown>

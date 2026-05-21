@@ -88,7 +88,6 @@ export async function updateFileMetadata(
   updates: {
     visibility?: 'PUBLIC' | 'PRIVATE'
     password?: string | null
-    expiresAt?: Date | null
     name?: string
   }
 ) {
@@ -116,10 +115,6 @@ export async function updateFileMetadata(
     } else {
       updateData.password = null
     }
-  }
-
-  if (updates.expiresAt !== undefined) {
-    updateData.expiresAt = updates.expiresAt
   }
 
   if (updates.name !== undefined) {
@@ -173,7 +168,7 @@ export async function deleteFileWithCleanup(
 
   try {
     // Delete from storage provider
-    const storageProvider = getStorageProvider()
+    const storageProvider = await getStorageProvider()
     await storageProvider.delete(file.path)
 
     // Delete from database
@@ -220,7 +215,7 @@ export async function deleteFilesWithCleanup(
     where: { id: { in: fileIds }, userId },
   })
 
-  const storageProvider = getStorageProvider()
+  const storageProvider = await getStorageProvider()
 
   for (const file of files) {
     try {
@@ -230,8 +225,9 @@ export async function deleteFilesWithCleanup(
       totalStorageBytes += file.size
     } catch (error) {
       failedCount++
-      logger.warn('Failed to delete file during bulk delete', error as Error, {
+      logger.warn('Failed to delete file during bulk delete', {
         fileId: file.id,
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -269,10 +265,14 @@ export async function getFileWithRelations(fileId: string) {
       collaborators: {
         select: {
           id: true,
-          email: true,
-          name: true,
-          permission: true,
-          addedAt: true,
+          role: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
@@ -287,12 +287,12 @@ export async function isFileSecure(fileId: string): Promise<boolean> {
   const file = await prisma.file.findUnique({
     where: { id: fileId },
     select: {
-      isQuarantined: true,
+      flagged: true,
     },
   })
 
   if (!file) return false
-  return !file.isQuarantined
+  return !file.flagged
 }
 
 /**
@@ -399,7 +399,7 @@ export async function archiveFile(fileId: string, userId: string) {
 
   return prisma.file.update({
     where: { id: fileId },
-    data: { isArchived: true },
+    data: { flagged: true },
   })
 }
 
@@ -417,6 +417,6 @@ export async function restoreFile(fileId: string, userId: string) {
 
   return prisma.file.update({
     where: { id: fileId },
-    data: { isArchived: false },
+    data: { flagged: false },
   })
 }

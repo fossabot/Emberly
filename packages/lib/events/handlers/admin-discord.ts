@@ -40,10 +40,14 @@ async function sendAdminAlert(embed: {
   }
 
   try {
+    const embedFields = embed.fields as Array<{ name: string; value: string; inline?: boolean }> | undefined
     await notifyDiscord({
       webhookUrl,
       embeds: [{
-        ...embed,
+        title: embed.title,
+        description: embed.description,
+        color: embed.color,
+        fields: embedFields,
         timestamp: embed.timestamp?.toISOString(),
       }],
     })

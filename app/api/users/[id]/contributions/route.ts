@@ -45,7 +45,7 @@ export async function GET(
 
     // Get contribution stats
     const linesOfCode = await getContributorLinesOfCode(
-      githubAccount.providerUsername,
+      githubAccount.providerUsername!,
       ''
     )
 
