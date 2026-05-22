@@ -21,6 +21,8 @@
     "db:seed": "npx tsx scripts/seed-plans.ts",
     "dev": "next dev --turbopack",
     "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "npx prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "npx prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "knip:check": "npx knip",
