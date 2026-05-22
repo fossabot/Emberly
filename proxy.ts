@@ -10,7 +10,6 @@ import {
   SUPERADMIN_PATHS,
   VIDEO_EXTENSIONS,
 } from './packages/lib/middleware/constants'
-
 import { Permission, hasPermission } from './packages/lib/permissions'
 
 // Global store for login context (IP, UserAgent, Geo)
@@ -43,7 +42,10 @@ function getClientIP(request: NextRequest): string | undefined {
     return cfConnectingIP
   }
 
-  return request.headers.get('x-client-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return (
+    request.headers.get('x-client-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  )
 }
 
 /**
@@ -65,6 +67,8 @@ function getGeoInfo(request: NextRequest) {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const normalizedPathname =
+    pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
 
   // ── Custom Domain Routing ──────────────────────────────────────────────
@@ -236,8 +240,8 @@ export async function proxy(request: NextRequest) {
 
   // Pass through raw/direct file paths and short URL redirects
   if (
-    pathname.endsWith('/raw') ||
-    pathname.endsWith('/direct') ||
+    normalizedPathname.endsWith('/raw') ||
+    normalizedPathname.endsWith('/direct') ||
     pathname.startsWith('/u/')
   ) {
     return NextResponse.next()
@@ -299,10 +303,10 @@ export async function proxy(request: NextRequest) {
   // serves actual video bytes instead of the HTML preview page.
   if (
     FILE_URL_PATTERN.test(pathname) &&
-    !pathname.endsWith('/raw') &&
-    !pathname.endsWith('/direct')
+    !normalizedPathname.endsWith('/raw') &&
+    !normalizedPathname.endsWith('/direct')
   ) {
-    const fileExt = pathname.split('.').pop()?.toLowerCase()
+    const fileExt = normalizedPathname.split('.').pop()?.toLowerCase()
     if (fileExt && VIDEO_EXTENSIONS.includes(fileExt)) {
       const rangeHeader = request.headers.get('range')
       const acceptHeader = request.headers.get('accept') || ''
@@ -312,7 +316,7 @@ export async function proxy(request: NextRequest) {
 
       if (isMediaRequest) {
         const url = new URL(request.url)
-        url.pathname = `${pathname}/raw`
+        url.pathname = `${normalizedPathname}/raw`
         return NextResponse.rewrite(url)
       }
     }
