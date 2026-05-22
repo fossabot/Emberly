@@ -235,7 +235,6 @@ export function registerAccountHandlers(): void {
             await events.emit('email.send', {
                 to: payload.email,
                 template: 'account-deleted',
-                body: [`We're sorry to see you go. Your Emberly account associated with ${payload.email} has been deleted.`],
                 subject: 'Your Emberly account has been deleted',
                 variables: {
                     email: payload.email,

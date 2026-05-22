@@ -83,6 +83,7 @@ export async function GET(req: Request) {
 
     return apiResponse(result)
   } catch (err: any) {
-    return apiError(err.message ?? 'Failed to fetch GitHub repos', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError(err.message ?? 'Failed to fetch GitHub repos')
   }
 }
+

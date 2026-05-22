@@ -23,7 +23,7 @@ export async function GET(request: Request) {
             }
 
             const page = await legal.getLegalBySlug(slug, true)
-            if (!page) return apiError('Legal page not found', HTTP_STATUS.NOT_FOUND)
+            if (!page) return apiError('Legal page not found')
             return apiResponse(page)
         }
 
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
             const { user, response } = await requireAuth(request)
             if (response) return response
             if (!user || !hasPermission(user.role as any, Permission.MANAGE_SETTINGS)) {
-                return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
+                return apiError('Forbidden')
             }
         }
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         if (response) return response
 
         if (!user || !hasPermission(user.role as any, Permission.MANAGE_SETTINGS)) {
-            return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
+            return apiError('Forbidden')
         }
 
         const body = await request.json()
@@ -85,3 +85,4 @@ export async function POST(request: Request) {
         )
     }
 }
+

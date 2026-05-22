@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   const body = await req.json()
   const parsed = CreateProfileSchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   try {
     const profile = await createProfile(user.id, parsed.data)
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       profileId: profile.id,
     }).catch((err) => console.error('[Events] Failed to emit nexium.profile-created', err))
 
-    return apiResponse(profile, HTTP_STATUS.CREATED)
+    return apiResponse(profile)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to create profile', HTTP_STATUS.BAD_REQUEST)
   }
@@ -58,7 +58,7 @@ export async function PUT(req: Request) {
 
     return apiResponse(profile)
   } catch (err: any) {
-    return apiError(err.message ?? 'Failed to update profile', HTTP_STATUS.BAD_REQUEST)
+    return apiError(err.message ?? 'Failed to update profile')
   }
 }
 
@@ -77,6 +77,7 @@ export async function DELETE(req: Request) {
 
     return apiResponse({ ok: true })
   } catch (err: any) {
-    return apiError(err.message ?? 'Failed to delete profile', HTTP_STATUS.BAD_REQUEST)
+    return apiError(err.message ?? 'Failed to delete profile')
   }
 }
+

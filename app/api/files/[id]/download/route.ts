@@ -28,6 +28,9 @@ export async function GET(
 ) {
   try {
     const user = await getAuthenticatedUser(request)
+    if (!user) {
+      return new Response(null, { status: 401 })
+    }
     const { id: fileId } = await params
     const url = new URL(request.url)
     const providedPassword = url.searchParams.get('password')
@@ -126,6 +129,9 @@ export async function POST(
 ) {
   try {
     const user = await getAuthenticatedUser(request)
+    if (!user) {
+      return new Response(null, { status: 401 })
+    }
     const { id: fileId } = await params
 
     let providedPassword: string | null = null

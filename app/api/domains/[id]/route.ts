@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
 
-
+import { Prisma } from '@/prisma/generated/prisma/client'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 import { getDomainWithOwnership, isValidDomainName } from '@/packages/lib/domain/service'
@@ -24,7 +24,7 @@ export async function DELETE(
     await prisma.customDomain.delete({ where: { id } })
     return new NextResponse(null, { status: 204 })
   } catch (error) {
-    logger.error('Error deleting domain', error as Error)
+    logger.error('Error deleting domain', error instanceof Error ? error : String(error))
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }
@@ -74,13 +74,13 @@ export async function PATCH(
       if (existing && existing.id !== id) return new NextResponse('Domain already exists', { status: 409 })
 
       // Update domain name and mark unverified so operator can reprovision
-      await prisma.customDomain.update({ where: { id }, data: { domain: newDomain, verified: false, cfHostnameId: null, cfMeta: null, cfStatus: null } })
+      await prisma.customDomain.update({ where: { id }, data: { domain: newDomain, verified: false, cfHostnameId: null, cfMeta: Prisma.DbNull, cfStatus: null } })
       return new NextResponse(null, { status: 204 })
     }
 
     return new NextResponse('Bad Request', { status: 400 })
   } catch (error) {
-    logger.error('Error updating domain', error as Error)
+    logger.error('Error updating domain', error instanceof Error ? error : String(error))
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }

@@ -247,3 +247,4 @@ echo "Screenshot uploaded successfully: $URL"
 ${useWayland ? 'notify-send "Screenshot Uploaded" "URL copied to clipboard: $URL"' : 'notify-send "Screenshot Uploaded" "URL copied to clipboard: $URL"'}
 exit 0`
 }
+

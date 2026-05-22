@@ -72,3 +72,4 @@ export async function POST(req: Request) {
 
   return apiResponse({ image: avatarUrl })
 }
+

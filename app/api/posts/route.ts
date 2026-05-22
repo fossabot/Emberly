@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       }
 
       const post = await blog.getPostBySlug(slug, true)
-      if (!post) return apiError('Post not found', HTTP_STATUS.NOT_FOUND)
+      if (!post) return apiError('Post not found')
       return apiResponse(post)
     }
 
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       const { user, response } = await requireAuth(request)
       if (response) return response
       if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-        return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
+        return apiError('Forbidden')
       }
       const posts = await blog.listPosts({
         publishedOnly: false,
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     if (response) return response
 
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-      return apiError('Forbidden', HTTP_STATUS.FORBIDDEN)
+      return apiError('Forbidden')
     }
 
     const body = await request.json()
@@ -90,3 +90,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

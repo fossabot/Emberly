@@ -8,15 +8,15 @@ import { NextRequest, NextResponse } from 'next/server'
  * Initiates Discord OAuth flow. Redirects to Discord authorization page.
  */
 export async function GET(request: NextRequest) {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
         const session = await getServerSession(authOptions)
         if (!session?.user?.id) {
             return NextResponse.redirect(new URL('/auth/login', baseUrl))
         }
 
         // Generate random state for CSRF protection
-        const state = Math.random().toString(36).substring(2, 15)
+        const state = crypto.randomUUID()
 
         // Store state in a short-lived cookie (5 minutes)
         const response = NextResponse.redirect(
@@ -48,15 +48,10 @@ export async function GET(request: NextRequest) {
  * Initiates Discord OAuth flow. Redirects to Discord authorization page.
  */
 export async function POST(request: NextRequest) {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://emberly.ca'
     try {
-        const session = await getServerSession(authOptions)
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
         // Generate random state for CSRF protection
-        const state = Math.random().toString(36).substring(2, 15)
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://emberly.ca'
+        const state = crypto.randomUUID()
 
         // Store state in a short-lived cookie (5 minutes)
         const response = NextResponse.redirect(
@@ -82,3 +77,4 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
+

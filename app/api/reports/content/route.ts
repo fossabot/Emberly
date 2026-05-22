@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         where: { id: contentId },
         select: { id: true, userId: true, shortCode: true, targetUrl: true },
       })
-      if (!url) return apiError('URL not found', HTTP_STATUS.NOT_FOUND)
+      if (!url) return apiError('URL not found')
       if (url.userId === user.id) {
         return apiError('You cannot report your own content', HTTP_STATUS.BAD_REQUEST)
       }
@@ -108,9 +108,10 @@ export async function POST(req: Request) {
       return apiResponse(report)
     }
 
-    return apiError('Invalid content type', HTTP_STATUS.BAD_REQUEST)
+    return apiError('Invalid content type')
   } catch (error) {
     logger.error('Error submitting content report', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

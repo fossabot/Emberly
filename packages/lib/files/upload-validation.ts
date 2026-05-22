@@ -32,7 +32,7 @@ export async function validateEmailVerified(userId: string): Promise<UploadValid
     }
 
     // Admins and higher roles bypass email verification requirement
-    if (hasPermission(user.role as any, Permission.MANAGE_FILES)) {
+    if (hasPermission(user.role as any, Permission.MODERATE_CONTENT)) {
         return { valid: true }
     }
 

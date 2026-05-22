@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   const body = await req.json()
   const parsed = CreateOpportunitySchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   try {
     const opp = await createOpportunity(user.id, parsed.data)
@@ -46,8 +46,9 @@ export async function POST(req: Request) {
       title: parsed.data.title,
     }).catch((err) => console.error('[Events] Failed to emit nexium.opportunity-created', err))
 
-    return apiResponse(opp, HTTP_STATUS.CREATED)
+    return apiResponse(opp)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to create opportunity', HTTP_STATUS.BAD_REQUEST)
   }
 }
+

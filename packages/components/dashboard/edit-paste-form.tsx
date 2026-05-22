@@ -293,7 +293,7 @@ export function EditPasteForm({ file, initialContent }: EditPasteFormProps) {
                                 {content ? (
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[rehypeHighlight]}
+                                        rehypePlugins={[rehypeHighlight as any]}
                                     >
                                         {content}
                                     </ReactMarkdown>

@@ -245,7 +245,7 @@ export function SuggestEditForm({ file, initialContent }: SuggestEditFormProps) 
                                 {content ? (
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[rehypeHighlight]}
+                                        rehypePlugins={[rehypeHighlight as any]}
                                     >
                                         {content}
                                     </ReactMarkdown>

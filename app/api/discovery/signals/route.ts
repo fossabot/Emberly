@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
   if (Array.isArray(body.orderedIds)) {
     const parsed = ReorderSignalsSchema.safeParse(body)
-    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
     const profile = await getProfile(user.id)
     if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
     await reorderSignals(profile.id, parsed.data.orderedIds)
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const parsed = SignalInputSchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   const profile = await getProfile(user.id)
   if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
@@ -80,8 +80,9 @@ export async function POST(req: Request) {
       signalTitle: parsed.data.title,
     }).catch((err) => console.error('[Events] Failed to emit nexium.signal-added', err))
 
-    return apiResponse(signal, HTTP_STATUS.CREATED)
+    return apiResponse(signal)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to add signal', HTTP_STATUS.BAD_REQUEST)
   }
 }
+

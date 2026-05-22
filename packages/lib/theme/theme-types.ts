@@ -65,7 +65,6 @@ export const GAMING_THEME_CONFIG: Record<string, GamingThemeEffects> = {
   'cyberpunk-neon': {
     chromaAberration: true,
     vignette: true,
-    glitchIntensity: 0.3,
   },
   'vaporwave': {
     curvature: true,

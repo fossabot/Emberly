@@ -102,6 +102,7 @@ export async function POST(req: Request) {
         })
     } catch (error) {
         logger.error('Failed to sync Vultr Object Storage instances', error as Error)
-        return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Internal server error')
     }
 }
+

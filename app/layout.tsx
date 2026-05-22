@@ -94,7 +94,6 @@ export default async function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script async src="https://ackee.bytebrush.dev/tracker.js" data-ackee-server="https://ackee.bytebrush.dev" data-ackee-domain-id="fee82036-9b66-4760-976e-af630cc35974"></script>
         <ThemeInitializer 
           userTheme={userTheme} 
           userCustomColors={userCustomColors}
@@ -107,7 +106,7 @@ export default async function RootLayout({
         <ThemeProvider
           attribute="class"
           enableSystem={false}
-          enableColorSchemeQuery={false}
+          enableColorScheme={false}
           storageKey=""
           disableTransitionOnChange
         >

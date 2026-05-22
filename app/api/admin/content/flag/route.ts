@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     if (contentType === 'url') {
       const url = await prisma.shortenedUrl.findUnique({ where: { id: contentId } })
-      if (!url) return apiError('URL not found', HTTP_STATUS.NOT_FOUND)
+      if (!url) return apiError('URL not found')
 
       const updated = await prisma.shortenedUrl.update({
         where: { id: contentId },
@@ -77,9 +77,10 @@ export async function POST(req: Request) {
       return apiResponse({ id: updated.id, flagged: updated.flagged })
     }
 
-    return apiError('Invalid content type', HTTP_STATUS.BAD_REQUEST)
+    return apiError('Invalid content type')
   } catch (error) {
     logger.error('Error flagging content', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

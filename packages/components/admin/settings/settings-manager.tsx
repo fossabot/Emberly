@@ -76,6 +76,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 import type { EmberlyConfig } from '@/lib/config'
+import type { BackgroundEffect, AnimationSpeed } from '@/lib/theme/theme-types'
 
 import { StorageBucketManager } from '@/packages/components/admin/settings/storage-bucket-manager'
 import { VultrInstanceManager } from '@/packages/components/admin/settings/vultr-instance-manager'
@@ -586,9 +587,9 @@ export function SettingsManager() {
 
 			const newConfig = { ...workingConfig }
 			newConfig.settings[section] = {
-				...newConfig.settings[section],
-				...(value as EmberlyConfig['settings'][T]),
-			}
+				...(newConfig.settings[section] as Record<string, unknown> ?? {}),
+				...(value as Record<string, unknown>),
+			} as EmberlyConfig['settings'][T]
 			setWorkingConfig(newConfig)
 		},
 		[workingConfig]
@@ -753,8 +754,8 @@ export function SettingsManager() {
 	const handleThemePresetChange = (themeId: string, backgroundEffect: string, animationSpeed: string) => {
 		handleSettingChange('appearance', {
 			theme: themeId,
-			backgroundEffect,
-			animationSpeed,
+			backgroundEffect: backgroundEffect as EmberlyConfig['settings']['appearance']['backgroundEffect'],
+			animationSpeed: animationSpeed as AnimationSpeed,
 		})
 	}
 
@@ -798,8 +799,8 @@ export function SettingsManager() {
 	) => {
 		handleSettingChange('appearance', {
 			theme: themeId,
-			backgroundEffect: meta?.backgroundEffect || 'none',
-			animationSpeed: meta?.animationSpeed || 'medium',
+		backgroundEffect: (meta?.backgroundEffect || 'none') as EmberlyConfig['settings']['appearance']['backgroundEffect'],
+		animationSpeed: (meta?.animationSpeed || 'medium') as AnimationSpeed,
 			customColors: colors,
 		})
 	}, [handleSettingChange])
@@ -1790,7 +1791,7 @@ export function SettingsManager() {
 										<Select
 											value={emailProvider}
 											onValueChange={(value) => handleSettingChange('integrations', {
-												emailProvider: value,
+												emailProvider: value as 'resend' | 'smtp',
 											})}
 										>
 											<SelectTrigger className="w-48 text-sm">
@@ -1868,74 +1869,74 @@ export function SettingsManager() {
 														smtp: {
 															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
 															host: e.target.value,
-														},
+														} as EmberlyConfig['settings']['integrations']['smtp'],
 													})}
-												/>
-											</SettingRow>
-											<SettingRow label="Port" description="SMTP server port (25, 465, 587, or 2587)">
-												<Input
-													type="number"
-													placeholder="587"
-													className="w-32 font-mono text-sm"
-													value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.port as number ?? 587}
-													onChange={(e) => handleSettingChange('integrations', {
-														smtp: {
-															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
-															port: Number(e.target.value),
-														},
-													})}
-												/>
-											</SettingRow>
-											<SettingRow label="Secure (TLS)" description="Use TLS — enable for port 465, disable for STARTTLS">
-												<Switch
-													checked={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.secure as boolean ?? false}
-													onCheckedChange={(checked) => handleSettingChange('integrations', {
-														smtp: {
-															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
-															secure: checked,
-														},
-													})}
-												/>
-											</SettingRow>
-											<SettingRow label="Username" description="SMTP authentication username">
-												<Input
-													placeholder="user@example.com"
-													className="w-80 text-sm"
-													value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.user as string ?? ''}
-													onChange={(e) => handleSettingChange('integrations', {
-														smtp: {
-															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
-															user: e.target.value,
-														},
-													})}
-												/>
-											</SettingRow>
-											<SettingRow label="Password" description="SMTP authentication password">
-												<Input
-													type="password"
-													placeholder="••••••••"
-													className="w-80 font-mono text-sm"
-													value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.password as string ?? ''}
-													onChange={(e) => handleSettingChange('integrations', {
-														smtp: {
-															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
-															password: e.target.value,
-														},
-													})}
-												/>
-											</SettingRow>
-											<SettingRow label="From Address" description="Sender address (overrides EMAIL_FROM env var)">
-												<Input
-													placeholder="Emberly <noreply@embrly.ca>"
-													className="w-80 text-sm"
-													value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.from as string ?? ''}
-													onChange={(e) => handleSettingChange('integrations', {
-														smtp: {
-															...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
-															from: e.target.value,
-														},
-													})}
-												/>
+													/>
+													</SettingRow>
+													<SettingRow label="Port" description="SMTP server port (25, 465, 587, or 2587)">
+														<Input
+															type="number"
+															placeholder="587"
+															className="w-32 font-mono text-sm"
+															value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.port as number ?? 587}
+															onChange={(e) => handleSettingChange('integrations', {
+																smtp: {
+																	...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
+																	port: Number(e.target.value),
+																} as EmberlyConfig['settings']['integrations']['smtp'],
+															})}
+															/>
+														</SettingRow>
+														<SettingRow label="Secure (TLS)" description="Use TLS — enable for port 465, disable for STARTTLS">
+															<Switch
+																checked={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.secure as boolean ?? false}
+																onCheckedChange={(checked) => handleSettingChange('integrations', {
+																	smtp: {
+																		...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
+																		secure: checked,
+																	} as EmberlyConfig['settings']['integrations']['smtp'],
+																})}
+															/>
+														</SettingRow>
+														<SettingRow label="Username" description="SMTP authentication username">
+															<Input
+																placeholder="user@example.com"
+																className="w-80 text-sm"
+																value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.user as string ?? ''}
+																onChange={(e) => handleSettingChange('integrations', {
+																	smtp: {
+																		...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
+																		user: e.target.value,
+																	} as EmberlyConfig['settings']['integrations']['smtp'],
+																})}
+															/>
+														</SettingRow>
+														<SettingRow label="Password" description="SMTP authentication password">
+															<Input
+																type="password"
+																placeholder="••••••••"
+																className="w-80 font-mono text-sm"
+																value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.password as string ?? ''}
+																onChange={(e) => handleSettingChange('integrations', {
+																	smtp: {
+																		...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
+																		password: e.target.value,
+																	} as EmberlyConfig['settings']['integrations']['smtp'],
+																})}
+															/>
+														</SettingRow>
+														<SettingRow label="From Address" description="Sender address (overrides EMAIL_FROM env var)">
+															<Input
+																placeholder="Emberly <noreply@embrly.ca>"
+																className="w-80 text-sm"
+																value={((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown>)?.from as string ?? ''}
+																onChange={(e) => handleSettingChange('integrations', {
+																	smtp: {
+																		...((workingConfig?.settings.integrations as Record<string, unknown>)?.smtp as Record<string, unknown> ?? {}),
+																		from: e.target.value,
+																	} as EmberlyConfig['settings']['integrations']['smtp'],
+																})}
+															/>
 											</SettingRow>
 											<div className="pt-3 border-t border-border/30 flex items-center justify-between gap-3">
 												<div>

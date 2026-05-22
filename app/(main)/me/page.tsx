@@ -3,6 +3,7 @@ const ProfileClient = dynamic(() => import('@/packages/components/profile').then
 
 import { getServerSession } from 'next-auth/next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { authOptions } from '@/packages/lib/auth'
 import { buildPageMetadata } from '@/packages/lib/embeds/metadata'
@@ -69,19 +70,19 @@ export default async function ProfilePage() {
   })
 
   if (!user) {
-    redirect('/auth/login')
+    return redirect('/auth/login')
   }
 
   // If no subscription in DB but user has a Stripe customer, try a one-time sync.
   // This auto-heals missed webhooks without requiring manual intervention.
-  let subscriptions = user.subscriptions
+  let subscriptions: any[] = user.subscriptions
   if (subscriptions.length === 0 && user.stripeCustomerId) {
     try {
       const { syncUserSubscriptionsFromStripe } = await import('@/packages/lib/stripe/billing')
       await syncUserSubscriptionsFromStripe(user.id, user.stripeCustomerId)
       subscriptions = await prisma.subscription.findMany({
         where: { userId: user.id },
-        select: { id: true, productId: true, status: true, currentPeriodEnd: true },
+        select: { id: true, productId: true, status: true, currentPeriodEnd: true, product: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 1,
       })

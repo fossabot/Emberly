@@ -42,8 +42,8 @@ export async function POST(
   if (!profile) return apiError('You need a Discovery profile to apply', HTTP_STATUS.BAD_REQUEST)
 
   try {
-    const app = await applyToOpportunity(id, profile.id, parsed.data.message)
-    return apiResponse(app, HTTP_STATUS.CREATED)
+    const app = await applyToOpportunity(id, profile.id, parsed.data.message || '')
+    return apiResponse(app)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to apply', HTTP_STATUS.BAD_REQUEST)
   }

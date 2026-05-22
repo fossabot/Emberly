@@ -57,7 +57,7 @@ export function addCORSHeaders(
   )
   response.headers.set(
     'Access-Control-Max-Age',
-    (config.maxAge || DEFAULT_CORS_CONFIG.maxAge).toString()
+    (config.maxAge ?? DEFAULT_CORS_CONFIG.maxAge!).toString()
   )
 
   // Allow credentials if not wildcard origin (only with specific origins)

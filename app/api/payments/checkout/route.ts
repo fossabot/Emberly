@@ -63,3 +63,4 @@ export async function GET(req: Request) {
         return handleApiError(err, 'Checkout GET failed')
     }
 }
+

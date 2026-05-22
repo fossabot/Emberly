@@ -11,7 +11,7 @@ import { hasPermission, Permission } from '@/packages/lib/permissions'
 
 export type AuthenticatedUser = {
   id: string
-  email: string
+  email: string | null
   name: string | null
   storageUsed: number
   storageQuotaMB?: number | null

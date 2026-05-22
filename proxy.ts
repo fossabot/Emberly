@@ -5,8 +5,10 @@ import { getToken } from 'next-auth/jwt'
 
 import { handleBotRequest } from './packages/lib/middleware/bot-handler'
 import {
+  FILE_URL_PATTERN,
   PROTECTED_PAGE_PATHS,
   SUPERADMIN_PATHS,
+  VIDEO_EXTENSIONS,
 } from './packages/lib/middleware/constants'
 import { Permission, hasPermission } from './packages/lib/permissions'
 
@@ -40,7 +42,10 @@ function getClientIP(request: NextRequest): string | undefined {
     return cfConnectingIP
   }
 
-  return request.ip
+  return (
+    request.headers.get('x-client-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  )
 }
 
 /**
@@ -62,6 +67,8 @@ function getGeoInfo(request: NextRequest) {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const normalizedPathname =
+    pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
 
   // ── Custom Domain Routing ──────────────────────────────────────────────
@@ -233,8 +240,8 @@ export async function proxy(request: NextRequest) {
 
   // Pass through raw/direct file paths and short URL redirects
   if (
-    pathname.endsWith('/raw') ||
-    pathname.endsWith('/direct') ||
+    normalizedPathname.endsWith('/raw') ||
+    normalizedPathname.endsWith('/direct') ||
     pathname.startsWith('/u/')
   ) {
     return NextResponse.next()
@@ -287,6 +294,33 @@ export async function proxy(request: NextRequest) {
 
   const botResponse = await handleBotRequest(request)
   if (botResponse) return botResponse
+
+  // ── Video Media Requests ──────────────────────────────────────────────
+  // Discord (and similar platforms) try to play videos from the original
+  // URL rather than the og:video URL. Their media proxy uses a non-bot
+  // user-agent and sends Range headers or Accept without text/html.
+  // Transparently rewrite these requests to /raw so the raw route handler
+  // serves actual video bytes instead of the HTML preview page.
+  if (
+    FILE_URL_PATTERN.test(pathname) &&
+    !normalizedPathname.endsWith('/raw') &&
+    !normalizedPathname.endsWith('/direct')
+  ) {
+    const fileExt = normalizedPathname.split('.').pop()?.toLowerCase()
+    if (fileExt && VIDEO_EXTENSIONS.includes(fileExt)) {
+      const rangeHeader = request.headers.get('range')
+      const acceptHeader = request.headers.get('accept') || ''
+      const isMediaRequest =
+        rangeHeader != null ||
+        (acceptHeader !== '' && !acceptHeader.includes('text/html'))
+
+      if (isMediaRequest) {
+        const url = new URL(request.url)
+        url.pathname = `${normalizedPathname}/raw`
+        return NextResponse.rewrite(url)
+      }
+    }
+  }
 
   // Everything else is public (marketing pages, user profiles, file viewer, etc.)
   return NextResponse.next()

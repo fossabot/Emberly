@@ -4,7 +4,7 @@ import { hash } from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 
-import { updateConfig } from '@/packages/lib/config'
+import { DEFAULT_CONFIG, updateConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
 import { invalidateSetupCache } from '@/packages/lib/database/setup'
 import { loggers } from '@/packages/lib/logger'
@@ -97,7 +97,9 @@ export async function POST(req: Request) {
 
     await updateConfig({
       settings: {
+        ...DEFAULT_CONFIG.settings,
         general: {
+          ...DEFAULT_CONFIG.settings.general,
           setup: {
             completed: true,
             completedAt: new Date().toISOString(),
@@ -130,8 +132,14 @@ export async function POST(req: Request) {
         },
         appearance: {
           theme: 'default-dark',
+          themeType: 'static' as const,
+          backgroundEffect: 'none' as const,
+          animationSpeed: 'medium' as const,
+          enableAnimations: true,
+          enableBackgroundEffect: false,
           favicon: null,
-          customColors: {},
+          customColors: {} as Record<string, string>,
+          systemThemes: {},
         },
         advanced: {
           customCSS: '',
@@ -162,3 +170,4 @@ export async function POST(req: Request) {
     )
   }
 }
+

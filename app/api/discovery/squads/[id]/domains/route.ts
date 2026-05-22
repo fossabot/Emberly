@@ -40,7 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   try {
     const domain = await addSquadDomain(id, user.id, parsed.data.domain)
-    return apiResponse({ domain }, HTTP_STATUS.CREATED)
+    return apiResponse({ domain })
   } catch (err: any) {
     if (err.message === 'Squad not found') return apiError('Squad not found or access denied', HTTP_STATUS.NOT_FOUND)
     if (err.message === 'Domain already registered') return apiError('Domain already registered', HTTP_STATUS.CONFLICT)

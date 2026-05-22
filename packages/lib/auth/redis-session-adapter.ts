@@ -79,6 +79,7 @@ export function RedisSessionAdapter(): Adapter {
     async updateSession(session) {
       const redis = await getRedisClient()
       const sessionToken = session.sessionToken
+      if (!session.expires) return null
       const expiresAt = session.expires.getTime()
 
       const data = await redis.get(`${SESSION_PREFIX}${sessionToken}`)

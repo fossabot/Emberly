@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     return apiResponse(userData)
   } catch (error) {
     logger.error('Profile fetch error:', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -251,7 +251,12 @@ export async function PUT(req: Request) {
       }).catch((err) => console.error('[Events] Failed to emit account.profile-updated', err))
     }
 
-    return apiResponse<ProfileResponse>(updatedUser)
+    const profileResponse: ProfileResponse = {
+      ...updatedUser,
+      emailPreferences: updatedUser.emailPreferences as ProfileResponse['emailPreferences'],
+      discordPreferences: updatedUser.discordPreferences as ProfileResponse['discordPreferences'],
+    }
+    return apiResponse<ProfileResponse>(profileResponse)
   } catch (error) {
     logger.error('Profile update error:', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
@@ -311,3 +316,4 @@ export async function DELETE(req: Request) {
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
+

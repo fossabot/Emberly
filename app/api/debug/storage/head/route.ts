@@ -40,3 +40,4 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Storage initialization failed' }, { status: 500 })
     }
 }
+

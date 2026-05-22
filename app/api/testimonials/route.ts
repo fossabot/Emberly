@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
         return apiResponse(shaped)
     } catch (error) {
-        return apiError('Failed to load testimonials', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to load testimonials')
     }
 }
 
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
         return apiResponse(created)
     } catch (error) {
-        return apiError('Failed to submit testimonial', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to submit testimonial')
     }
 }
 
@@ -123,7 +123,7 @@ export async function PUT(req: Request) {
 
         return apiResponse(updated)
     } catch (error) {
-        return apiError('Failed to update testimonial', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to update testimonial')
     }
 }
 
@@ -139,6 +139,7 @@ export async function DELETE(req: Request) {
         await prisma.testimonial.delete({ where: { id: existing.id } })
         return apiResponse({ id: existing.id })
     } catch (error) {
-        return apiError('Failed to delete testimonial', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to delete testimonial')
     }
 }
+

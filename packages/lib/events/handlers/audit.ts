@@ -1,4 +1,5 @@
 import type { BaseEvent, EventType, RequestContext } from '@/packages/types/events'
+import { Prisma } from '@/prisma/generated/prisma/client'
 
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
@@ -163,7 +164,7 @@ async function markEventAsAuditable(event: BaseEvent): Promise<void> {
                 userAgent: auditFields.userAgent,
                 geo: auditFields.geo,
                 // Replace payload with redacted version for long-term storage
-                payload: redactedPayload,
+                payload: redactedPayload as Prisma.InputJsonValue,
             },
         })
 

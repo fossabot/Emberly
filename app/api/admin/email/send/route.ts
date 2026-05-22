@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
         })
     } catch (error) {
         logger.error('Admin email send error', error as Error)
-        return apiError('Failed to send emails', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError('Failed to send emails')
     }
 }
+

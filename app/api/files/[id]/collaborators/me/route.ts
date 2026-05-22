@@ -11,7 +11,7 @@ export async function GET(
 ) {
     try {
         const { id } = await params
-        const { user, response } = await requireAuth(req)
+        const { user, response } = await requireAuth(request)
     if (response) return response
 
         const file = await prisma.file.findUnique({

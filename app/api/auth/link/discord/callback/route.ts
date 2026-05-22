@@ -13,8 +13,8 @@ import { sendTemplateEmail, AccountChangeEmail } from '@/packages/lib/emails'
  * Verifies Discord user, checks booster status, and creates LinkedAccount.
  */
 export async function GET(request: NextRequest) {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
         const session = await getServerSession(authOptions)
         if (!session?.user?.id) {
             return NextResponse.redirect(new URL('/auth/signin', baseUrl))
@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
         const code = searchParams.get('code')
         const state = searchParams.get('state')
         const error = searchParams.get('error')
+        const storedState = request.cookies.get('discord_oauth_state')?.value
+
+        if (!state || !storedState || state !== storedState) {
+            return NextResponse.json({ error: 'Invalid Discord OAuth state' }, { status: 400 })
+        }
 
         if (error) {
             console.warn('[Discord OAuth callback] Error from Discord:', error)
@@ -176,3 +181,4 @@ export async function GET(request: NextRequest) {
         )
     }
 }
+

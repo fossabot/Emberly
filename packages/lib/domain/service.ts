@@ -2,11 +2,11 @@
  * Server-side domain service — NOT browser-compatible.
  * Contains shared logic used across domain API routes.
  */
-import type { CustomDomain } from '@/prisma/generated/prisma/client'
+import { Prisma, type CustomDomain } from '@/prisma/generated/prisma/client'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 
-const logger = loggers.domains || loggers.app
+const logger = loggers.domains
 
 /** Regex for a valid hostname (e.g. "img.example.com"). */
 export const DOMAIN_NAME_REGEX = /^([a-z0-9-]+\.)+[a-z]{2,}$/
@@ -47,7 +47,7 @@ export async function persistCfErrorBackoff(
   try {
     await prisma.customDomain.update({
       where: { id: domainId },
-      data: { cfStatus: 'error', cfMeta, cfBackoffCount: next, cfPauseUntil: pauseUntil },
+      data: { cfStatus: 'error', cfMeta: cfMeta as Prisma.InputJsonValue, cfBackoffCount: next, cfPauseUntil: pauseUntil },
     })
   } catch (err) {
     logger.error('Failed to persist CF error backoff state', {

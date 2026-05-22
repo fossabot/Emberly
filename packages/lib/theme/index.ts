@@ -40,9 +40,9 @@ export {
 // Categories
 export {
   THEME_CATEGORIES,
-  CATEGORY_ORDER,
   sortCategories,
   getCategoryLabel,
+  getCategoryOrder,
   getCategoryIcon,
   type ThemeCategory,
 } from './theme-categories'

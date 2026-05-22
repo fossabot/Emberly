@@ -88,7 +88,7 @@ export async function GET(req: Request) {
     return apiResponse(applications)
   } catch (error) {
     logger.error('Error fetching applications', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -149,7 +149,7 @@ export async function POST(req: Request) {
       applicationId: application.id,
       userId: user.id,
       userName: user.name ?? 'Unknown',
-      userEmail: user.email,
+      userEmail: user.email ?? '',
       type,
     })
 
@@ -162,6 +162,7 @@ export async function POST(req: Request) {
     return apiResponse(application)
   } catch (error) {
     logger.error('Error submitting application', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
+
