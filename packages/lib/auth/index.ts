@@ -419,7 +419,7 @@ export const authOptions: NextAuthOptions = {
             // Only send alert if detection says we should
             if (detection.shouldAlert) {
               await sendTemplateEmail({
-                to: email ?? '',
+                to: userEmail,
                 subject: '⚠️ New device sign-in to your Emberly account',
                 template: NewLoginEmail,
                 props: {

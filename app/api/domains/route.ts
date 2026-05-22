@@ -7,7 +7,7 @@ import { loggers } from '@/packages/lib/logger'
 import { canAddCustomDomain, getPlanLimits, getUserDomainCount } from '@/packages/lib/storage/quota'
 import { calculateDomainSlotBonus } from '@/packages/lib/perks'
 
-const logger = loggers.app.getChildLogger('domains')
+const logger = loggers.domains
 import { createCustomHostname } from '@/packages/lib/cloudflare/client'
 import { isValidDomainName } from '@/packages/lib/domain/service'
 

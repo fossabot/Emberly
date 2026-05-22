@@ -6,7 +6,7 @@ import { Prisma, type CustomDomain } from '@/prisma/generated/prisma/client'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 
-const logger = loggers.app.getChildLogger('domains')
+const logger = loggers.domains
 
 /** Regex for a valid hostname (e.g. "img.example.com"). */
 export const DOMAIN_NAME_REGEX = /^([a-z0-9-]+\.)+[a-z]{2,}$/

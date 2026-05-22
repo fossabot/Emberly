@@ -7,7 +7,7 @@ import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 import { getCustomHostname } from '@/packages/lib/cloudflare/client'
 
-const logger = loggers.app.getChildLogger('domains')
+const logger = loggers.domains
 const resolveTxt = dns.promises.resolveTxt
 
 // Simple in-memory cache for TXT lookups to avoid hammering DNS during client polling.

@@ -5,8 +5,10 @@ import { loggers } from '@/packages/lib/logger'
 const logger = loggers.api
 
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
+  let username = 'unknown'
+
   try {
-    const { username } = await params
+    ;({ username } = await params)
     logger.info('Fetching public profile', { username })
 
     const user = await prisma.user.findFirst({
@@ -48,7 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     return NextResponse.json(user)
   } catch (error) {
     logger.error('Error fetching public profile:', error as Error, {
-      username: username,
+      username,
     })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

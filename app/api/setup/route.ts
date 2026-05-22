@@ -137,7 +137,7 @@ export async function POST(req: Request) {
           enableBackgroundEffect: false,
           favicon: null,
           customColors: {} as Record<string, string>,
-          systemThemes: false,
+          systemThemes: {},
         },
         advanced: {
           customCSS: '',
