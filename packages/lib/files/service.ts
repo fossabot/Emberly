@@ -206,6 +206,7 @@ export async function deleteFilesWithCleanup(
   deletedCount: number
   failedCount: number
   totalStorageBytes: number
+  error?: string
 }> {
   let deletedCount = 0
   let failedCount = 0
@@ -215,7 +216,20 @@ export async function deleteFilesWithCleanup(
     where: { id: { in: fileIds }, userId },
   })
 
-  const storageProvider = await getStorageProvider()
+  let storageProvider: Awaited<ReturnType<typeof getStorageProvider>>
+  try {
+    storageProvider = await getStorageProvider()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to initialize storage provider'
+    logger.error('Failed to initialize storage provider for bulk delete', error as Error, { userId })
+    return {
+      success: false,
+      deletedCount: 0,
+      failedCount: files.length,
+      totalStorageBytes: 0,
+      error: message,
+    }
+  }
 
   for (const file of files) {
     try {

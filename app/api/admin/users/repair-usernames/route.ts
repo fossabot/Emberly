@@ -107,7 +107,7 @@ export async function POST(req: Request) {
       if (processedNames.has(newName)) {
         results.push({
           userId: user.id,
-          email: user.email!,
+          email: user.email ?? '',
           oldName: user.name!,
           newName,
           status: 'skipped',
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
       if (existingUser) {
         results.push({
           userId: user.id,
-          email: user.email!,
+          email: user.email ?? '',
           oldName: user.name!,
           newName,
           status: 'skipped',
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
       if (dryRun) {
         results.push({
           userId: user.id,
-          email: user.email!,
+          email: user.email ?? '',
           oldName: user.name!,
           newName,
           status: 'success',

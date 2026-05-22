@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Generate random state for CSRF protection
-        const state = Math.random().toString(36).substring(2, 15)
+        const state = crypto.randomUUID()
 
         // Store state in a short-lived cookie (5 minutes)
         const response = NextResponse.redirect(
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://emberly.ca'
     try {
         // Generate random state for CSRF protection
-        const state = Math.random().toString(36).substring(2, 15)
+        const state = crypto.randomUUID()
 
         // Store state in a short-lived cookie (5 minutes)
         const response = NextResponse.redirect(

@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
         const code = searchParams.get('code')
         const state = searchParams.get('state')
         const error = searchParams.get('error')
+        const storedState = request.cookies.get('discord_oauth_state')?.value
+
+        if (!state || !storedState || state !== storedState) {
+            return NextResponse.json({ error: 'Invalid Discord OAuth state' }, { status: 400 })
+        }
 
         if (error) {
             console.warn('[Discord OAuth callback] Error from Discord:', error)
