@@ -593,16 +593,10 @@ export type EventTypeMap = {
   // MODERATION EVENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  'moderation.content-reported': {
-    reportId: string
-    contentType: string
-    contentId: string
-    contentName: string
-    reporterUserId: string
-    reporterUserName: string
-    category: string
-    reason: string
-  }
+export const EventCategories = {
+  moderation: ['moderation.content-reported', 'moderation.user-reported', 'moderation.report-resolved', 'moderation.squad-reported', 'moderation.squad-report-resolved'],
+  ...
+} as const
 
   'moderation.user-reported': {
     reportId: string
