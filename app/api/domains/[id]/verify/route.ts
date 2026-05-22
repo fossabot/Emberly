@@ -43,7 +43,9 @@ async function dohResolveTxt(name: string): Promise<string[]> {
     }
     return out
   } catch (err) {
-    logger.debug('DoH TXT lookup exception', err instanceof Error ? err.message : String(err))
+    logger.debug('DoH TXT lookup exception', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     return []
   }
 }
@@ -60,7 +62,9 @@ async function getTxtRecords(name: string): Promise<string[]> {
     txtLookupCache.set(name, { records, expiresAt: now + DEFAULT_CACHE_TTL_MS })
     return records
   } catch (err) {
-    logger.debug('System TXT lookup failed, falling back to DoH', err instanceof Error ? err.message : String(err))
+    logger.debug('System TXT lookup failed, falling back to DoH', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     const records = await dohResolveTxt(name)
     txtLookupCache.set(name, { records, expiresAt: now + DEFAULT_CACHE_TTL_MS })
     return records
