@@ -251,7 +251,12 @@ export async function PUT(req: Request) {
       }).catch((err) => console.error('[Events] Failed to emit account.profile-updated', err))
     }
 
-    return apiResponse<ProfileResponse>(updatedUser)
+    const profileResponse: ProfileResponse = {
+      ...updatedUser,
+      emailPreferences: updatedUser.emailPreferences as ProfileResponse['emailPreferences'],
+      discordPreferences: updatedUser.discordPreferences as ProfileResponse['discordPreferences'],
+    }
+    return apiResponse<ProfileResponse>(profileResponse)
   } catch (error) {
     logger.error('Profile update error:', error as Error)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)

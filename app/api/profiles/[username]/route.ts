@@ -48,7 +48,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     return NextResponse.json(user)
   } catch (error) {
     logger.error('Error fetching public profile:', error as Error, {
-      username,
+      username: username,
     })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

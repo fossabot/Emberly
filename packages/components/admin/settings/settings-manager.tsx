@@ -587,8 +587,8 @@ export function SettingsManager() {
 
 			const newConfig = { ...workingConfig }
 			newConfig.settings[section] = {
-				...(newConfig.settings[section] ?? {}),
-				...(value as EmberlyConfig['settings'][T]),
+				...(newConfig.settings[section] as Record<string, unknown> ?? {}),
+				...(value as Record<string, unknown>),
 			} as EmberlyConfig['settings'][T]
 			setWorkingConfig(newConfig)
 		},
@@ -754,7 +754,7 @@ export function SettingsManager() {
 	const handleThemePresetChange = (themeId: string, backgroundEffect: string, animationSpeed: string) => {
 		handleSettingChange('appearance', {
 			theme: themeId,
-			backgroundEffect: backgroundEffect as BackgroundEffect,
+			backgroundEffect: backgroundEffect as EmberlyConfig['settings']['appearance']['backgroundEffect'],
 			animationSpeed: animationSpeed as AnimationSpeed,
 		})
 	}
@@ -799,8 +799,8 @@ export function SettingsManager() {
 	) => {
 		handleSettingChange('appearance', {
 			theme: themeId,
-			backgroundEffect: (meta?.backgroundEffect || 'none') as BackgroundEffect,
-			animationSpeed: (meta?.animationSpeed || 'medium') as AnimationSpeed,
+		backgroundEffect: (meta?.backgroundEffect || 'none') as EmberlyConfig['settings']['appearance']['backgroundEffect'],
+		animationSpeed: (meta?.animationSpeed || 'medium') as AnimationSpeed,
 			customColors: colors,
 		})
 	}, [handleSettingChange])

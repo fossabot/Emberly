@@ -149,7 +149,7 @@ export async function POST(req: Request) {
       applicationId: application.id,
       userId: user.id,
       userName: user.name ?? 'Unknown',
-      userEmail: user.email,
+      userEmail: user.email ?? '',
       type,
     })
 

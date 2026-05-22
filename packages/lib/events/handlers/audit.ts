@@ -1,4 +1,5 @@
 import type { BaseEvent, EventType, RequestContext } from '@/packages/types/events'
+import { Prisma } from '@/prisma/generated/prisma/client'
 
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'

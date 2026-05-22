@@ -284,9 +284,9 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
   for (const key in source) {
     if (source[key] !== undefined) {
       if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-        result[key] = deepMerge(target[key] || {}, source[key] as any)
+        result[key] = deepMerge(target[key] ?? {} as T[Extract<keyof T, string>], source[key] as T[Extract<keyof T, string>])
       } else {
-        result[key] = source[key] as any
+        result[key] = source[key] as T[Extract<keyof T, string>]
       }
     }
   }
@@ -477,8 +477,8 @@ export async function updateConfigSection<
       settings: {
         ...config.settings,
         [section]: {
-          ...config.settings[section],
-          ...data,
+          ...(config.settings[section] as Record<string, unknown>),
+          ...(data as Record<string, unknown>),
         },
       },
     }

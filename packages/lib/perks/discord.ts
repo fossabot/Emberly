@@ -222,7 +222,6 @@ export async function verifyDiscordBoosterStatus(
             perkDescription: 'Unlock exclusive perks for boosting the Emberly Discord server',
             perkIcon: '🚀',
             expiresAt: undefined,
-            viewUrl: '/profile?tab=security#linked-accounts',
           })
         }
       }

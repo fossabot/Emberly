@@ -98,7 +98,6 @@ export async function verifyContributorStatus(
             perkDescription: 'Unlock exclusive perks for contributing to the Emberly open source project',
             perkIcon: '⭐',
             expiresAt: undefined, // Contributor perk doesn't expire
-            viewUrl: '/profile?tab=security#linked-accounts',
           })
         }
       } else {

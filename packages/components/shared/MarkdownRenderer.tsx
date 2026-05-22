@@ -11,9 +11,9 @@ export default function MarkdownRenderer({ children }: { children: string }) {
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]}
       components={{
-        img: ({ src, alt }: { src?: string; alt?: string }) => (
+        img: (props: Record<string, unknown>) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt={alt || ''} className="rounded-md mx-auto my-4 max-w-full" />
+          <img src={props.src as string} alt={(props.alt as string) || ''} className="rounded-md mx-auto my-4 max-w-full" />
         ),
         code: ({ node, inline, className, children, ...props }) => {
           if (inline) return <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>{children}</code>

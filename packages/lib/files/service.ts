@@ -169,7 +169,7 @@ export async function deleteFileWithCleanup(
   try {
     // Delete from storage provider
     const storageProvider = await getStorageProvider()
-    await storageProvider.delete(file.path)
+    await storageProvider.deleteFile(file.path)
 
     // Delete from database
     await prisma.file.delete({
@@ -219,7 +219,7 @@ export async function deleteFilesWithCleanup(
 
   for (const file of files) {
     try {
-      await storageProvider.delete(file.path)
+      await storageProvider.deleteFile(file.path)
       await prisma.file.delete({ where: { id: file.id } })
       deletedCount++
       totalStorageBytes += file.size

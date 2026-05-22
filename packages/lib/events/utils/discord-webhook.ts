@@ -6,6 +6,7 @@ export async function notifyDiscord(options: {
     description?: string
     color?: number
     fields?: Array<{ name: string; value: string; inline?: boolean }>
+    timestamp?: string
   }>
 }): Promise<void> {
   if (!options.webhookUrl) return

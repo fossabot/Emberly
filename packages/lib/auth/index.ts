@@ -419,7 +419,7 @@ export const authOptions: NextAuthOptions = {
             // Only send alert if detection says we should
             if (detection.shouldAlert) {
               await sendTemplateEmail({
-                to: email!,
+                to: email ?? '',
                 subject: '⚠️ New device sign-in to your Emberly account',
                 template: NewLoginEmail,
                 props: {
@@ -490,10 +490,8 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  // Trust multiple origins for cross-domain auth
-  // Use NEXTAUTH_TRUSTED_ORIGINS env var to specify allowed origins
-  // Format: "https://emberly.site,https://embrly.ca"
-  trustHost: NEXTAUTH_TRUSTED_ORIGINS.length > 0 || process.env.NEXTAUTH_URL?.includes('localhost'),
+  // Trust multiple origins for cross-domain auth (supported at runtime in next-auth v4)
+  ...((NEXTAUTH_TRUSTED_ORIGINS.length > 0 || (process.env.NEXTAUTH_URL ?? '').includes('localhost')) ? { trustHost: true as any } : {}),
   // Configure cookie domain only when NEXTAUTH_COOKIE_DOMAIN is provided.
   // This makes the session cookie valid across subdomains (e.g. uploads.example.com)
   // but cannot be used to share cookies across unrelated registrable domains.

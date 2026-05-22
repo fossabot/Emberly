@@ -64,7 +64,7 @@ export async function GET(
     // Parallel: fetch commits for all repos simultaneously
     const repoCommitResults = await Promise.allSettled(
       orgRepos.map(async (repo) => {
-        const commits = await getRepoCommits('EmberlyOSS', repo.name, githubAccount.providerUsername, 5)
+        const commits = await getRepoCommits('EmberlyOSS', repo.name,       githubAccount.providerUsername!, 5)
         return { repo, commits }
       })
     )

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { join } from 'path'
 
+import { Prisma } from '@/prisma/generated/prisma/client'
 import { authOptions } from '@/packages/lib/auth'
 import { getConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
@@ -73,8 +74,8 @@ export async function POST(req: Request) {
     // Persist updated config under the new Emberly key and write config file
     await prisma.config.upsert({
       where: { key: 'emberly_config' },
-      create: { key: 'emberly_config', value: config },
-      update: { value: config },
+      create: { key: 'emberly_config', value: config as Prisma.InputJsonValue },
+      update: { value: config as Prisma.InputJsonValue },
     })
 
     await storageProvider.uploadFile(

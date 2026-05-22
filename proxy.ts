@@ -43,7 +43,7 @@ function getClientIP(request: NextRequest): string | undefined {
     return cfConnectingIP
   }
 
-  return request.ip
+  return request.headers.get('x-client-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
 }
 
 /**

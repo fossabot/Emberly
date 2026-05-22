@@ -130,13 +130,13 @@ export async function POST(req: Request) {
         },
         appearance: {
           theme: 'default-dark',
-          themeType: 'dark',
-          backgroundEffect: 'none',
-          animationSpeed: 1,
+          themeType: 'static' as const,
+          backgroundEffect: 'none' as const,
+          animationSpeed: 'medium' as const,
           enableAnimations: true,
           enableBackgroundEffect: false,
           favicon: null,
-          customColors: {},
+          customColors: {} as Record<string, string>,
           systemThemes: false,
         },
         advanced: {

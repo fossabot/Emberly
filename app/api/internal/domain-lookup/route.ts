@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ found: false })
     }
 
-    const user = domain.user
-    const profileSlug = user.vanityId || user.urlId || user.name || ''
+    const user = domain.user!
+    const profileSlug = user.vanityId ?? user.urlId ?? user.name ?? ''
 
     return NextResponse.json({
       found: true,

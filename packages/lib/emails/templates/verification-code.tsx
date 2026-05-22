@@ -12,7 +12,6 @@ import {
   Button,
   Hr,
   Preview,
-  Code,
 } from '@react-email/components'
 import { Tailwind } from '@react-email/tailwind'
 

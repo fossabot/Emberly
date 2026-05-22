@@ -144,12 +144,13 @@ export async function POST(req: Request) {
       const fileSizeMB = bytesToMB(size)
       
       // Check plan upload size cap
-      const maxUploadBytes = planLimits.uploadSizeCapMB * 1024 * 1024
+      const uploadSizeCapMB = planLimits.uploadSizeCapMB ?? 0
+      const maxUploadBytes = uploadSizeCapMB * 1024 * 1024
       if (size > maxUploadBytes) {
         return NextResponse.json(
           {
             error: `File exceeds ${planLimits.planName} plan limit`,
-            message: `Maximum file size for ${planLimits.planName} is ${planLimits.uploadSizeCapMB}MB. Upgrade your plan to upload larger files.`,
+            message: `Maximum file size for ${planLimits.planName} is ${uploadSizeCapMB}MB. Upgrade your plan to upload larger files.`,
             action: 'upgrade',
           },
           { status: 413 }

@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
     }
 
     const stripe = await getStripeClient()
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
     }
 
     const json = await req.json().catch(() => null)

@@ -593,6 +593,17 @@ export type EventTypeMap = {
   // MODERATION EVENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  'moderation.content-reported': {
+    reportId: string
+    contentType: string
+    contentId: string
+    contentName: string
+    reporterUserId: string
+    reporterUserName: string
+    category: string
+    reason: string
+  }
+
   'moderation.user-reported': {
     reportId: string
     reportedUserId: string

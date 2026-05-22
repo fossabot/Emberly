@@ -155,8 +155,8 @@ export async function POST(req: Request) {
 
           results.push({
             userId: user.id,
-            email: user.email,
-            oldName: user.name,
+            email: user.email ?? '',
+            oldName: user.name ?? '',
             newName,
             status: 'success',
           })
@@ -165,8 +165,8 @@ export async function POST(req: Request) {
         } catch (err) {
           results.push({
             userId: user.id,
-            email: user.email,
-            oldName: user.name,
+            email: user.email ?? '',
+            oldName: user.name ?? '',
             newName,
             status: 'error',
             reason: err instanceof Error ? err.message : 'Unknown error',

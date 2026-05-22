@@ -134,7 +134,7 @@ export async function sendEmail({
     }
 
     const integrations = await getIntegrations()
-    const provider = (integrations as Record<string, unknown>).emailProvider as string | undefined ?? 'resend'
+    const provider = ((integrations as Record<string, unknown>).emailProvider as string | undefined) ?? 'resend'
 
     let messageId: string | undefined
 
