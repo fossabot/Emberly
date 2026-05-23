@@ -1,17 +1,18 @@
 import React from 'react'
+
 import {
+  Body,
+  Button,
+  Column,
   Container,
   Head,
-  Html,
-  Body,
-  Section,
-  Row,
-  Column,
-  Text,
-  Link,
-  Button,
   Hr,
+  Html,
+  Link,
   Preview,
+  Row,
+  Section,
+  Text,
 } from '@react-email/components'
 import { Tailwind } from '@react-email/tailwind'
 
@@ -38,7 +39,7 @@ export function MagicLinkEmail({
             <Section className="mb-8">
               <Row>
                 <Column align="left">
-                  <Link href="https://emberly.ca" className="inline-block">
+                  <Link href="https://embrly.ca" className="inline-block">
                     <Text className="m-0 text-xl font-bold text-orange-600">
                       Emberly
                     </Text>
@@ -91,7 +92,9 @@ export function MagicLinkEmail({
               <Row className="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                 <Column align="center">
                   <Text className="m-0 text-sm text-yellow-800">
-                    <strong>⏰ This link expires in {expiresInMinutes} minutes</strong>
+                    <strong>
+                      ⏰ This link expires in {expiresInMinutes} minutes
+                    </strong>
                   </Text>
                 </Column>
               </Row>
@@ -115,7 +118,9 @@ export function MagicLinkEmail({
               <Row className="mt-6">
                 <Column className="rounded-lg bg-blue-50 p-4 border border-blue-200">
                   <Text className="m-0 text-sm text-blue-900">
-                    <strong>Didn't request this?</strong> If you didn't request a sign-in link, you can safely ignore this email. This link is unique and only works for your account.
+                    <strong>Didn't request this?</strong> If you didn't request
+                    a sign-in link, you can safely ignore this email. This link
+                    is unique and only works for your account.
                   </Text>
                 </Column>
               </Row>
@@ -124,7 +129,9 @@ export function MagicLinkEmail({
               <Row className="mt-4">
                 <Column>
                   <Text className="m-0 text-xs text-gray-600">
-                    <strong>About magic links:</strong> This is a secure way to sign in without remembering a password. The link is unique to you and only works once.
+                    <strong>About magic links:</strong> This is a secure way to
+                    sign in without remembering a password. The link is unique
+                    to you and only works once.
                   </Text>
                 </Column>
               </Row>

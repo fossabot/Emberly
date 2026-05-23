@@ -2,7 +2,6 @@
  * CORS utilities for file serving and embedding
  * Enables users to embed Emberly-hosted files/images on external sites
  */
-
 import type { NextResponse } from 'next/server'
 
 export interface CORSConfig {
@@ -45,15 +44,18 @@ export function addCORSHeaders(
   response.headers.set('Access-Control-Allow-Origin', allowOrigin)
   response.headers.set(
     'Access-Control-Allow-Methods',
-    config.allowMethods?.join(', ') || DEFAULT_CORS_CONFIG.allowMethods!.join(', ')
+    config.allowMethods?.join(', ') ||
+      DEFAULT_CORS_CONFIG.allowMethods!.join(', ')
   )
   response.headers.set(
     'Access-Control-Allow-Headers',
-    config.allowHeaders?.join(', ') || DEFAULT_CORS_CONFIG.allowHeaders!.join(', ')
+    config.allowHeaders?.join(', ') ||
+      DEFAULT_CORS_CONFIG.allowHeaders!.join(', ')
   )
   response.headers.set(
     'Access-Control-Expose-Headers',
-    config.exposeHeaders?.join(', ') || DEFAULT_CORS_CONFIG.exposeHeaders!.join(', ')
+    config.exposeHeaders?.join(', ') ||
+      DEFAULT_CORS_CONFIG.exposeHeaders!.join(', ')
   )
   response.headers.set(
     'Access-Control-Max-Age',
@@ -123,11 +125,16 @@ export function getCORSHeaders(
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': config.allowMethods?.join(', ') || 'GET, HEAD, OPTIONS',
+    'Access-Control-Allow-Methods':
+      config.allowMethods?.join(', ') || 'GET, HEAD, OPTIONS',
     'Access-Control-Allow-Headers':
       config.allowHeaders?.join(', ') || 'Content-Type, Range',
-    'Access-Control-Expose-Headers': config.exposeHeaders?.join(', ') || 'Content-Type, Content-Length, Content-Range, Accept-Ranges, Cache-Control',
-    'Access-Control-Max-Age': (config.maxAge || 86400).toString(),
+    'Access-Control-Expose-Headers':
+      config.exposeHeaders?.join(', ') ||
+      'Content-Type, Content-Length, Content-Range, Accept-Ranges, Cache-Control',
+    'Access-Control-Max-Age': (
+      config.maxAge ?? DEFAULT_CORS_CONFIG.maxAge!
+    ).toString(),
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer-when-downgrade',
   }

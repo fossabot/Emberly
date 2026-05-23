@@ -7,11 +7,17 @@ import {
   PaginationMeta,
 } from '@/packages/types/dto/api-responses'
 
-export function apiResponse<T>(data: T): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    success: true,
-  })
+export function apiResponse<T>(
+  data: T,
+  status: number = HTTP_STATUS.OK
+): NextResponse<ApiResponse<T>> {
+  return NextResponse.json(
+    {
+      data,
+      success: true,
+    },
+    { status }
+  )
 }
 
 export function paginatedResponse<T>(

@@ -1,11 +1,10 @@
-import { z } from 'zod'
-
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
 import { prisma } from '@/packages/lib/database/prisma'
 import { events } from '@/packages/lib/events'
 import { loggers } from '@/packages/lib/logger'
 import { ReportCategory } from '@/prisma/generated/prisma/client'
+import { z } from 'zod'
 
 const logger = loggers.api.getChildLogger('content-reports')
 
@@ -19,7 +18,10 @@ const SubmitContentReportSchema = z.object({
     .string()
     .min(10, 'Reason must be at least 10 characters')
     .max(500, 'Reason must be at most 500 characters'),
-  details: z.string().max(2000, 'Details must be at most 2000 characters').optional(),
+  details: z
+    .string()
+    .max(2000, 'Details must be at most 2000 characters')
+    .optional(),
 })
 
 export async function POST(req: Request) {
@@ -43,7 +45,10 @@ export async function POST(req: Request) {
       })
       if (!file) return apiError('File not found', HTTP_STATUS.NOT_FOUND)
       if (file.userId === user.id) {
-        return apiError('You cannot report your own content', HTTP_STATUS.BAD_REQUEST)
+        return apiError(
+          'You cannot report your own content',
+          HTTP_STATUS.BAD_REQUEST
+        )
       }
 
       const report = await prisma.contentReport.create({
@@ -68,7 +73,11 @@ export async function POST(req: Request) {
         reason,
       })
 
-      logger.info('Content report submitted', { reportId: report.id, contentType, contentId })
+      logger.info('Content report submitted', {
+        reportId: report.id,
+        contentType,
+        contentId,
+      })
       return apiResponse(report)
     }
 
@@ -77,9 +86,12 @@ export async function POST(req: Request) {
         where: { id: contentId },
         select: { id: true, userId: true, shortCode: true, targetUrl: true },
       })
-      if (!url) return apiError('URL not found')
+      if (!url) return apiError('URL not found', HTTP_STATUS.NOT_FOUND)
       if (url.userId === user.id) {
-        return apiError('You cannot report your own content', HTTP_STATUS.BAD_REQUEST)
+        return apiError(
+          'You cannot report your own content',
+          HTTP_STATUS.BAD_REQUEST
+        )
       }
 
       const report = await prisma.contentReport.create({
@@ -104,7 +116,11 @@ export async function POST(req: Request) {
         reason,
       })
 
-      logger.info('Content report submitted', { reportId: report.id, contentType, contentId })
+      logger.info('Content report submitted', {
+        reportId: report.id,
+        contentType,
+        contentId,
+      })
       return apiResponse(report)
     }
 
@@ -114,4 +130,3 @@ export async function POST(req: Request) {
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
-
