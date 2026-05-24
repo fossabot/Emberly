@@ -6,16 +6,18 @@ import { AuthProvider } from '@/packages/components/providers/auth-provider'
 import { QueryProvider } from '@/packages/components/providers/query-provider'
 import { ThemeProviderWrapper } from '@/packages/components/providers/theme-provider-wrapper'
 import { SetupChecker } from '@/packages/components/setup-checker'
+import Snowfall from '@/packages/components/theme/snowfall'
+import {
+  ThemeEffectsContainer,
+  ThemeEffectsWrapper,
+} from '@/packages/components/theme/theme-effects-wrapper'
 import { ThemeInitializer } from '@/packages/components/theme/theme-initializer'
 import { ThemeProvider } from '@/packages/components/theme/theme-provider'
-import { ThemeEffectsWrapper, ThemeEffectsContainer } from '@/packages/components/theme/theme-effects-wrapper'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/packages/lib/auth'
-import { prisma } from '@/packages/lib/database/prisma'
 import { Toaster } from '@/packages/components/ui/toaster'
-import Snowfall from '@/packages/components/theme/snowfall'
-
+import { authOptions } from '@/packages/lib/auth'
 import { getConfig } from '@/packages/lib/config'
+import { prisma } from '@/packages/lib/database/prisma'
+import { getServerSession } from 'next-auth'
 
 import './globals.css'
 
@@ -37,7 +39,9 @@ const inter = localFont({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
+  ),
   title: null,
   description: null,
   icons: {
@@ -57,7 +61,8 @@ export default async function RootLayout({
 }) {
   const config = await getConfig()
   const customCSS = config.settings.advanced?.customCSS || ''
-  const hasCustomFont = typeof customCSS === 'string' ? customCSS.includes('font-family') : false
+  const hasCustomFont =
+    typeof customCSS === 'string' ? customCSS.includes('font-family') : false
 
   if (config.settings.appearance.favicon) {
     metadata.icons = {
@@ -82,27 +87,37 @@ export default async function RootLayout({
     userCustomColors = (user?.customColors as Record<string, string>) ?? null
   }
 
-  const defaultTheme = typeof config.settings.appearance.theme === 'string'
-    ? config.settings.appearance.theme
-    : 'default-dark'
-  const systemColors = typeof config.settings.appearance.customColors === 'object' && config.settings.appearance.customColors
-    ? config.settings.appearance.customColors
-    : {}
+  const defaultTheme =
+    typeof config.settings.appearance.theme === 'string'
+      ? config.settings.appearance.theme
+      : 'default-dark'
+  const systemColors =
+    typeof config.settings.appearance.customColors === 'object' &&
+    config.settings.appearance.customColors
+      ? config.settings.appearance.customColors
+      : {}
 
   return (
-    <html lang="en" data-theme={userTheme ?? defaultTheme} suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme={userTheme ?? defaultTheme}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <ThemeInitializer 
-          userTheme={userTheme} 
+        <ThemeInitializer
+          userTheme={userTheme}
           userCustomColors={userCustomColors}
           systemTheme={defaultTheme}
           systemColors={systemColors}
         />
         <CustomHead />
       </head>
-      <body suppressHydrationWarning className={`${!hasCustomFont ? inter.variable + ' font-sans' : ''} min-h-screen flex flex-col`}>
+      <body
+        suppressHydrationWarning
+        className={`${!hasCustomFont ? inter.variable + ' font-sans' : ''} min-h-screen flex flex-col`}
+      >
         <ThemeProvider
           attribute="class"
           enableSystem={false}

@@ -1,9 +1,8 @@
-import { z } from 'zod'
-
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
+import { z } from 'zod'
 
 const logger = loggers.api.getChildLogger('admin-content-flag')
 
@@ -55,8 +54,10 @@ export async function POST(req: Request) {
     }
 
     if (contentType === 'url') {
-      const url = await prisma.shortenedUrl.findUnique({ where: { id: contentId } })
-      if (!url) return apiError('URL not found')
+      const url = await prisma.shortenedUrl.findUnique({
+        where: { id: contentId },
+      })
+      if (!url) return apiError('URL not found', HTTP_STATUS.NOT_FOUND)
 
       const updated = await prisma.shortenedUrl.update({
         where: { id: contentId },
@@ -83,4 +84,3 @@ export async function POST(req: Request) {
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
-

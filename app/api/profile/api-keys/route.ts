@@ -1,8 +1,7 @@
-import { z } from 'zod'
-
+import { createUserApiKey, listUserApiKeys } from '@/packages/lib/api-keys'
+import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
-import { apiError, apiResponse, HTTP_STATUS } from '@/packages/lib/api/response'
-import { listUserApiKeys, createUserApiKey } from '@/packages/lib/api-keys'
+import { z } from 'zod'
 
 const CreateKeySchema = z.object({
   name: z.string().min(1).max(64),
@@ -24,14 +23,15 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}))
   const parsed = CreateKeySchema.safeParse(body)
-  if (!parsed.success) return apiError('name is required (max 64 chars)')
+  if (!parsed.success)
+    return apiError('name is required (max 64 chars)', HTTP_STATUS.BAD_REQUEST)
 
   try {
     const result = await createUserApiKey(user!.id, parsed.data.name)
-    return apiResponse(result)
+    return apiResponse(result, HTTP_STATUS.CREATED)
   } catch (err: any) {
-    if (err.message.startsWith('Maximum')) return apiError(err.message, HTTP_STATUS.UNPROCESSABLE_ENTITY)
+    if (err.message.startsWith('Maximum'))
+      return apiError(err.message, HTTP_STATUS.UNPROCESSABLE_ENTITY)
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
-
