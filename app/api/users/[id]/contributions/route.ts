@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/packages/lib/database/prisma'
-import { getCommitDetail, getOrgRepos, getRepoCommits } from '@/packages/lib/github'
+import {
+  getCommitDetail,
+  getOrgRepos,
+  getRepoCommits,
+} from '@/packages/lib/github'
 import { getContributorLinesOfCode } from '@/packages/lib/perks/github'
 
 export async function GET(
@@ -23,6 +27,7 @@ export async function GET(
       },
       select: {
         id: true,
+        perkRoles: true,
         linkedAccounts: {
           where: { provider: 'github' },
           select: {
@@ -38,23 +43,33 @@ export async function GET(
     }
 
     const githubAccount = user.linkedAccounts[0]
-    
+
     if (!githubAccount.providerUsername) {
       return NextResponse.json({ linesOfCode: 0, repos: [] }, { status: 200 })
     }
 
-    // Get contribution stats
-    const linesOfCode = await getContributorLinesOfCode(
-      githubAccount.providerUsername!,
-      ''
+    // Get contribution stats from DB perkRoles (cached) instead of full re-calculation
+    const contributorRole = user.perkRoles.find((r: string) =>
+      r.startsWith('CONTRIBUTOR:')
     )
+    let linesOfCode = 0
+    if (contributorRole) {
+      linesOfCode = parseInt(contributorRole.split(':')[1] || '0')
+      if (linesOfCode > 0 && linesOfCode < 100) linesOfCode = linesOfCode * 1000 // legacy format
+    }
 
     // Fetch EmberlyOSS org repos and find ones the user contributed to
     const orgRepos = await getOrgRepos('EmberlyOSS')
 
     const recentCommits: Array<{
-      sha: string; message: string; date: string; url: string
-      repo: string; additions: number; deletions: number; filesChanged: number
+      sha: string
+      message: string
+      date: string
+      url: string
+      repo: string
+      additions: number
+      deletions: number
+      filesChanged: number
     }> = []
     let totalFilesChanged = 0
     let totalAdditions = 0
@@ -64,14 +79,24 @@ export async function GET(
     // Parallel: fetch commits for all repos simultaneously
     const repoCommitResults = await Promise.allSettled(
       orgRepos.map(async (repo) => {
-        const commits = await getRepoCommits('EmberlyOSS', repo.name,       githubAccount.providerUsername!, 5)
+        const commits = await getRepoCommits(
+          'EmberlyOSS',
+          repo.name,
+          githubAccount.providerUsername!,
+          5
+        )
         return { repo, commits }
       })
     )
 
     const reposWithCommits = repoCommitResults
-      .filter((r): r is PromiseFulfilledResult<{ repo: (typeof orgRepos)[0]; commits: Awaited<ReturnType<typeof getRepoCommits>> }> =>
-        r.status === 'fulfilled' && r.value.commits.length > 0
+      .filter(
+        (
+          r
+        ): r is PromiseFulfilledResult<{
+          repo: (typeof orgRepos)[0]
+          commits: Awaited<ReturnType<typeof getRepoCommits>>
+        }> => r.status === 'fulfilled' && r.value.commits.length > 0
       )
       .map((r) => r.value)
 
@@ -79,14 +104,29 @@ export async function GET(
       contributedRepos.push(repo)
     }
 
-    // Parallel: fetch all commit details across all repos simultaneously
+    // Collect all commits from all repos and sort them by date BEFORE fetching details
+    const allCommitsRaw = reposWithCommits.flatMap(({ repo, commits }) =>
+      commits.map((commit) => ({ repo, commit }))
+    )
+    allCommitsRaw.sort(
+      (a, b) =>
+        new Date(b.commit.commit.author.date).getTime() -
+        new Date(a.commit.commit.author.date).getTime()
+    )
+
+    // Take only the top 10 most recent commits to fetch details for
+    const topCommitsRaw = allCommitsRaw.slice(0, 10)
+
+    // Parallel: fetch commit details ONLY for the top 10 commits
     const commitDetailResults = await Promise.allSettled(
-      reposWithCommits.flatMap(({ repo, commits }) =>
-        commits.map(async (commit) => {
-          const detail = await getCommitDetail('EmberlyOSS', repo.name, commit.sha)
-          return { repo, commit, detail }
-        })
-      )
+      topCommitsRaw.map(async ({ repo, commit }) => {
+        const detail = await getCommitDetail(
+          'EmberlyOSS',
+          repo.name,
+          commit.sha
+        )
+        return { repo, commit, detail }
+      })
     )
 
     for (const result of commitDetailResults) {
@@ -112,8 +152,10 @@ export async function GET(
       totalDeletions += deletions
     }
 
-    // Sort commits by date and limit to 10 most recent
-    recentCommits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    // Note: recentCommits is already roughly sorted, but we sort it exactly just to be sure
+    recentCommits.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
     const topCommits = recentCommits.slice(0, 10)
 
     return NextResponse.json({
@@ -135,11 +177,19 @@ export async function GET(
     })
   } catch (error) {
     console.error('[GET /api/users/[id]/contributions]', error)
-    return NextResponse.json({ 
-      linesOfCode: 0, 
-      repos: [], 
-      recentCommits: [], 
-      stats: { totalFilesChanged: 0, totalAdditions: 0, totalDeletions: 0, totalRepos: 0 } 
-    }, { status: 200 })
+    return NextResponse.json(
+      {
+        linesOfCode: 0,
+        repos: [],
+        recentCommits: [],
+        stats: {
+          totalFilesChanged: 0,
+          totalAdditions: 0,
+          totalDeletions: 0,
+          totalRepos: 0,
+        },
+      },
+      { status: 200 }
+    )
   }
 }

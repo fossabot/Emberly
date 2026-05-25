@@ -245,11 +245,14 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const botResponse = await handleBotRequest(request)
-  if (botResponse) return botResponse
-
+  // ── Video/Audio Media Requests ─────────────────────────────────────────
+  // Must run BEFORE the bot handler. Discord's media proxy uses a UA that
+  // contains "discord", so the bot handler would catch it and serve HTML.
+  // By checking for Range headers or non-HTML Accept first, media playback
+  // requests get raw file bytes while crawlers (who send Accept: text/html)
+  // still fall through to the bot handler for OG metadata.
   if (
-    FILE_URL_PATTERN.test(pathname) &&
+    FILE_URL_PATTERN.test(normalizedPathname) &&
     !normalizedPathname.endsWith('/raw') &&
     !normalizedPathname.endsWith('/direct')
   ) {
@@ -268,6 +271,9 @@ export async function proxy(request: NextRequest) {
       }
     }
   }
+
+  const botResponse = await handleBotRequest(request)
+  if (botResponse) return botResponse
 
   return NextResponse.next()
 }
