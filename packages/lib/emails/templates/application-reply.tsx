@@ -102,7 +102,11 @@ export function ApplicationReplyEmail({
                 <Row>
                   <Column>
                     <Text className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      {senderName ? `Reply from ${senderName}` : (isStaffReply ? 'Reply from Emberly Staff' : 'Reply from Applicant')}
+                      {senderName
+                        ? `Reply from ${senderName}`
+                        : isStaffReply
+                          ? 'Reply from Emberly Staff'
+                          : 'Reply from Applicant'}
                     </Text>
                     <Hr className="my-2 border-gray-200" />
                     <Text className="m-0 text-base leading-relaxed text-gray-800 whitespace-pre-wrap">
@@ -132,10 +136,12 @@ export function ApplicationReplyEmail({
               <Row>
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-400">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                   <Text className="m-0 mt-1 text-xs text-gray-400">
-                    You received this email because of activity on your Emberly application.
+                    You received this email because of activity on your Emberly
+                    application.
                   </Text>
                 </Column>
               </Row>

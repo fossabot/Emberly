@@ -64,10 +64,12 @@ export function SubscriptionCancelledEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Your Emberly subscription has been cancelled. Your account will revert to the free plan after the cancellation date.
+                    Your Emberly subscription has been cancelled. Your account
+                    will revert to the free plan after the cancellation date.
                   </Text>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    <strong>Effective date:</strong> {new Date(effectiveAt).toLocaleString()}
+                    <strong>Effective date:</strong>{' '}
+                    {new Date(effectiveAt).toLocaleString()}
                   </Text>
                   {reason && (
                     <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
@@ -80,7 +82,9 @@ export function SubscriptionCancelledEmail({
               <Row className="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                 <Column>
                   <Text className="m-0 text-sm text-yellow-800">
-                    <strong>ℹ️ What happens next:</strong> You can reactivate your subscription at any time by visiting your billing settings.
+                    <strong>ℹ️ What happens next:</strong> You can reactivate
+                    your subscription at any time by visiting your billing
+                    settings.
                   </Text>
                 </Column>
               </Row>
@@ -92,7 +96,8 @@ export function SubscriptionCancelledEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

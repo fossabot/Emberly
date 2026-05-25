@@ -68,8 +68,8 @@ export function StorageAssignedEmail({
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
                     Great news! You've been assigned{' '}
-                    <strong className="text-green-700">{storageAmount}</strong> of
-                    additional storage {reason}.
+                    <strong className="text-green-700">{storageAmount}</strong>{' '}
+                    of additional storage {reason}.
                   </Text>
                 </Column>
               </Row>
@@ -129,7 +129,8 @@ export function StorageAssignedEmail({
                     📊 Storage Tips:
                   </Text>
                   <Text className="m-0 text-sm text-blue-900">
-                    • Keep track of your storage usage to avoid running out of space
+                    • Keep track of your storage usage to avoid running out of
+                    space
                   </Text>
                   <Text className="m-0 text-sm text-blue-900">
                     • Delete files you no longer need to free up space
@@ -147,7 +148,8 @@ export function StorageAssignedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

@@ -5,22 +5,34 @@ import React from 'react'
 // No dependency on marked's internal API, which changes across major versions.
 
 function inlineMarkdown(text: string): string {
-  return text
-    // Bold + italic ***text***
-    .replace(/\*\*\*(.+?)\*\*\*/g,
-      '<strong style="font-weight:700;color:#111827;"><em style="font-style:italic;">$1</em></strong>')
-    // Bold **text**
-    .replace(/\*\*(.+?)\*\*/g,
-      '<strong style="font-weight:700;color:#111827;">$1</strong>')
-    // Italic *text* (not **)
-    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g,
-      '<em style="font-style:italic;">$1</em>')
-    // Inline code `text`
-    .replace(/`([^`]+)`/g,
-      '<code style="background:#f3f4f6;border-radius:3px;padding:2px 5px;font-family:monospace;font-size:13px;">$1</code>')
-    // Links [text](url)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" style="color:#ea580c;text-decoration:underline;">$1</a>')
+  return (
+    text
+      // Bold + italic ***text***
+      .replace(
+        /\*\*\*(.+?)\*\*\*/g,
+        '<strong style="font-weight:700;color:#111827;"><em style="font-style:italic;">$1</em></strong>'
+      )
+      // Bold **text**
+      .replace(
+        /\*\*(.+?)\*\*/g,
+        '<strong style="font-weight:700;color:#111827;">$1</strong>'
+      )
+      // Italic *text* (not **)
+      .replace(
+        /(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g,
+        '<em style="font-style:italic;">$1</em>'
+      )
+      // Inline code `text`
+      .replace(
+        /`([^`]+)`/g,
+        '<code style="background:#f3f4f6;border-radius:3px;padding:2px 5px;font-family:monospace;font-size:13px;">$1</code>'
+      )
+      // Links [text](url)
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" style="color:#ea580c;text-decoration:underline;">$1</a>'
+      )
+  )
 }
 
 function markdownToEmailHtml(markdown: string): string {
@@ -32,7 +44,10 @@ function markdownToEmailHtml(markdown: string): string {
     const line = lines[i]
 
     // Blank lines
-    if (line.trim() === '') { i++; continue }
+    if (line.trim() === '') {
+      i++
+      continue
+    }
 
     // Fenced code block ```
     if (line.startsWith('```')) {
@@ -45,15 +60,18 @@ function markdownToEmailHtml(markdown: string): string {
       i++ // skip closing ```
       html.push(
         `<pre style="background:#f3f4f6;border-radius:4px;padding:12px;overflow-x:auto;font-size:13px;margin:0 0 12px 0;">` +
-        `<code style="font-family:monospace;">${codeLines.join('\n')}</code></pre>`
+          `<code style="font-family:monospace;">${codeLines.join('\n')}</code></pre>`
       )
       continue
     }
 
     // Horizontal rule ---
     if (/^---+$/.test(line.trim())) {
-      html.push('<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />')
-      i++; continue
+      html.push(
+        '<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />'
+      )
+      i++
+      continue
     }
 
     // Headings h1 / h2 / h3
@@ -61,16 +79,25 @@ function markdownToEmailHtml(markdown: string): string {
     const h2 = line.match(/^## (.+)$/)
     const h3 = line.match(/^### (.+)$/)
     if (h1) {
-      html.push(`<h1 style="margin:16px 0 8px;font-size:22px;font-weight:700;color:#111827;">${inlineMarkdown(h1[1])}</h1>`)
-      i++; continue
+      html.push(
+        `<h1 style="margin:16px 0 8px;font-size:22px;font-weight:700;color:#111827;">${inlineMarkdown(h1[1])}</h1>`
+      )
+      i++
+      continue
     }
     if (h2) {
-      html.push(`<h2 style="margin:16px 0 8px;font-size:18px;font-weight:700;color:#111827;">${inlineMarkdown(h2[1])}</h2>`)
-      i++; continue
+      html.push(
+        `<h2 style="margin:16px 0 8px;font-size:18px;font-weight:700;color:#111827;">${inlineMarkdown(h2[1])}</h2>`
+      )
+      i++
+      continue
     }
     if (h3) {
-      html.push(`<h3 style="margin:16px 0 8px;font-size:16px;font-weight:700;color:#111827;">${inlineMarkdown(h3[1])}</h3>`)
-      i++; continue
+      html.push(
+        `<h3 style="margin:16px 0 8px;font-size:16px;font-weight:700;color:#111827;">${inlineMarkdown(h3[1])}</h3>`
+      )
+      i++
+      continue
     }
 
     // Blockquote
@@ -82,8 +109,8 @@ function markdownToEmailHtml(markdown: string): string {
       }
       html.push(
         `<blockquote style="margin:0 0 12px 0;padding:8px 16px;border-left:4px solid #e5e7eb;color:#6b7280;font-style:italic;">` +
-        quoteLines.map(l => inlineMarkdown(l)).join('<br/>') +
-        `</blockquote>`
+          quoteLines.map((l) => inlineMarkdown(l)).join('<br/>') +
+          `</blockquote>`
       )
       continue
     }
@@ -94,11 +121,13 @@ function markdownToEmailHtml(markdown: string): string {
       while (i < lines.length && /^[-*] /.test(lines[i])) {
         items.push(
           `<li style="margin-bottom:4px;font-size:15px;line-height:1.6;color:#374151;">` +
-          `${inlineMarkdown(lines[i].replace(/^[-*] /, ''))}</li>`
+            `${inlineMarkdown(lines[i].replace(/^[-*] /, ''))}</li>`
         )
         i++
       }
-      html.push(`<ul style="margin:0 0 12px 0;padding-left:20px;">${items.join('')}</ul>`)
+      html.push(
+        `<ul style="margin:0 0 12px 0;padding-left:20px;">${items.join('')}</ul>`
+      )
       continue
     }
 
@@ -108,11 +137,13 @@ function markdownToEmailHtml(markdown: string): string {
       while (i < lines.length && /^\d+\. /.test(lines[i])) {
         items.push(
           `<li style="margin-bottom:4px;font-size:15px;line-height:1.6;color:#374151;">` +
-          `${inlineMarkdown(lines[i].replace(/^\d+\. /, ''))}</li>`
+            `${inlineMarkdown(lines[i].replace(/^\d+\. /, ''))}</li>`
         )
         i++
       }
-      html.push(`<ol style="margin:0 0 12px 0;padding-left:20px;">${items.join('')}</ol>`)
+      html.push(
+        `<ol style="margin:0 0 12px 0;padding-left:20px;">${items.join('')}</ol>`
+      )
       continue
     }
 
@@ -134,7 +165,7 @@ function markdownToEmailHtml(markdown: string): string {
     if (paraLines.length > 0) {
       html.push(
         `<p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:#374151;">` +
-        `${inlineMarkdown(paraLines.join(' '))}</p>`
+          `${inlineMarkdown(paraLines.join(' '))}</p>`
       )
     }
   }
@@ -228,7 +259,9 @@ export function AdminBroadcastEmail({
                 <Column>
                   <div
                     className="m-0 mb-6 text-base leading-relaxed text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: markdownToEmailHtml(body) }}
+                    dangerouslySetInnerHTML={{
+                      __html: markdownToEmailHtml(body),
+                    }}
                   />
                 </Column>
               </Row>
@@ -251,7 +284,8 @@ export function AdminBroadcastEmail({
               <Row className="mt-6">
                 <Column>
                   <Text className="m-0 text-xs text-gray-600">
-                    <strong>Questions?</strong> Please reach out to the Emberly team via{' '}
+                    <strong>Questions?</strong> Please reach out to the Emberly
+                    team via{' '}
                     <Link
                       href="https://embrly.ca/contact"
                       className="text-orange-600 no-underline font-semibold"
@@ -270,7 +304,8 @@ export function AdminBroadcastEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

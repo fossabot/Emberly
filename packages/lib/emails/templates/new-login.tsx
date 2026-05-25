@@ -69,7 +69,9 @@ export function NewLoginEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    We detected a new login to your Emberly account. If this was you, no action is needed. If this wasn't you, please review the details below and secure your account.
+                    We detected a new login to your Emberly account. If this was
+                    you, no action is needed. If this wasn't you, please review
+                    the details below and secure your account.
                   </Text>
                 </Column>
               </Row>
@@ -153,7 +155,9 @@ export function NewLoginEmail({
               <Row className="mt-6">
                 <Column>
                   <Text className="m-0 text-xs text-gray-600">
-                    <strong>Why are you receiving this?</strong> We send notifications for new logins to help keep your account secure.
+                    <strong>Why are you receiving this?</strong> We send
+                    notifications for new logins to help keep your account
+                    secure.
                   </Text>
                 </Column>
               </Row>
@@ -165,7 +169,8 @@ export function NewLoginEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

@@ -847,6 +847,14 @@ export type EventTypeMap = {
     opportunityTitle: string
     context?: RequestContext
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORAGE / BUCKET EVENTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  'storage.sync-buckets': {
+    _trigger?: 'periodic' | 'manual' // Internal field to track trigger type
+  }
 }
 
 export type EventType = keyof EventTypeMap

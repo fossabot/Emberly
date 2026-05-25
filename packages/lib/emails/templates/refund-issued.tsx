@@ -68,7 +68,8 @@ export function RefundIssuedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Your Emberly refund has been processed and will appear in your account within 5-10 business days.
+                    Your Emberly refund has been processed and will appear in
+                    your account within 5-10 business days.
                   </Text>
                 </Column>
               </Row>
@@ -96,7 +97,8 @@ export function RefundIssuedEmail({
               <Row className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Column>
                   <Text className="m-0 text-sm text-blue-800">
-                    <strong>ℹ️ Note:</strong> Contact your bank or payment provider if you don't see the refund after 10 business days.
+                    <strong>ℹ️ Note:</strong> Contact your bank or payment
+                    provider if you don't see the refund after 10 business days.
                   </Text>
                 </Column>
               </Row>
@@ -108,7 +110,8 @@ export function RefundIssuedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>
