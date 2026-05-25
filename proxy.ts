@@ -3,7 +3,10 @@ import type { NextRequest } from 'next/server'
 
 import { getToken } from 'next-auth/jwt'
 
-import { handleBotRequest } from './packages/lib/middleware/bot-handler'
+import {
+  handleBotRequest,
+  isBotRequest,
+} from './packages/lib/middleware/bot-handler'
 import {
   FILE_URL_PATTERN,
   PROTECTED_PAGE_PATHS,
@@ -133,6 +136,34 @@ export async function proxy(request: NextRequest) {
   const isAlphaMigrationApi = pathname === '/api/auth/alpha-migration'
   const isNextAuthRoute = pathname.startsWith('/api/auth/')
   const isApiRoute = pathname.startsWith('/api/')
+
+  if (
+    FILE_URL_PATTERN.test(pathname) &&
+    pathname === normalizedPathname &&
+    !normalizedPathname.endsWith('/raw') &&
+    !normalizedPathname.endsWith('/direct')
+  ) {
+    const fileExt = normalizedPathname.split('.').pop()?.toLowerCase()
+    const rangeHeader = request.headers.get('range')
+    const acceptHeader = request.headers.get('accept') || ''
+    const isMediaRequest =
+      rangeHeader != null ||
+      (acceptHeader !== '' && !acceptHeader.includes('text/html'))
+    const userAgent = request.headers.get('user-agent') || ''
+    const url = new URL(request.url)
+
+    if (fileExt && VIDEO_EXTENSIONS.includes(fileExt) && isMediaRequest) {
+      url.pathname = `${pathname}/raw`
+      return NextResponse.rewrite(url)
+    }
+
+    // Bot HTML requests fall through so the bot handler can respect the
+    // uploader's rich-embed setting.
+    if (!isBotRequest(userAgent)) {
+      url.pathname = `${pathname}/`
+      return NextResponse.rewrite(url)
+    }
+  }
 
   const token = await getAuthToken()
   if (token) {

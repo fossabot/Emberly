@@ -58,8 +58,10 @@ export async function GET(
       if (linesOfCode > 0 && linesOfCode < 100) linesOfCode = linesOfCode * 1000 // legacy format
     }
 
-    // Fetch EmberlyOSS org repos and find ones the user contributed to
-    const orgRepos = await getOrgRepos('EmberlyOSS')
+    // Only public repos can be exposed on public profiles.
+    const orgRepos = (await getOrgRepos('EmberlyOSS')).filter(
+      (repo) => !repo.private
+    )
 
     const recentCommits: Array<{
       sha: string
