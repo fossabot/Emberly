@@ -65,6 +65,11 @@ export async function handleBotRequest(
 
   if (enableRichEmbeds) {
     // Rich embeds enabled: serve the page with branded metadata
+    if (!isRawPath && !isDirectPath && request.nextUrl.pathname === pathname) {
+      const url = new URL(request.url)
+      url.pathname = `${pathname}/`
+      return NextResponse.rewrite(url)
+    }
     return NextResponse.next()
   } else {
     // Rich embeds disabled: redirect to raw file
