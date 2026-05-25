@@ -105,10 +105,12 @@ export function VerificationCodeEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-sm text-gray-600">
-                    This code expires in <strong>{expiresInMinutes} minutes</strong>.
+                    This code expires in{' '}
+                    <strong>{expiresInMinutes} minutes</strong>.
                   </Text>
                   <Text className="m-0 text-sm text-gray-600">
-                    If you didn't request this code, you can safely ignore this email.
+                    If you didn't request this code, you can safely ignore this
+                    email.
                   </Text>
                 </Column>
               </Row>
@@ -117,7 +119,8 @@ export function VerificationCodeEmail({
               <Row className="mt-6">
                 <Column className="rounded-lg bg-blue-50 p-4 border border-blue-200">
                   <Text className="m-0 text-sm text-blue-900">
-                    🔒 <strong>Security tip:</strong> Never share this code with anyone. Emberly staff will never ask for it.
+                    🔒 <strong>Security tip:</strong> Never share this code with
+                    anyone. Emberly staff will never ask for it.
                   </Text>
                 </Column>
               </Row>
@@ -129,7 +132,8 @@ export function VerificationCodeEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

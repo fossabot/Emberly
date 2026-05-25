@@ -69,7 +69,8 @@ export function EmailChangedOldEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Your Emberly account email address has been changed {changedBy}.
+                    Your Emberly account email address has been changed{' '}
+                    {changedBy}.
                   </Text>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
                     <strong>Old email:</strong> {oldEmail}
@@ -91,7 +92,9 @@ export function EmailChangedOldEmail({
               <Row className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Column>
                   <Text className="m-0 text-sm text-blue-800">
-                    <strong>ℹ️ Next steps:</strong> If you did not make this change, please contact our support team immediately to secure your account.
+                    <strong>ℹ️ Next steps:</strong> If you did not make this
+                    change, please contact our support team immediately to
+                    secure your account.
                   </Text>
                 </Column>
               </Row>
@@ -115,7 +118,8 @@ export function EmailChangedOldEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

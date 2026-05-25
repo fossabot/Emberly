@@ -29,7 +29,9 @@ export function NexiumWelcomeEmail({
   return (
     <Html>
       <Head>
-        <Preview>Your Nexium profile is live – Start connecting with opportunities</Preview>
+        <Preview>
+          Your Nexium profile is live – Start connecting with opportunities
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -63,10 +65,13 @@ export function NexiumWelcomeEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Welcome to Nexium – your professional profile is live and ready to be discovered by teams and opportunities that match your skills.
+                    Welcome to Nexium – your professional profile is live and
+                    ready to be discovered by teams and opportunities that match
+                    your skills.
                   </Text>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Your profile ID is <strong>{profileId}</strong>. Share your profile link to start making connections.
+                    Your profile ID is <strong>{profileId}</strong>. Share your
+                    profile link to start making connections.
                   </Text>
                 </Column>
               </Row>
@@ -81,9 +86,21 @@ export function NexiumWelcomeEmail({
               </Row>
 
               {[
-                { icon: '🎯', title: 'List Your Skills', desc: 'Add specific technologies and expertise so the right opportunities find you' },
-                { icon: '📝', title: 'Write a Strong Bio', desc: 'Describe what you build, what you value, and what you\'re looking for' },
-                { icon: '🔗', title: 'Link Your Work', desc: 'Connect your GitHub, portfolio, or projects to back up your skills' },
+                {
+                  icon: '🎯',
+                  title: 'List Your Skills',
+                  desc: 'Add specific technologies and expertise so the right opportunities find you',
+                },
+                {
+                  icon: '📝',
+                  title: 'Write a Strong Bio',
+                  desc: "Describe what you build, what you value, and what you're looking for",
+                },
+                {
+                  icon: '🔗',
+                  title: 'Link Your Work',
+                  desc: 'Connect your GitHub, portfolio, or projects to back up your skills',
+                },
               ].map((tip, idx) => (
                 <Row key={idx} className="mb-3">
                   <Column className="w-8">
@@ -133,7 +150,8 @@ export function NexiumWelcomeEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

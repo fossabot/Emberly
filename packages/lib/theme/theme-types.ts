@@ -4,7 +4,7 @@
 
 export type ThemeType = 'static' | 'animated' | 'gaming' | 'cyberpunk' | 'retro'
 
-export type BackgroundEffect = 
+export type BackgroundEffect =
   | 'none'
   | 'particles'
   | 'gradient-shift'
@@ -66,7 +66,7 @@ export const GAMING_THEME_CONFIG: Record<string, GamingThemeEffects> = {
     chromaAberration: true,
     vignette: true,
   },
-  'vaporwave': {
+  vaporwave: {
     curvature: true,
     chromaAberration: false,
     reflectivity: 0.6,
@@ -91,7 +91,7 @@ export const DEFAULT_THEME_CONFIG: ThemeConfiguration = {
 
 export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
   // Legacy alias for backwards compatibility
-  'dark': {
+  dark: {
     id: 'default-dark',
     name: 'Default Dark',
     description: 'Clean and professional dark theme',
@@ -177,7 +177,7 @@ export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
     isGaming: false,
     emoji: '🧡',
   },
-  'remembrance': {
+  remembrance: {
     id: 'remembrance',
     name: 'Remembrance',
     description: 'Muted palette with remembrance red',
@@ -202,7 +202,8 @@ export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
   'cyberpunk-neon': {
     id: 'cyberpunk-neon',
     name: 'Cyberpunk Neon',
-    description: 'Futuristic cyberpunk theme with neon glow and chroma aberration',
+    description:
+      'Futuristic cyberpunk theme with neon glow and chroma aberration',
     type: 'gaming',
     backgroundEffect: 'glitch',
     animationSpeed: 'fast',
@@ -221,7 +222,7 @@ export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
     isGaming: true,
     emoji: '💚',
   },
-  'vaporwave': {
+  vaporwave: {
     id: 'vaporwave',
     name: 'Vaporwave',
     description: 'Aesthetic vaporwave theme with gradient shifts',
@@ -248,7 +249,7 @@ export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
     name: 'Neon Grid',
     description: 'Grid-based neon theme perfect for tech enthusiasts',
     type: 'gaming',
-    backgroundEffect: 'grid',
+    backgroundEffect: 'none',
     animationSpeed: 'medium',
     supportsFx: true,
     isGaming: true,
@@ -264,6 +265,84 @@ export const THEME_METADATA_MAP: Record<string, ThemeMetadata> = {
     supportsFx: true,
     isGaming: true,
     emoji: '🌠',
+  },
+  'sunset-glow': {
+    id: 'sunset-glow',
+    name: 'Sunset Glow',
+    description: 'Warm sunset palette with gradient orange and purple accents',
+    type: 'animated',
+    backgroundEffect: 'gradient-shift',
+    animationSpeed: 'slow',
+    supportsFx: true,
+    isGaming: false,
+    emoji: '🌅',
+  },
+  'forest-deep': {
+    id: 'forest-deep',
+    name: 'Forest Deep',
+    description: 'Natural forest theme with deep green and teal accents',
+    type: 'animated',
+    backgroundEffect: 'particles',
+    animationSpeed: 'medium',
+    supportsFx: true,
+    isGaming: false,
+    emoji: '🌲',
+  },
+  'ocean-depth': {
+    id: 'ocean-depth',
+    name: 'Ocean Depth',
+    description: 'Deep ocean blues with coral and golden accents',
+    type: 'animated',
+    backgroundEffect: 'waves',
+    animationSpeed: 'slow',
+    supportsFx: true,
+    isGaming: false,
+    emoji: '🌊',
+  },
+  'midnight-purple': {
+    id: 'midnight-purple',
+    name: 'Midnight Purple',
+    description: 'Deep purple gaming aesthetic with golden highlights',
+    type: 'gaming',
+    backgroundEffect: 'glitch',
+    animationSpeed: 'medium',
+    supportsFx: true,
+    isGaming: true,
+    emoji: '🌙',
+  },
+  'slate-stone': {
+    id: 'slate-stone',
+    name: 'Slate Stone',
+    description:
+      'Minimalist slate and stone palette with cyan and magenta pops',
+    type: 'gaming',
+    backgroundEffect: 'grid',
+    animationSpeed: 'medium',
+    supportsFx: true,
+    isGaming: true,
+    emoji: '🏔️',
+  },
+  'tropical-breeze': {
+    id: 'tropical-breeze',
+    name: 'Tropical Breeze',
+    description: 'Beach vibes with turquoise, gold, and tropical pink',
+    type: 'gaming',
+    backgroundEffect: 'particles',
+    animationSpeed: 'medium',
+    supportsFx: true,
+    isGaming: false,
+    emoji: '🏝️',
+  },
+  'lavender-dream': {
+    id: 'lavender-dream',
+    name: 'Lavender Dream',
+    description: 'Calming lavender with soft purple and sky blue accents',
+    type: 'animated',
+    backgroundEffect: 'aurora',
+    animationSpeed: 'slow',
+    supportsFx: true,
+    isGaming: false,
+    emoji: '💜',
   },
 }
 

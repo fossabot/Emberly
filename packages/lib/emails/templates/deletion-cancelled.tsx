@@ -62,10 +62,13 @@ export function DeletionCancelledEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Your Emberly account has been successfully recovered. Your account deletion request has been cancelled and your account is now active again.
+                    Your Emberly account has been successfully recovered. Your
+                    account deletion request has been cancelled and your account
+                    is now active again.
                   </Text>
                   <Text className="m-0 mb-4 text-sm text-gray-600">
-                    <strong>Cancelled:</strong> {new Date(cancelledAt).toLocaleString()}
+                    <strong>Cancelled:</strong>{' '}
+                    {new Date(cancelledAt).toLocaleString()}
                   </Text>
                 </Column>
               </Row>
@@ -73,7 +76,8 @@ export function DeletionCancelledEmail({
               <Row className="mt-6 p-4 rounded-lg bg-green-50 border border-green-200">
                 <Column>
                   <Text className="m-0 text-sm text-green-800">
-                    <strong>✓ Your account is confirmed active.</strong> All your files and settings have been preserved.
+                    <strong>✓ Your account is confirmed active.</strong> All
+                    your files and settings have been preserved.
                   </Text>
                 </Column>
               </Row>
@@ -85,7 +89,8 @@ export function DeletionCancelledEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

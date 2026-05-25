@@ -3,7 +3,17 @@
 import React, { useEffect, useRef } from 'react'
 
 interface AnimatedBackgroundProps {
-  type: 'particles' | 'gradient-shift' | 'waves' | 'glitch' | 'grid' | 'parallax' | 'aurora' | 'stars' | 'matrix' | 'scanlines'
+  type:
+    | 'particles'
+    | 'gradient-shift'
+    | 'waves'
+    | 'glitch'
+    | 'grid'
+    | 'parallax'
+    | 'aurora'
+    | 'stars'
+    | 'matrix'
+    | 'scanlines'
   intensity?: number
   speed?: 'slow' | 'medium' | 'fast'
   color?: string
@@ -39,11 +49,11 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     const resizeCanvas = () => {
       const w = window.innerWidth
       const h = window.innerHeight
-      
+
       // Set canvas internal resolution
       canvas.width = w
       canvas.height = h
-      
+
       // Reset context state after resize
       ctx.imageSmoothingEnabled = true
       ctx.lineCap = 'round'
@@ -55,27 +65,71 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
 
     const speedMultiplier = speed === 'slow' ? 0.5 : speed === 'fast' ? 2 : 1
 
-    console.log(`[AnimatedBackground] Starting ${type} animation with intensity=${intensity}, speed=${speed}`)
+    console.log(
+      `[AnimatedBackground] Starting ${type} animation with intensity=${intensity}, speed=${speed}`
+    )
 
     // Start the appropriate animation
     if (type === 'particles') {
-      animationRef.current = startParticles(ctx, canvas, intensity, speedMultiplier, color)
+      animationRef.current = startParticles(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier,
+        color
+      )
     } else if (type === 'gradient-shift') {
-      animationRef.current = startGradientShift(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startGradientShift(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'waves') {
-      animationRef.current = startWaves(ctx, canvas, intensity, speedMultiplier, color)
+      animationRef.current = startWaves(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier,
+        color
+      )
     } else if (type === 'grid') {
       animationRef.current = startGrid(ctx, canvas, intensity, color)
     } else if (type === 'aurora') {
-      animationRef.current = startAurora(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startAurora(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'stars') {
-      animationRef.current = startStarfield(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startStarfield(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'matrix') {
-      animationRef.current = startMatrix(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startMatrix(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'parallax') {
-      animationRef.current = startParallax(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startParallax(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'glitch') {
-      animationRef.current = startGlitch(ctx, canvas, intensity, speedMultiplier)
+      animationRef.current = startGlitch(
+        ctx,
+        canvas,
+        intensity,
+        speedMultiplier
+      )
     } else if (type === 'scanlines') {
       animationRef.current = startScanlines(ctx, canvas, intensity)
     }
@@ -89,7 +143,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     }
   }, [type, intensity, speed, color])
 
-    return (
+  return (
     <canvas
       ref={canvasRef}
       className="pointer-events-none"
@@ -114,7 +168,13 @@ function startParticles(
   speedMultiplier: number,
   color: string
 ): number {
-  const particles: Array<{ x: number; y: number; vx: number; vy: number; size: number }> = []
+  const particles: Array<{
+    x: number
+    y: number
+    vx: number
+    vy: number
+    size: number
+  }> = []
   const particleCount = Math.floor(intensity * 100) + 20 // Minimum 20 particles
 
   for (let i = 0; i < particleCount; i++) {
@@ -131,7 +191,7 @@ function startParticles(
     // Clear with semi-transparent background for motion blur
     ctx.fillStyle = 'rgba(15, 23, 42, 0.1)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     ctx.fillStyle = color
     ctx.globalAlpha = Math.min(intensity, 1)
 
@@ -162,20 +222,37 @@ function startGradientShift(
   intensity: number,
   speedMultiplier: number
 ): number {
-  let hue = 0
+  let hue = Math.random() * 360
 
   const animate = () => {
-    hue += speedMultiplier * 0.3
-    hue = hue % 360
+    hue = (hue + speedMultiplier * 0.2) % 360
 
+    // Create a more dynamic gradient
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-    gradient.addColorStop(0, `hsl(${hue}, 100%, 50%)`)
-    gradient.addColorStop(0.5, `hsl(${(hue + 120) % 360}, 100%, 50%)`)
-    gradient.addColorStop(1, `hsl(${(hue + 240) % 360}, 100%, 50%)`)
+    gradient.addColorStop(0, `hsl(${hue}, 80%, 40%)`)
+    gradient.addColorStop(0.5, `hsl(${(hue + 120) % 360}, 70%, 35%)`)
+    gradient.addColorStop(1, `hsl(${(hue + 240) % 360}, 75%, 40%)`)
 
     ctx.fillStyle = gradient
-    ctx.globalAlpha = Math.min(intensity * 0.8, 0.9)
+    ctx.globalAlpha = Math.min(intensity * 0.6, 0.7)
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // Add secondary gradient layer for depth
+    const gradient2 = ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height / 2,
+      0,
+      canvas.width / 2,
+      canvas.height / 2,
+      Math.max(canvas.width, canvas.height)
+    )
+    gradient2.addColorStop(0, `hsla(${hue}, 60%, 50%, 0.2)`)
+    gradient2.addColorStop(1, `hsla(${hue}, 60%, 30%, 0)`)
+
+    ctx.fillStyle = gradient2
+    ctx.globalAlpha = Math.min(intensity * 0.3, 0.5)
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
     ctx.globalAlpha = 1
 
     return requestAnimationFrame(animate)
@@ -213,7 +290,10 @@ function startWaves(
       for (let x = 0; x < canvas.width; x += 5) {
         const y =
           yOffset +
-          Math.sin((x * waveFrequency + time * speedMultiplier * 0.02 + phaseShift) * Math.PI) *
+          Math.sin(
+            (x * waveFrequency + time * speedMultiplier * 0.02 + phaseShift) *
+              Math.PI
+          ) *
             waveHeight
 
         if (x === 0) ctx.moveTo(x, y)
@@ -246,12 +326,12 @@ function startGrid(
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     ctx.strokeStyle = color
-    ctx.globalAlpha = Math.min(intensity, 0.7)
+    ctx.globalAlpha = Math.min(intensity * 0.8, 0.7)
     ctx.lineWidth = 1
 
-    const gridSize = 40
+    const gridSize = 50
 
-    // Draw moving grid
+    // Draw vertical lines
     for (let x = -gridSize; x < canvas.width + gridSize; x += gridSize) {
       ctx.beginPath()
       ctx.moveTo(x + offset, 0)
@@ -259,6 +339,7 @@ function startGrid(
       ctx.stroke()
     }
 
+    // Draw horizontal lines
     for (let y = -gridSize; y < canvas.height + gridSize; y += gridSize) {
       ctx.beginPath()
       ctx.moveTo(0, y + offset)
@@ -266,8 +347,27 @@ function startGrid(
       ctx.stroke()
     }
 
+    // Add subtle glow/perspective effect
+    ctx.strokeStyle = `rgba(${color.match(/\d+/g)?.slice(0, 3).join(', ') || '100, 150, 255'}, ${0.2 * intensity})`
+    ctx.lineWidth = 0.5
+
+    for (let i = 1; i < 3; i++) {
+      const innerGridSize = gridSize * 2
+      for (
+        let x = -innerGridSize;
+        x < canvas.width + innerGridSize;
+        x += innerGridSize
+      ) {
+        ctx.beginPath()
+        ctx.moveTo(x + offset * 0.3, 0)
+        ctx.lineTo(x + offset * 0.3, canvas.height)
+        ctx.stroke()
+      }
+    }
+
     ctx.globalAlpha = 1
-    offset = (offset + 1) % gridSize
+    offset += 0.8
+    if (offset > gridSize) offset -= gridSize
 
     return requestAnimationFrame(animate)
   }
@@ -285,42 +385,55 @@ function startAurora(
 
   const animate = () => {
     // Fade the canvas background over time for aurora trail effect
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)'
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     // Draw multiple flowing aurora bands with wave motion
-    for (let bandIndex = 0; bandIndex < 4; bandIndex++) {
-      const baseHue = 220 + bandIndex * 40
-      const waveOffset = Math.sin(time * 0.008 * speedMultiplier + bandIndex * 0.5) * 100
-      const bandHeight = canvas.height * 0.15
-      const bandY = canvas.height * 0.25 + bandIndex * 80 + waveOffset
+    const bandCount = Math.max(2, Math.floor(intensity * 4))
+
+    for (let bandIndex = 0; bandIndex < bandCount; bandIndex++) {
+      const baseHue = 200 + bandIndex * 30
+      const waveOffset =
+        Math.sin(time * 0.005 * speedMultiplier + bandIndex * 0.8) * 60
+      const bandHeight = canvas.height * 0.12
+      const bandY = canvas.height * 0.3 + bandIndex * 80 + waveOffset
 
       // Create horizontal gradient for the aurora band
-      const gradient = ctx.createLinearGradient(0, bandY - bandHeight / 2, 0, bandY + bandHeight / 2)
+      const gradient = ctx.createLinearGradient(
+        0,
+        bandY - bandHeight / 2,
+        0,
+        bandY + bandHeight / 2
+      )
 
-      const hue = (baseHue + time * speedMultiplier * 0.3) % 360
-      const hue2 = (baseHue + 60 + time * speedMultiplier * 0.25) % 360
+      const hue = (baseHue + time * speedMultiplier * 0.15) % 360
+      const hue2 = (baseHue + 60 + time * speedMultiplier * 0.1) % 360
 
       // Create color stops for smooth aurora effect
-      gradient.addColorStop(0, `hsla(${hue}, 100%, 40%, 0)`)
-      gradient.addColorStop(0.25, `hsla(${hue}, 100%, 60%, 0.6)`)
-      gradient.addColorStop(0.5, `hsla(${hue2}, 100%, 70%, 0.8)`)
-      gradient.addColorStop(0.75, `hsla(${hue}, 100%, 60%, 0.6)`)
-      gradient.addColorStop(1, `hsla(${hue}, 100%, 40%, 0)`)
+      gradient.addColorStop(0, `hsla(${hue}, 100%, 35%, 0)`)
+      gradient.addColorStop(0.2, `hsla(${hue}, 100%, 50%, 0.4)`)
+      gradient.addColorStop(0.5, `hsla(${hue2}, 100%, 60%, 0.7)`)
+      gradient.addColorStop(0.8, `hsla(${hue}, 100%, 50%, 0.4)`)
+      gradient.addColorStop(1, `hsla(${hue}, 100%, 35%, 0)`)
 
       ctx.fillStyle = gradient
-      ctx.globalAlpha = Math.min(intensity, 1)
+      ctx.globalAlpha = Math.min(intensity * 0.8, 0.9)
       ctx.fillRect(0, bandY - bandHeight / 2, canvas.width, bandHeight)
 
-      // Add a glowing effect with vertical gradients
-      const glowGradient = ctx.createLinearGradient(0, bandY - bandHeight, 0, bandY + bandHeight)
-      glowGradient.addColorStop(0.3, `hsla(${hue}, 100%, 50%, 0.2)`)
-      glowGradient.addColorStop(0.5, `hsla(${hue}, 100%, 50%, 0.4)`)
-      glowGradient.addColorStop(0.7, `hsla(${hue}, 100%, 50%, 0.2)`)
+      // Add a subtle glow layer
+      const glowGradient = ctx.createLinearGradient(
+        0,
+        bandY - bandHeight * 1.5,
+        0,
+        bandY + bandHeight * 1.5
+      )
+      glowGradient.addColorStop(0.2, `hsla(${hue}, 80%, 40%, 0.15)`)
+      glowGradient.addColorStop(0.5, `hsla(${hue2}, 80%, 50%, 0.3)`)
+      glowGradient.addColorStop(0.8, `hsla(${hue}, 80%, 40%, 0.15)`)
 
       ctx.fillStyle = glowGradient
-      ctx.globalAlpha = Math.min(intensity * 0.5, 0.5)
-      ctx.fillRect(0, bandY - bandHeight, canvas.width, bandHeight * 2)
+      ctx.globalAlpha = Math.min(intensity * 0.3, 0.4)
+      ctx.fillRect(0, bandY - bandHeight * 1.5, canvas.width, bandHeight * 3)
     }
 
     ctx.globalAlpha = 1
@@ -386,7 +499,10 @@ function startMatrix(
   intensity: number,
   speedMultiplier: number
 ): number {
-  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'.split('')
+  const chars =
+    '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'.split(
+      ''
+    )
   const fontSize = 14
   const columns = Math.floor(canvas.width / fontSize)
   const drops: number[] = []
@@ -437,14 +553,22 @@ function startParallax(
     ctx.fillStyle = 'rgba(15, 23, 42, 1)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    layers.forEach((layer) => {
+    // Draw parallax layers with actual movement
+    layers.forEach((layer, index) => {
       ctx.fillStyle = layer.color
       ctx.globalAlpha = Math.min(intensity * layer.speed, 0.8)
-      ctx.fillRect(0, canvas.height * layer.height * 0.5, canvas.width, canvas.height * layer.height * 0.5)
+
+      const moveAmount = (offset * speedMultiplier * layer.speed) % canvas.width
+      const baseY = canvas.height * (0.3 + index * 0.25)
+      const layerHeight = 30
+
+      // Draw two copies for seamless scrolling
+      ctx.fillRect(moveAmount - canvas.width, baseY, canvas.width, layerHeight)
+      ctx.fillRect(moveAmount, baseY, canvas.width, layerHeight)
     })
 
     ctx.globalAlpha = 1
-    offset += speedMultiplier * 0.5
+    offset += 0.5
 
     return requestAnimationFrame(animate)
   }
@@ -459,38 +583,56 @@ function startGlitch(
   speedMultiplier: number
 ): number {
   let time = 0
+  const glitchStrength = Math.max(0.1, intensity * 0.5)
 
   const animate = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgba(15, 23, 42, 1)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Random glitch lines
-    for (let i = 0; i < 5 * intensity; i++) {
-      if (Math.random() > 0.8 - intensity * 0.2) {
+    // Random glitch lines - more controlled frequency
+    if (Math.random() > 0.85) {
+      for (let i = 0; i < 3 + Math.floor(intensity * 3); i++) {
         const y = Math.random() * canvas.height
-        const height = Math.random() * 40 + 5
-        const offset = (Math.random() - 0.5) * 30
+        const height = Math.random() * 40 + 10
+        const offset = (Math.random() - 0.5) * 50 * glitchStrength
+        const width = Math.random() * 200 + 100
 
-      ctx.fillStyle = i % 2 === 0 ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 255, 255, 0.5)'
-      ctx.globalAlpha = Math.min(intensity, 0.8)
-        ctx.fillRect(offset, y, canvas.width - Math.abs(offset), height)
+        ctx.fillStyle =
+          i % 2 === 0
+            ? `rgba(255, 0, 0, ${0.3 * intensity})`
+            : `rgba(0, 255, 255, ${0.3 * intensity})`
+        ctx.globalAlpha = Math.min(intensity * 0.7, 0.8)
+        ctx.fillRect(Math.max(0, offset), y, width, height)
       }
     }
 
-    // Glitch blocks
-    if (time % 10 === 0) {
-      const numGlitches = Math.floor(intensity * 3)
+    // Glitch blocks with controlled timing
+    if (time % Math.max(5, Math.floor(20 / speedMultiplier)) === 0) {
+      const numGlitches = Math.max(1, Math.floor(intensity * 2))
       for (let i = 0; i < numGlitches; i++) {
         const x = Math.random() * canvas.width
         const y = Math.random() * canvas.height
-        const w = Math.random() * 100 + 50
-        const h = Math.random() * 50 + 20
+        const w = Math.random() * 120 + 40
+        const h = Math.random() * 60 + 20
 
-        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 255, 255, 0.4)'
-        ctx.globalAlpha = Math.min(intensity, 0.8)
+        ctx.fillStyle =
+          Math.random() > 0.5
+            ? `rgba(255, 0, 0, ${0.25 * intensity})`
+            : `rgba(0, 255, 255, ${0.25 * intensity})`
+        ctx.globalAlpha = intensity * 0.6
         ctx.fillRect(x, y, w, h)
       }
+    }
+
+    // Add color distortion
+    if (Math.random() > 0.92) {
+      const distortY = Math.random() * 0.3 * canvas.height
+      const distortHeight = Math.random() * 100 + 50
+
+      ctx.fillStyle = `rgba(255, 0, 127, ${0.15 * intensity})`
+      ctx.globalAlpha = 0.3
+      ctx.fillRect(0, distortY, canvas.width, distortHeight)
     }
 
     ctx.globalAlpha = 1
@@ -501,27 +643,41 @@ function startGlitch(
 
   return animate()
 }
+
 // Scanlines effect - CRT monitor style
 function startScanlines(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   intensity: number
 ): number {
+  let time = 0
+
   const animate = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    
-    // Draw scanlines
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.15 * intensity})`
+
+    // Draw animated scanlines
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.12 * intensity})`
     for (let y = 0; y < canvas.height; y += 2) {
       ctx.fillRect(0, y, canvas.width, 1)
     }
-    
-    // Optional: Add subtle flicker
-    if (Math.random() > 0.97) {
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.02 * intensity})`
+
+    // Add subtle vertical flicker effect
+    if (Math.random() > 0.98) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.03 * intensity})`
       ctx.fillRect(0, 0, canvas.width, canvas.height)
     }
 
+    // Add occasional horizontal distortion
+    if (Math.random() > 0.95) {
+      const distortY = Math.random() * canvas.height
+      const distortHeight = Math.random() * 40 + 10
+      ctx.fillStyle = `rgba(100, 150, 255, ${0.05 * intensity})`
+      ctx.globalAlpha = 0.2
+      ctx.fillRect(0, distortY, canvas.width, distortHeight)
+      ctx.globalAlpha = 1
+    }
+
+    time++
     return requestAnimationFrame(animate)
   }
 

@@ -36,7 +36,9 @@ export function QuotaReachedEmail({
   return (
     <Html>
       <Head>
-        <Preview>You're using {percentage.toFixed(0)}% of your storage quota</Preview>
+        <Preview>
+          You're using {percentage.toFixed(0)}% of your storage quota
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -70,7 +72,8 @@ export function QuotaReachedEmail({
               <Row className="mb-6">
                 <Column>
                   <Text className="m-0 mb-4 text-base text-gray-700">
-                    Your storage quota is now {percentage.toFixed(1)}% full. Here's a breakdown:
+                    Your storage quota is now {percentage.toFixed(1)}% full.
+                    Here's a breakdown:
                   </Text>
                 </Column>
               </Row>
@@ -86,7 +89,9 @@ export function QuotaReachedEmail({
                       </Text>
                     </Column>
                     <Column className="w-1/3">
-                      <Text className="m-0 text-sm text-gray-600">Available</Text>
+                      <Text className="m-0 text-sm text-gray-600">
+                        Available
+                      </Text>
                       <Text className="m-0 text-lg font-bold text-gray-900">
                         {quotaLimit.toFixed(1)} {unit}
                       </Text>
@@ -115,7 +120,8 @@ export function QuotaReachedEmail({
                           style={{
                             width: `${Math.min(percentage, 100)}%`,
                             height: '100%',
-                            backgroundColor: percentage > 90 ? '#ef4444' : '#f97316',
+                            backgroundColor:
+                              percentage > 90 ? '#ef4444' : '#f97316',
                             transition: 'width 0.3s ease',
                           }}
                         />
@@ -135,9 +141,21 @@ export function QuotaReachedEmail({
               </Row>
 
               {[
-                { icon: '🗑️', title: 'Delete old files', desc: 'Remove files you no longer need' },
-                { icon: '📦', title: 'Upgrade your plan', desc: 'Get more storage with a paid plan' },
-                { icon: '🤝', title: 'Contact support', desc: 'Request a manual increase' },
+                {
+                  icon: '🗑️',
+                  title: 'Delete old files',
+                  desc: 'Remove files you no longer need',
+                },
+                {
+                  icon: '📦',
+                  title: 'Upgrade your plan',
+                  desc: 'Get more storage with a paid plan',
+                },
+                {
+                  icon: '🤝',
+                  title: 'Contact support',
+                  desc: 'Request a manual increase',
+                },
               ].map((option, idx) => (
                 <Row key={idx} className="mb-2">
                   <Column className="w-8">
@@ -173,7 +191,8 @@ export function QuotaReachedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

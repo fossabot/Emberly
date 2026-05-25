@@ -33,7 +33,9 @@ export function NexiumOpportunityEmail({
   return (
     <Html>
       <Head>
-        <Preview>New opportunity matched your Nexium profile: {opportunityTitle}</Preview>
+        <Preview>
+          New opportunity matched your Nexium profile: {opportunityTitle}
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -55,9 +57,7 @@ export function NexiumOpportunityEmail({
             <Section className="border border-blue-200 rounded-lg bg-gradient-to-br from-blue-50 to-white p-8 text-center">
               <Row>
                 <Column align="center">
-                  <Text className="m-0 mb-4 text-5xl">
-                    💼
-                  </Text>
+                  <Text className="m-0 mb-4 text-5xl">💼</Text>
                   <Text className="m-0 mb-2 text-sm font-semibold text-blue-700 uppercase tracking-wide">
                     Opportunity Match
                   </Text>
@@ -75,7 +75,8 @@ export function NexiumOpportunityEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Hi {name}! A new opportunity has been matched to your Nexium profile based on your skills and experience.
+                    Hi {name}! A new opportunity has been matched to your Nexium
+                    profile based on your skills and experience.
                   </Text>
                 </Column>
               </Row>
@@ -110,18 +111,25 @@ export function NexiumOpportunityEmail({
               </Row>
 
               {[
-                { icon: '🔍', desc: 'Review the full opportunity details and requirements' },
-                { icon: '📬', desc: 'Express your interest directly from your Nexium profile' },
-                { icon: '🤝', desc: 'Connect with the team if it\'s the right fit for you' },
+                {
+                  icon: '🔍',
+                  desc: 'Review the full opportunity details and requirements',
+                },
+                {
+                  icon: '📬',
+                  desc: 'Express your interest directly from your Nexium profile',
+                },
+                {
+                  icon: '🤝',
+                  desc: "Connect with the team if it's the right fit for you",
+                },
               ].map((step, idx) => (
                 <Row key={idx} className="mb-2">
                   <Column className="w-8">
                     <Text className="m-0 text-lg">{step.icon}</Text>
                   </Column>
                   <Column className="flex-1 text-left">
-                    <Text className="m-0 text-gray-700">
-                      {step.desc}
-                    </Text>
+                    <Text className="m-0 text-gray-700">{step.desc}</Text>
                   </Column>
                 </Row>
               ))}
@@ -159,7 +167,8 @@ export function NexiumOpportunityEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

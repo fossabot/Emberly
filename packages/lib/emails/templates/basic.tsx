@@ -30,7 +30,7 @@ export function BasicEmail({
   headline = title,
   body,
   cta,
-  footerNote = `© ${new Date().getFullYear()} Emberly. All rights reserved.`,
+  footerNote = `© ${new Date().getFullYear()} NodeByte LTD. All rights reserved.`,
 }: BasicEmailProps) {
   return (
     <Html>

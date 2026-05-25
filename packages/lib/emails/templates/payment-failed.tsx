@@ -73,7 +73,8 @@ export function PaymentFailedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    We tried to process a payment for your Emberly account but it was unsuccessful.
+                    We tried to process a payment for your Emberly account but
+                    it was unsuccessful.
                   </Text>
                 </Column>
               </Row>
@@ -92,7 +93,8 @@ export function PaymentFailedEmail({
                   </Text>
                   {nextRetryAt && (
                     <Text className="m-0 text-sm text-gray-700">
-                      <strong>Next retry:</strong> {new Date(nextRetryAt).toLocaleString()}
+                      <strong>Next retry:</strong>{' '}
+                      {new Date(nextRetryAt).toLocaleString()}
                     </Text>
                   )}
                 </Column>
@@ -113,7 +115,8 @@ export function PaymentFailedEmail({
               <Row className="mt-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                 <Column>
                   <Text className="m-0 text-sm text-yellow-800">
-                    <strong>ℹ️ Action required:</strong> Please update your payment method to keep your subscription active.
+                    <strong>ℹ️ Action required:</strong> Please update your
+                    payment method to keep your subscription active.
                   </Text>
                 </Column>
               </Row>
@@ -125,7 +128,8 @@ export function PaymentFailedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

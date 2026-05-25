@@ -78,7 +78,10 @@ export function FileSharedEmail({
                       {fileName}
                     </Text>
                     <Text className="m-0 mt-1 text-sm text-gray-500">
-                      Your access level: <strong>{role === 'EDITOR' ? 'Editor' : 'Suggester'}</strong>
+                      Your access level:{' '}
+                      <strong>
+                        {role === 'EDITOR' ? 'Editor' : 'Suggester'}
+                      </strong>
                     </Text>
                   </Section>
 
@@ -104,7 +107,7 @@ export function FileSharedEmail({
                 .
               </Text>
               <Text className="m-0 mt-4 text-center text-xs text-gray-400">
-                © {new Date().getFullYear()} Emberly · All rights reserved
+                © {new Date().getFullYear()} NodeByte LTD · All rights reserved
               </Text>
             </Section>
           </Container>

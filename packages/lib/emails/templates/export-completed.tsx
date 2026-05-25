@@ -67,7 +67,8 @@ export function ExportCompletedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Your Emberly data export has been completed and is ready to download.
+                    Your Emberly data export has been completed and is ready to
+                    download.
                   </Text>
                 </Column>
               </Row>
@@ -89,7 +90,8 @@ export function ExportCompletedEmail({
                 <Row className="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                   <Column align="center">
                     <Text className="m-0 text-sm text-yellow-800">
-                      <strong>⏰ Download expires:</strong> {new Date(expiresAt).toLocaleString()}
+                      <strong>⏰ Download expires:</strong>{' '}
+                      {new Date(expiresAt).toLocaleString()}
                     </Text>
                   </Column>
                 </Row>
@@ -110,7 +112,8 @@ export function ExportCompletedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

@@ -69,7 +69,8 @@ export function AccountChangeEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    {userName ? `Hi ${userName},` : ''} Your Emberly account has been modified. Here are the details:
+                    {userName ? `Hi ${userName},` : ''} Your Emberly account has
+                    been modified. Here are the details:
                   </Text>
                 </Column>
               </Row>
@@ -106,7 +107,8 @@ export function AccountChangeEmail({
               <Row className="mt-6">
                 <Column className="rounded-lg bg-blue-50 p-4 border border-blue-200">
                   <Text className="m-0 text-sm text-blue-900">
-                    <strong>Didn't make this change?</strong> If you didn't authorize this modification, please{' '}
+                    <strong>Didn't make this change?</strong> If you didn't
+                    authorize this modification, please{' '}
                     <Link
                       href={supportUrl}
                       className="text-blue-700 font-semibold no-underline"
@@ -122,7 +124,9 @@ export function AccountChangeEmail({
               <Row className="mt-4">
                 <Column>
                   <Text className="m-0 text-xs text-gray-600">
-                    <strong>Why are you receiving this?</strong> We send notifications when important account changes are made to help keep your account secure.
+                    <strong>Why are you receiving this?</strong> We send
+                    notifications when important account changes are made to
+                    help keep your account secure.
                   </Text>
                 </Column>
               </Row>
@@ -134,7 +138,8 @@ export function AccountChangeEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

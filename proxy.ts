@@ -12,8 +12,6 @@ import {
 } from './packages/lib/middleware/constants'
 import { Permission, hasPermission } from './packages/lib/permissions'
 
-// Global store for login context (IP, UserAgent, Geo)
-// Used to pass request context to NextAuth callbacks
 declare global {
   var __nextAuthLoginContext: Record<string, any>
 }
@@ -22,10 +20,6 @@ if (!globalThis.__nextAuthLoginContext) {
   globalThis.__nextAuthLoginContext = {}
 }
 
-/**
- * Extract IP address from various sources
- * Priority: x-forwarded-for (Vercel), x-real-ip, cf-connecting-ip (Cloudflare), client IP
- */
 function getClientIP(request: NextRequest): string | undefined {
   const forwarded = request.headers.get('x-forwarded-for')
   if (forwarded) {
@@ -48,9 +42,6 @@ function getClientIP(request: NextRequest): string | undefined {
   )
 }
 
-/**
- * Extract geographic information from CDN headers
- */
 function getGeoInfo(request: NextRequest) {
   const country =
     request.headers.get('x-vercel-ip-country') ||
@@ -71,11 +62,6 @@ export async function proxy(request: NextRequest) {
     pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://embrly.ca'
 
-  // ── Custom Domain Routing ──────────────────────────────────────────────
-  // If the incoming host differs from the main domain, check if it's a
-  // verified custom domain. If the visitor is on the root path ("/"),
-  // rewrite to the domain owner's public profile. All other paths
-  // (file views, short URLs, etc.) pass through normally.
   const incomingHost = request.headers.get('host')?.replace(/:\d+$/, '')
   const mainHost = new URL(baseUrl).hostname
 
@@ -84,7 +70,6 @@ export async function proxy(request: NextRequest) {
     incomingHost !== mainHost &&
     incomingHost !== 'localhost'
   ) {
-    // Only rewrite the root path — everything else (files, short URLs, assets) passes through
     if (pathname === '/') {
       try {
         const lookupUrl = new URL('/api/internal/domain-lookup', request.url)
@@ -101,13 +86,11 @@ export async function proxy(request: NextRequest) {
           }
         }
       } catch (e) {
-        // Lookup failed — fall through to normal routing
         console.error('[Proxy] Custom domain lookup failed:', e)
       }
     }
   }
 
-  // Capture login context for auth tracking
   if (
     pathname === '/api/auth/callback/credentials' &&
     request.method === 'POST'
@@ -116,7 +99,6 @@ export async function proxy(request: NextRequest) {
     const { country, city } = getGeoInfo(request)
     const userAgent = request.headers.get('user-agent')
 
-    // Store in global context with a timestamp key
     const contextKey = `login_context:${Date.now()}`
     globalThis.__nextAuthLoginContext[contextKey] = {
       ip: ip || undefined,
@@ -124,22 +106,17 @@ export async function proxy(request: NextRequest) {
       geo: country || city ? { country, city } : null,
     }
 
-    // Cleanup old entries (keep only recent ones)
     const now = Date.now()
     for (const key in globalThis.__nextAuthLoginContext) {
       try {
         const ts = parseInt(key.split(':')[1])
         if (now - ts > 60000) {
-          // Keep for 1 minute
           delete globalThis.__nextAuthLoginContext[key]
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   }
 
-  // Fetch token lazily so we only hit auth once
   let tokenPromise: Promise<null | Record<string, any>> | null = null
   const getAuthToken = () => {
     if (!tokenPromise) {
@@ -151,15 +128,12 @@ export async function proxy(request: NextRequest) {
     return tokenPromise
   }
 
-  // ALPHA MIGRATION CHECK - Must come FIRST before any other checks
-  // Users created before Dec 27, 2025 who haven't verified their email must complete migration
   const ALPHA_CUTOFF_DATE = new Date('2025-12-27T00:00:00.000Z')
   const isAlphaMigrationPage = pathname === '/auth/alpha-migration'
   const isAlphaMigrationApi = pathname === '/api/auth/alpha-migration'
   const isNextAuthRoute = pathname.startsWith('/api/auth/')
   const isApiRoute = pathname.startsWith('/api/')
 
-  // Check if user needs alpha migration
   const token = await getAuthToken()
   if (token) {
     const createdAt = token.createdAt ? new Date(token.createdAt) : null
@@ -167,11 +141,6 @@ export async function proxy(request: NextRequest) {
     const hasVerifiedEmail = token.emailVerified === true
     const needsMigration = isPreCutoffUser && !hasVerifiedEmail
 
-    // Users who need migration can ONLY access:
-    // - The migration page itself
-    // - The migration API
-    // - NextAuth routes (for logout, session refresh)
-    // - Other API routes (they should handle auth themselves)
     if (
       needsMigration &&
       !isAlphaMigrationPage &&
@@ -183,11 +152,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // EMAIL VERIFICATION CHECK - Enforce email verification for authenticated users
-  // Users who haven't verified their email can ONLY access:
-  // - Auth pages (/auth/*)
-  // - NextAuth routes (/api/auth/*)
-  // - Email verification endpoint (/api/auth/verify-email)
   const isVerifyEmailPage = pathname === '/auth/verify-email'
   const isVerifyEmailApi = pathname === '/api/auth/verify-email'
   const isAuthPage = pathname.startsWith('/auth/')
@@ -210,26 +174,21 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // PASSWORD BREACH CHECK - Redirect to security tab if breach detected
-  // Users with detected password breaches are redirected to profile security tab
   const isProfileSecurityTab =
     pathname === '/me' && request.nextUrl.searchParams.get('tab') === 'security'
   const isProfilePath = pathname === '/me'
   const isDashboardRoot = pathname === '/dashboard'
 
   if (token && token.passwordBreachDetectedAt) {
-    // If already on profile security tab, allow through
     if (isProfileSecurityTab) {
       return NextResponse.next()
     }
-    // If on dashboard root, redirect to profile security
     if (isDashboardRoot) {
       console.log(
         `[Proxy] User ${token.email} with password breach detected, redirecting from dashboard to profile security`
       )
       return NextResponse.redirect(new URL('/me?tab=security', baseUrl))
     }
-    // If on profile but not security tab, redirect to security tab
     if (isProfilePath && !request.nextUrl.searchParams.get('tab')) {
       console.log(
         `[Proxy] User ${token.email} with password breach detected, redirecting to security tab`
@@ -238,7 +197,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Pass through raw/direct file paths and short URL redirects
   if (
     normalizedPathname.endsWith('/raw') ||
     normalizedPathname.endsWith('/direct') ||
@@ -247,12 +205,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // API routes manage their own authentication — skip middleware auth checks
   if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
-  // Auth, setup, and email verification flows are always public
   if (pathname.startsWith('/auth/') || pathname.startsWith('/setup')) {
     return NextResponse.next()
   }
@@ -265,8 +221,6 @@ export async function proxy(request: NextRequest) {
     return { token: t }
   }
 
-  // All /admin/* routes require at minimum ADMIN access.
-  // Specific superadmin-only paths require elevated permissions.
   if (pathname.startsWith('/admin/') || pathname === '/admin') {
     const auth = await ensureAuthenticated()
     if (auth instanceof NextResponse) return auth
@@ -284,7 +238,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Protected pages require a valid session
   if (PROTECTED_PAGE_PATHS.some((p) => pathname.startsWith(p))) {
     const t = await getAuthToken()
     if (!t) {
@@ -295,12 +248,6 @@ export async function proxy(request: NextRequest) {
   const botResponse = await handleBotRequest(request)
   if (botResponse) return botResponse
 
-  // ── Video Media Requests ──────────────────────────────────────────────
-  // Discord (and similar platforms) try to play videos from the original
-  // URL rather than the og:video URL. Their media proxy uses a non-bot
-  // user-agent and sends Range headers or Accept without text/html.
-  // Transparently rewrite these requests to /raw so the raw route handler
-  // serves actual video bytes instead of the HTML preview page.
   if (
     FILE_URL_PATTERN.test(pathname) &&
     !normalizedPathname.endsWith('/raw') &&
@@ -322,7 +269,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Everything else is public (marketing pages, user profiles, file viewer, etc.)
   return NextResponse.next()
 }
 

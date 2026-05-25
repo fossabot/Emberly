@@ -64,7 +64,9 @@ export function AccountDeletedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Your Emberly account has been permanently deleted. All associated data, files, and settings have been removed from our servers.
+                    Your Emberly account has been permanently deleted. All
+                    associated data, files, and settings have been removed from
+                    our servers.
                   </Text>
                   {reason && (
                     <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
@@ -72,7 +74,8 @@ export function AccountDeletedEmail({
                     </Text>
                   )}
                   <Text className="m-0 mb-6 text-sm text-gray-600">
-                    <strong>Deleted:</strong> {new Date(deletedAt).toLocaleString()}
+                    <strong>Deleted:</strong>{' '}
+                    {new Date(deletedAt).toLocaleString()}
                   </Text>
                 </Column>
               </Row>
@@ -80,7 +83,9 @@ export function AccountDeletedEmail({
               <Row className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
                 <Column>
                   <Text className="m-0 text-sm text-gray-800">
-                    <strong>ℹ️ What happens next:</strong> Your account and all associated data cannot be recovered. If you have any questions, feel free to contact our support team.
+                    <strong>ℹ️ What happens next:</strong> Your account and all
+                    associated data cannot be recovered. If you have any
+                    questions, feel free to contact our support team.
                   </Text>
                 </Column>
               </Row>
@@ -92,7 +97,8 @@ export function AccountDeletedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>
