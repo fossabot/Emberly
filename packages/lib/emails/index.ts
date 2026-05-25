@@ -41,7 +41,7 @@ async function getSmtpTransport(): Promise<{ transport: Transporter; from: strin
 
     const host = (smtp?.host as string | undefined) || process.env.SMTP_HOST || ''
     const port = (smtp?.port as number | undefined) || Number(process.env.SMTP_PORT) || 587
-    const secure = (smtp?.secure as boolean | undefined) ?? (process.env.SMTP_SECURE === 'true') ?? false
+    const secure = (smtp?.secure as boolean | undefined) ?? process.env.SMTP_SECURE === 'true'
     const user = (smtp?.user as string | undefined) || process.env.SMTP_USER || ''
     const password = (smtp?.password as string | undefined) || process.env.SMTP_PASSWORD || ''
     const from = (smtp?.from as string | undefined) || process.env.EMAIL_FROM || 'Emberly <noreply@embrly.ca>'
@@ -134,7 +134,7 @@ export async function sendEmail({
     }
 
     const integrations = await getIntegrations()
-    const provider = (integrations as Record<string, unknown>).emailProvider as string | undefined ?? 'resend'
+    const provider = ((integrations as Record<string, unknown>).emailProvider as string | undefined) ?? 'resend'
 
     let messageId: string | undefined
 

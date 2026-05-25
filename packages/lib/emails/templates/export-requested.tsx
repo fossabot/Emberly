@@ -64,7 +64,9 @@ export function ExportRequestedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    We've received your request to export your Emberly data. We're preparing your files now and will send you a download link as soon as it's ready.
+                    We've received your request to export your Emberly data.
+                    We're preparing your files now and will send you a download
+                    link as soon as it's ready.
                   </Text>
                 </Column>
               </Row>
@@ -75,7 +77,8 @@ export function ExportRequestedEmail({
                     <strong>Export ID:</strong> {exportId}
                   </Text>
                   <Text className="m-0 mb-6 text-sm text-gray-600">
-                    <strong>Requested:</strong> {new Date(requestedAt).toLocaleString()}
+                    <strong>Requested:</strong>{' '}
+                    {new Date(requestedAt).toLocaleString()}
                   </Text>
                 </Column>
               </Row>
@@ -83,7 +86,10 @@ export function ExportRequestedEmail({
               <Row className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Column>
                   <Text className="m-0 text-sm text-blue-800">
-                    <strong>ℹ️ What happens next:</strong> Depending on the size of your data, the export may take several minutes to complete. We'll email you as soon as your data is ready to download.
+                    <strong>ℹ️ What happens next:</strong> Depending on the size
+                    of your data, the export may take several minutes to
+                    complete. We'll email you as soon as your data is ready to
+                    download.
                   </Text>
                 </Column>
               </Row>
@@ -95,7 +101,8 @@ export function ExportRequestedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

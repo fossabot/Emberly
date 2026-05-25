@@ -49,7 +49,7 @@ export default function TopItems({ allowed }: { allowed?: { topFiles?: boolean; 
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie data={filePie} dataKey="value" nameKey="name" innerRadius={30} outerRadius={60} fill="#8884d8">
-                                    {filePie.map((_, i) => <Cell key={`c-${i}`} fill={COLORS[i % COLORS.length]} />)}
+                                    {filePie.map((_: unknown, i: number) => <Cell key={`c-${i}`} fill={COLORS[i % COLORS.length]} />)}
                                 </Pie>
                             </PieChart>
                         </ResponsiveContainer>

@@ -173,7 +173,6 @@ export async function POST(
                     dashboardUrl,
                 },
                 skipTracking: false,
-                templateName: 'file-shared',
             }).catch((err) => logger.error('Failed to send file-shared email', err as Error))
         }
 

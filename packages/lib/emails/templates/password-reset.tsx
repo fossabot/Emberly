@@ -65,7 +65,8 @@ export function PasswordResetEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    We received a request to reset the password for your Emberly account. Click the button below to create a new password.
+                    We received a request to reset the password for your Emberly
+                    account. Click the button below to create a new password.
                   </Text>
                 </Column>
               </Row>
@@ -86,7 +87,9 @@ export function PasswordResetEmail({
               <Row className="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                 <Column align="center">
                   <Text className="m-0 text-sm text-yellow-800">
-                    <strong>⏰ This link expires in {expiresInMinutes} minutes</strong>
+                    <strong>
+                      ⏰ This link expires in {expiresInMinutes} minutes
+                    </strong>
                   </Text>
                 </Column>
               </Row>
@@ -110,7 +113,8 @@ export function PasswordResetEmail({
               <Row className="mt-6">
                 <Column className="rounded-lg bg-blue-50 p-4 border border-blue-200">
                   <Text className="m-0 text-sm text-blue-900">
-                    <strong>Didn't request this?</strong> If you didn't request a password reset, you can safely ignore this email or{' '}
+                    <strong>Didn't request this?</strong> If you didn't request
+                    a password reset, you can safely ignore this email or{' '}
                     <Link
                       href="https://embrly.ca/contact"
                       className="text-blue-700 font-semibold no-underline"
@@ -147,7 +151,8 @@ export function PasswordResetEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

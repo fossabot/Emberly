@@ -93,13 +93,13 @@ export async function POST(req: Request) {
       // Apply the repair action
       switch (action) {
         case 'replace-hyphen':
-          newName = user.name.replace(/ /g, '-')
+          newName = user.name!.replace(/ /g, '-')
           break
         case 'replace-underscore':
-          newName = user.name.replace(/ /g, '_')
+          newName = user.name!.replace(/ /g, '_')
           break
         case 'remove-spaces':
-          newName = user.name.replace(/ /g, '')
+          newName = user.name!.replace(/ /g, '')
           break
       }
 
@@ -107,8 +107,8 @@ export async function POST(req: Request) {
       if (processedNames.has(newName)) {
         results.push({
           userId: user.id,
-          email: user.email,
-          oldName: user.name,
+          email: user.email ?? '',
+          oldName: user.name!,
           newName,
           status: 'skipped',
           reason: 'Would create a duplicate username in this repair batch',
@@ -127,8 +127,8 @@ export async function POST(req: Request) {
       if (existingUser) {
         results.push({
           userId: user.id,
-          email: user.email,
-          oldName: user.name,
+          email: user.email ?? '',
+          oldName: user.name!,
           newName,
           status: 'skipped',
           reason: `Username already taken by another user (${existingUser.id})`,
@@ -141,8 +141,8 @@ export async function POST(req: Request) {
       if (dryRun) {
         results.push({
           userId: user.id,
-          email: user.email,
-          oldName: user.name,
+          email: user.email ?? '',
+          oldName: user.name!,
           newName,
           status: 'success',
         })
@@ -155,8 +155,8 @@ export async function POST(req: Request) {
 
           results.push({
             userId: user.id,
-            email: user.email,
-            oldName: user.name,
+            email: user.email ?? '',
+            oldName: user.name ?? '',
             newName,
             status: 'success',
           })
@@ -165,8 +165,8 @@ export async function POST(req: Request) {
         } catch (err) {
           results.push({
             userId: user.id,
-            email: user.email,
-            oldName: user.name,
+            email: user.email ?? '',
+            oldName: user.name ?? '',
             newName,
             status: 'error',
             reason: err instanceof Error ? err.message : 'Unknown error',

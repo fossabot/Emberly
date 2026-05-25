@@ -134,7 +134,7 @@ export async function DELETE(req: Request, { params }: Params) {
                 await deleteDnsRecord(instance.cfDnsRecordId)
                 logger.info(`[Admin] Deleted Cloudflare DNS record ${instance.cfDnsRecordId}`)
             } catch (cfErr) {
-                logger.warn('[Admin] Cloudflare DNS record deletion failed (non-fatal)', cfErr as Error)
+                logger.warn('[Admin] Cloudflare DNS record deletion failed (non-fatal)', { error: cfErr })
             }
         }
 

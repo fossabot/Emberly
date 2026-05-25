@@ -191,7 +191,7 @@ export async function cancelSubscription(
  */
 export async function getActiveSubscription(
     userId: string
-): Promise<(Subscription & { product: { id: string; name: string; metadata: unknown } }) | null> {
+): Promise<(Subscription & { product: { id: string; name: string } }) | null> {
     const subscription = await prisma.subscription.findFirst({
         where: {
             userId,
@@ -199,7 +199,7 @@ export async function getActiveSubscription(
         },
         include: {
             product: {
-                select: { id: true, name: true, metadata: true },
+                select: { id: true, name: true },
             },
         },
         orderBy: { createdAt: 'desc' },

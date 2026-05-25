@@ -68,7 +68,8 @@ export function DeletionRequestedEmail({
                     Your Emberly account is scheduled to be permanently deleted.
                   </Text>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    <strong>Deletion date:</strong> {new Date(scheduledAt).toLocaleString()}
+                    <strong>Deletion date:</strong>{' '}
+                    {new Date(scheduledAt).toLocaleString()}
                   </Text>
                 </Column>
               </Row>
@@ -76,7 +77,9 @@ export function DeletionRequestedEmail({
               <Row className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Column>
                   <Text className="m-0 text-sm text-blue-800">
-                    <strong>ℹ️ Before deletion:</strong> All your files, settings, and account data will be permanently removed. This action cannot be undone.
+                    <strong>ℹ️ Before deletion:</strong> All your files,
+                    settings, and account data will be permanently removed. This
+                    action cannot be undone.
                   </Text>
                 </Column>
               </Row>
@@ -100,7 +103,8 @@ export function DeletionRequestedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

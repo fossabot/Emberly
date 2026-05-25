@@ -14,7 +14,7 @@ import {
   SiPostgresql, SiMysql, SiMongodb, SiRedis, SiSqlite,
   SiGraphql, SiApollographql,
   SiGooglecloud, SiCloudflare, SiVercel, SiNetlify,
-  SiTailwindcss, SiCss3, SiHtml5, SiSass,
+  SiTailwindcss, SiCss, SiHtml5, SiSass,
   SiUnity, SiUnrealengine, SiGodotengine, SiBlender, SiFigma,
   SiDiscord,
   SiLinux, SiUbuntu, SiDebian, SiArchlinux,

@@ -135,3 +135,4 @@ export async function GET(req: NextRequest) {
         return apiError('Failed to fetch audit logs', HTTP_STATUS.INTERNAL_SERVER_ERROR)
     }
 }
+

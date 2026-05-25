@@ -28,7 +28,9 @@ export function NexiumSquadInviteDeclinedEmail({
   return (
     <Html>
       <Head>
-        <Preview>{memberName} declined your invite to join {squadName}</Preview>
+        <Preview>
+          {memberName} declined your invite to join {squadName}
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -38,7 +40,9 @@ export function NexiumSquadInviteDeclinedEmail({
               <Row>
                 <Column align="left">
                   <Link href="https://embrly.ca" className="inline-block">
-                    <Text className="m-0 text-xl font-bold text-orange-600">Emberly</Text>
+                    <Text className="m-0 text-xl font-bold text-orange-600">
+                      Emberly
+                    </Text>
                   </Link>
                 </Column>
               </Row>
@@ -64,8 +68,9 @@ export function NexiumSquadInviteDeclinedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    <strong>{memberName}</strong> has declined your invitation to join{' '}
-                    <strong>{squadName}</strong>. No action is required on your end — you can always invite someone else.
+                    <strong>{memberName}</strong> has declined your invitation
+                    to join <strong>{squadName}</strong>. No action is required
+                    on your end — you can always invite someone else.
                   </Text>
                 </Column>
               </Row>
@@ -74,10 +79,15 @@ export function NexiumSquadInviteDeclinedEmail({
               <Row className="mt-2">
                 <Column className="rounded-lg bg-blue-50 p-4 border border-blue-200">
                   <Text className="m-0 text-sm text-blue-900">
-                    You can invite other users from your squad's Members tab on the{' '}
-                    <Link href="https://embrly.ca/dashboard/discovery" className="text-blue-700 underline">
+                    You can invite other users from your squad's Members tab on
+                    the{' '}
+                    <Link
+                      href="https://embrly.ca/dashboard/discovery"
+                      className="text-blue-700 underline"
+                    >
                       Discovery dashboard
-                    </Link>.
+                    </Link>
+                    .
                   </Text>
                 </Column>
               </Row>
@@ -89,10 +99,14 @@ export function NexiumSquadInviteDeclinedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                   <Text className="m-0 mt-1 text-xs text-gray-400">
-                    <Link href="https://embrly.ca" className="text-gray-400 underline">
+                    <Link
+                      href="https://embrly.ca"
+                      className="text-gray-400 underline"
+                    >
                       embrly.ca
                     </Link>
                   </Text>

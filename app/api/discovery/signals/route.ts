@@ -1,9 +1,12 @@
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAuth } from '@/packages/lib/auth/api-auth'
-import { getProfile, addSignal, reorderSignals } from '@/packages/lib/nexium'
-import { SignalInputSchema, ReorderSignalsSchema } from '@/packages/types/dto/nexium'
 import { events } from '@/packages/lib/events'
 import { getRepo } from '@/packages/lib/github'
+import { addSignal, getProfile, reorderSignals } from '@/packages/lib/nexium'
+import {
+  ReorderSignalsSchema,
+  SignalInputSchema,
+} from '@/packages/types/dto/nexium'
 
 /** Parse owner + repo name from a github.com URL, returning null if not a GitHub URL. */
 function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
@@ -24,7 +27,8 @@ export async function GET(req: Request) {
   if (response) return response
 
   const profile = await getProfile(user.id)
-  if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
+  if (!profile)
+    return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
   return apiResponse(profile.signals)
 }
 
@@ -37,18 +41,28 @@ export async function POST(req: Request) {
 
   if (Array.isArray(body.orderedIds)) {
     const parsed = ReorderSignalsSchema.safeParse(body)
-    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+    if (!parsed.success)
+      return apiError(
+        parsed.error.issues[0]?.message ?? 'Invalid input',
+        HTTP_STATUS.BAD_REQUEST
+      )
     const profile = await getProfile(user.id)
-    if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
+    if (!profile)
+      return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
     await reorderSignals(profile.id, parsed.data.orderedIds)
     return apiResponse({ ok: true })
   }
 
   const parsed = SignalInputSchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success)
+    return apiError(
+      parsed.error.issues[0]?.message ?? 'Invalid input',
+      HTTP_STATUS.BAD_REQUEST
+    )
 
   const profile = await getProfile(user.id)
-  if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
+  if (!profile)
+    return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
 
   try {
     // Auto-fetch GitHub repo metadata when URL is a github.com repo link
@@ -65,7 +79,10 @@ export async function POST(req: Request) {
             forks_count: repoData.forks_count,
             language: repoData.language,
             topics: repoData.topics,
-            owner: { login: repoData.owner.login, avatar_url: repoData.owner.avatar_url },
+            owner: {
+              login: repoData.owner.login,
+              avatar_url: repoData.owner.avatar_url,
+            },
           }
         }
       }
@@ -73,15 +90,22 @@ export async function POST(req: Request) {
 
     const signal = await addSignal(profile.id, { ...parsed.data, metadata })
 
-    void events.emit('nexium.signal-added', {
-      userId: user.id,
-      email: user.email!,
-      signalType: parsed.data.type,
-      signalTitle: parsed.data.title,
-    }).catch((err) => console.error('[Events] Failed to emit nexium.signal-added', err))
+    void events
+      .emit('nexium.signal-added', {
+        userId: user.id,
+        email: user.email!,
+        signalType: parsed.data.type,
+        signalTitle: parsed.data.title,
+      })
+      .catch((err) =>
+        console.error('[Events] Failed to emit nexium.signal-added', err)
+      )
 
-    return apiResponse(signal, HTTP_STATUS.CREATED)
+    return apiResponse(signal)
   } catch (err: any) {
-    return apiError(err.message ?? 'Failed to add signal', HTTP_STATUS.BAD_REQUEST)
+    return apiError(
+      err.message ?? 'Failed to add signal',
+      HTTP_STATUS.BAD_REQUEST
+    )
   }
 }

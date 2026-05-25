@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     // If the request came from a verified custom domain owned by the user,
     // override the generated RequestURL so ShareX uses that domain.
     try {
-      const reqHost = (request.headers && (request.headers as Headers).get('host')) || null
+      const reqHost = (req.headers && (req.headers as Headers).get('host')) || null
       if (reqHost) {
         const hostNoPort = reqHost.replace(/:\d+$/, '')
         if (hostNoPort) {
@@ -113,3 +113,4 @@ export async function GET(req: Request) {
     )
   }
 }
+

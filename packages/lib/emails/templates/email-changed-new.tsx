@@ -67,10 +67,12 @@ export function EmailChangedNewEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Your Emberly account email has been successfully updated to this address ({newEmail}).
+                    Your Emberly account email has been successfully updated to
+                    this address ({newEmail}).
                   </Text>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    You'll receive all future account emails at this new address.
+                    You'll receive all future account emails at this new
+                    address.
                   </Text>
                 </Column>
               </Row>
@@ -105,7 +107,8 @@ export function EmailChangedNewEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

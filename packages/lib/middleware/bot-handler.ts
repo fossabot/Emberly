@@ -10,7 +10,8 @@ export function isBotRequest(userAgent: string): boolean {
     userAgent.includes('telegram') ||
     userAgent.includes('twitter') ||
     userAgent.includes('facebook') ||
-    userAgent.includes('linkedin')
+    userAgent.includes('linkedin') ||
+    userAgent.includes('whatsapp')
   )
 }
 
@@ -18,6 +19,10 @@ export async function handleBotRequest(
   request: NextRequest
 ): Promise<NextResponse | null> {
   const userAgent = request.headers.get('user-agent')?.toLowerCase() || ''
+  const pathname =
+    request.nextUrl.pathname.length > 1
+      ? request.nextUrl.pathname.replace(/\/$/, '')
+      : request.nextUrl.pathname
 
   if (
     !isBotRequest(userAgent) ||
@@ -26,13 +31,13 @@ export async function handleBotRequest(
     return null
   }
 
-  const fileExt = request.nextUrl.pathname.split('.').pop()?.toLowerCase()
+  const fileExt = pathname.split('.').pop()?.toLowerCase()
   const isVideo = fileExt && VIDEO_EXTENSIONS.includes(fileExt)
-  const isRawPath = request.nextUrl.pathname.endsWith('/raw')
-  const isDirectPath = request.nextUrl.pathname.endsWith('/direct')
+  const isRawPath = pathname.endsWith('/raw')
+  const isDirectPath = pathname.endsWith('/direct')
 
   // Extract user ID and filename from pathname: /[userUrlId]/[filename]
-  const pathMatch = request.nextUrl.pathname.match(/^\/([^/]+)\/([^/]+)/)
+  const pathMatch = pathname.match(/^\/([^/]+)\/([^/]+)/)
   if (!pathMatch) {
     return NextResponse.next()
   }
@@ -65,7 +70,7 @@ export async function handleBotRequest(
     // Rich embeds disabled: redirect to raw file
     if (!isRawPath && !isDirectPath) {
       const url = new URL(request.url)
-      url.pathname = `${url.pathname}/raw`
+      url.pathname = `${pathname}/raw`
       return NextResponse.redirect(url)
     }
     return NextResponse.next()

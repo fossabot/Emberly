@@ -336,7 +336,7 @@ export function PasteForm() {
                 {content ? (
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeHighlight]}
+                    rehypePlugins={[rehypeHighlight as any]}
                   >
                     {content}
                   </ReactMarkdown>

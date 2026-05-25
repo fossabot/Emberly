@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   // Support bulk replace: { skills: [...] }
   if (Array.isArray(body.skills)) {
     const parsed = ReplaceSkillsSchema.safeParse(body)
-    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
     const profile = await getProfile(user.id)
     if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
     const result = await replaceSkills(profile.id, parsed.data.skills)
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   // Support reorder: { orderedIds: [...] }
   if (Array.isArray(body.orderedIds)) {
     const parsed = ReorderSkillsSchema.safeParse(body)
-    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+    if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
     const profile = await getProfile(user.id)
     if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
     await reorderSkills(profile.id, parsed.data.orderedIds)
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   }
 
   const parsed = SkillInputSchema.safeParse(body)
-  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input', HTTP_STATUS.BAD_REQUEST)
+  if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   const profile = await getProfile(user.id)
   if (!profile) return apiError('Discovery profile not found', HTTP_STATUS.NOT_FOUND)
@@ -63,8 +63,9 @@ export async function POST(req: Request) {
       skillName: parsed.data.name,
     }).catch((err) => console.error('[Events] Failed to emit nexium.skill-added', err))
 
-    return apiResponse(skill, HTTP_STATUS.CREATED)
+    return apiResponse(skill)
   } catch (err: any) {
     return apiError(err.message ?? 'Failed to add skill', HTTP_STATUS.BAD_REQUEST)
   }
 }
+

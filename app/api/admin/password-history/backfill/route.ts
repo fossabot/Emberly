@@ -29,7 +29,7 @@ export async function GET(_req: Request) {
     })
   } catch (error) {
     console.error('Failed to get password history stats:', error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     // Backfill specific user
     if (action === 'backfill-user') {
       if (!userId) {
-        return apiError('Missing required field: userId', HTTP_STATUS.BAD_REQUEST)
+        return apiError('Missing required field: userId')
       }
 
       const wasAdded = await backfillUserPasswordHistory(userId)
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       })
     }
 
-    return apiError('Invalid action', HTTP_STATUS.BAD_REQUEST)
+    return apiError('Invalid action')
   } catch (error) {
     console.error('Failed to backfill password history:', error)
     return apiError(
@@ -80,3 +80,4 @@ export async function POST(req: Request) {
     )
   }
 }
+

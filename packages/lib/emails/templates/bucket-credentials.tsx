@@ -70,7 +70,9 @@ export function BucketCredentialsEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-2xl font-bold text-gray-900">
-                    {recipientName ? `${recipientName}, your bucket is live!` : 'Your bucket is live!'}
+                    {recipientName
+                      ? `${recipientName}, your bucket is live!`
+                      : 'Your bucket is live!'}
                   </Text>
                 </Column>
               </Row>
@@ -78,8 +80,9 @@ export function BucketCredentialsEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    We&apos;ve configured your dedicated storage bucket <strong>{bucketName}</strong>. Use the
-                    credentials below to connect your S3-compatible client.
+                    We&apos;ve configured your dedicated storage bucket{' '}
+                    <strong>{bucketName}</strong>. Use the credentials below to
+                    connect your S3-compatible client.
                   </Text>
                 </Column>
               </Row>
@@ -107,8 +110,8 @@ export function BucketCredentialsEmail({
 
                 <Hr className="my-4 border-gray-700" />
                 <Text className="m-0 text-xs text-amber-400">
-                  ⚠️ Your Secret Access Key was set by Emberly and is not shown here for security. 
-                  If you need it, please contact support.
+                  ⚠️ Your Secret Access Key was set by Emberly and is not shown
+                  here for security. If you need it, please contact support.
                 </Text>
               </Section>
 
@@ -118,7 +121,10 @@ export function BucketCredentialsEmail({
                   Security reminder
                 </Text>
                 <Text className="m-0 text-sm text-amber-700">
-                  Never share your access credentials publicly. Store them securely in environment variables or a secrets manager. Contact support immediately if you suspect unauthorized access.
+                  Never share your access credentials publicly. Store them
+                  securely in environment variables or a secrets manager.
+                  Contact support immediately if you suspect unauthorized
+                  access.
                 </Text>
               </Section>
 
@@ -142,11 +148,15 @@ export function BucketCredentialsEmail({
               <Row>
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-400">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                   <Text className="m-0 mt-1 text-xs text-gray-400">
                     Questions? Contact us at{' '}
-                    <Link href="mailto:support@embrly.ca" className="text-orange-600">
+                    <Link
+                      href="mailto:support@embrly.ca"
+                      className="text-orange-600"
+                    >
                       support@embrly.ca
                     </Link>
                   </Text>

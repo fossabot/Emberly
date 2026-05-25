@@ -102,7 +102,7 @@ export async function POST(req: Request) {
             // Send email with verification code
             try {
                 await sendTemplateEmail({
-                    to: user.email,
+                    to: user.email ?? '',
                     subject: 'Enable Two-Factor Authentication',
                     template: VerificationCodeEmail,
                     props: {
@@ -166,12 +166,12 @@ export async function POST(req: Request) {
             // Emit auditable events (fire-and-forget)
             void events.emit('auth.2fa-enabled', {
                 userId: user.id,
-                email: user.email,
+                email: user.email ?? '',
                 method: 'totp',
             }).catch((err) => console.error('[Events] Failed to emit auth.2fa-enabled', err))
             void events.emit('auth.2fa-backup-codes-generated', {
                 userId: user.id,
-                email: user.email,
+                email: user.email ?? '',
                 codesCount: recoveryCodes.length,
             }).catch((err) => console.error('[Events] Failed to emit auth.2fa-backup-codes-generated', err))
 
@@ -243,7 +243,7 @@ export async function DELETE(req: Request) {
             // Send email with verification code
             try {
                 await sendTemplateEmail({
-                    to: user.email,
+                    to: user.email ?? '',
                     subject: 'Disable Two-Factor Authentication',
                     template: VerificationCodeEmail,
                     props: {
@@ -316,7 +316,7 @@ export async function DELETE(req: Request) {
             // Emit auditable event (fire-and-forget)
             void events.emit('auth.2fa-disabled', {
                 userId: user.id,
-                email: user.email,
+                email: user.email ?? '',
                 method: 'totp',
                 disabledBy: 'user',
             }).catch((err) => console.error('[Events] Failed to emit auth.2fa-disabled', err))
@@ -330,3 +330,4 @@ export async function DELETE(req: Request) {
         return apiError('Internal server error')
     }
 }
+

@@ -609,3 +609,4 @@ async function deprovisionUserStorageBucket(
 
     logger.info(`[Deprovision] Bucket deprovisioned for user ${user.id}`)
 }
+

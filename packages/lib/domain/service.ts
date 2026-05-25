@@ -2,11 +2,11 @@
  * Server-side domain service — NOT browser-compatible.
  * Contains shared logic used across domain API routes.
  */
-import type { CustomDomain } from '@/prisma/generated/prisma/client'
 import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
+import { type CustomDomain, Prisma } from '@/prisma/generated/prisma/client'
 
-const logger = loggers.domains || loggers.app
+const logger = loggers.domains
 
 /** Regex for a valid hostname (e.g. "img.example.com"). */
 export const DOMAIN_NAME_REGEX = /^([a-z0-9-]+\.)+[a-z]{2,}$/
@@ -23,9 +23,11 @@ export function isValidDomainName(domain: string): boolean {
  */
 export async function getDomainWithOwnership(
   domainId: string,
-  userId: string,
+  userId: string
 ): Promise<CustomDomain | null> {
-  const domain = await prisma.customDomain.findUnique({ where: { id: domainId } })
+  const domain = await prisma.customDomain.findUnique({
+    where: { id: domainId },
+  })
   if (!domain || domain.userId !== userId) return null
   return domain
 }
@@ -38,7 +40,7 @@ export async function getDomainWithOwnership(
 export async function persistCfErrorBackoff(
   domainId: string,
   currentBackoffCount: number,
-  cfMeta: unknown,
+  cfMeta: unknown
 ): Promise<void> {
   const next = Math.min(currentBackoffCount + 1, 10)
   const exp = Math.min(next, 5)
@@ -47,7 +49,12 @@ export async function persistCfErrorBackoff(
   try {
     await prisma.customDomain.update({
       where: { id: domainId },
-      data: { cfStatus: 'error', cfMeta, cfBackoffCount: next, cfPauseUntil: pauseUntil },
+      data: {
+        cfStatus: 'error',
+        cfMeta: safeSerialize(cfMeta) as Prisma.InputJsonValue,
+        cfBackoffCount: next,
+        cfPauseUntil: pauseUntil,
+      },
     })
   } catch (err) {
     logger.error('Failed to persist CF error backoff state', {
@@ -70,7 +77,7 @@ export function safeSerialize(value: unknown): unknown {
           seen.add(val)
         }
         return val
-      }),
+      })
     )
   } catch {
     try {

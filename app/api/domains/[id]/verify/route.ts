@@ -7,7 +7,7 @@ import { prisma } from '@/packages/lib/database/prisma'
 import { loggers } from '@/packages/lib/logger'
 import { getCustomHostname } from '@/packages/lib/cloudflare/client'
 
-const logger = loggers.domains || loggers.app
+const logger = loggers.domains
 const resolveTxt = dns.promises.resolveTxt
 
 // Simple in-memory cache for TXT lookups to avoid hammering DNS during client polling.
@@ -43,7 +43,9 @@ async function dohResolveTxt(name: string): Promise<string[]> {
     }
     return out
   } catch (err) {
-    logger.debug('DoH TXT lookup exception', err as Error)
+    logger.debug('DoH TXT lookup exception', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     return []
   }
 }
@@ -60,7 +62,9 @@ async function getTxtRecords(name: string): Promise<string[]> {
     txtLookupCache.set(name, { records, expiresAt: now + DEFAULT_CACHE_TTL_MS })
     return records
   } catch (err) {
-    logger.debug('System TXT lookup failed, falling back to DoH', err as Error)
+    logger.debug('System TXT lookup failed, falling back to DoH', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     const records = await dohResolveTxt(name)
     txtLookupCache.set(name, { records, expiresAt: now + DEFAULT_CACHE_TTL_MS })
     return records

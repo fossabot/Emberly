@@ -1,9 +1,11 @@
-import { z } from 'zod'
-
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { requireAdmin } from '@/packages/lib/auth/api-auth'
-import { getStripeClient, isStripeConfigured } from '@/packages/lib/stripe/client'
 import { loggers } from '@/packages/lib/logger'
+import {
+  getStripeClient,
+  isStripeConfigured,
+} from '@/packages/lib/stripe/client'
+import { z } from 'zod'
 
 const logger = loggers.api.getChildLogger('admin-promo-codes')
 
@@ -13,7 +15,10 @@ const CreatePromoSchema = z.object({
     .string()
     .min(2)
     .max(50)
-    .regex(/^[A-Z0-9_-]+$/i, 'Code must only contain letters, numbers, hyphens, and underscores'),
+    .regex(
+      /^[A-Z0-9_-]+$/i,
+      'Code must only contain letters, numbers, hyphens, and underscores'
+    ),
   /** Discount percentage (0–100). Use this OR amountOff, not both. */
   percentOff: z.number().min(1).max(100).optional(),
   /** Fixed discount in cents. Use this OR percentOff, not both. */
@@ -38,13 +43,19 @@ export async function GET(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
+      return apiError(
+        'Stripe is not configured',
+        HTTP_STATUS.SERVICE_UNAVAILABLE
+      )
     }
 
     const stripe = await getStripeClient()
 
     const [promoCodes, coupons] = await Promise.all([
-      stripe.promotionCodes.list({ limit: 100, expand: ['data.promotion.coupon'] }),
+      stripe.promotionCodes.list({
+        limit: 100,
+        expand: ['data.promotion.coupon'],
+      }),
       stripe.coupons.list({ limit: 100 }),
     ])
 
@@ -71,7 +82,7 @@ export async function GET(req: Request) {
     return apiResponse(result)
   } catch (error) {
     logger.error('Error listing promo codes', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
 
@@ -85,7 +96,10 @@ export async function POST(req: Request) {
     if (response) return response
 
     if (!(await isStripeConfigured())) {
-      return apiError('Stripe is not configured', HTTP_STATUS.SERVICE_UNAVAILABLE)
+      return apiError(
+        'Stripe is not configured',
+        HTTP_STATUS.SERVICE_UNAVAILABLE
+      )
     }
 
     const json = await req.json().catch(() => null)
@@ -94,16 +108,33 @@ export async function POST(req: Request) {
       return apiError(parsed.error.issues[0].message, HTTP_STATUS.BAD_REQUEST)
     }
 
-    const { code, percentOff, amountOff, currency, maxRedemptions, expiresAt, isPrivate } = parsed.data
+    const {
+      code,
+      percentOff,
+      amountOff,
+      currency,
+      maxRedemptions,
+      expiresAt,
+      isPrivate,
+    } = parsed.data
 
     if (!percentOff && !amountOff) {
-      return apiError('Either percentOff or amountOff is required', HTTP_STATUS.BAD_REQUEST)
+      return apiError(
+        'Either percentOff or amountOff is required',
+        HTTP_STATUS.BAD_REQUEST
+      )
     }
     if (percentOff && amountOff) {
-      return apiError('Only one of percentOff or amountOff may be set', HTTP_STATUS.BAD_REQUEST)
+      return apiError(
+        'Only one of percentOff or amountOff may be set',
+        HTTP_STATUS.BAD_REQUEST
+      )
     }
     if (amountOff && !currency) {
-      return apiError('currency is required when amountOff is set', HTTP_STATUS.BAD_REQUEST)
+      return apiError(
+        'currency is required when amountOff is set',
+        HTTP_STATUS.BAD_REQUEST
+      )
     }
 
     const stripe = await getStripeClient()

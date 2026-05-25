@@ -4,9 +4,84 @@ All notable changes to this project will be documented in this file.
 
 The format is based on "Keep a Changelog" and follows [Semantic Versioning](https://semver.org/).
 
+## [2.4.4] - 2026-05-24
+
+### Added
+
+- **Expanded Theme System** — User theming options significantly expanded with new preset themes and custom hues.
+  - **New Theme Presets** (7 additional themes): 🌅 Sunset Glow (gradient-shift animated), 🌲 Forest Deep (particle effects), 🌊 Ocean Depth (wave animation), 🌙 Midnight Purple (glitch gaming), 🏔️ Slate Stone (grid gaming), 🏝️ Tropical Breeze (particle effects), 💜 Lavender Dream (aurora effects).
+    - Each theme includes full ColorConfig with 18 HSL-based color properties, background effects, and animation speeds.
+    - Metadata added to `THEME_METADATA_MAP` with descriptions, emoji identifiers, and effect configurations.
+  - **Expanded Custom Hues** (12 new hues added for 22 total): Lime, Spring, Mint, Teal, Turquoise, Sky, Purple, Violet, Magenta, Crimson, and additional saturation/lightness variations.
+    - Hues now span the full color spectrum from warm tones (Coral, Amber, Marigold) through cool tones (Teal, Azure, Ocean) to purples and reds.
+    - Each hue preset includes saturation and lightness values optimized for visual consistency.
+  - Users can now mix-and-match theme presets with any custom hue for greater personalization.
+- **Storage Bucket Sync Service** — New centralized synchronization service for Vultr Object Storage bucket management.
+  - `packages/lib/storage/sync-buckets.ts` — Unified bucket sync logic handling provisioning, status updates, and credential management.
+  - `POST /api/admin/storage/sync-buckets` — Admin endpoint to trigger manual sync of all Vultr buckets, with operation counts (imported, updated, synced).
+  - Automatic detection and sync of Vultr instance status changes (`pending` → `active`), credential population, and database state reconciliation.
+- **Storage Event Handler** — New dedicated event handler for storage-related events.
+  - `packages/lib/events/handlers/storage.ts` — Dispatches events like `user.bucket-provisioned`, `user.bucket-deprovisioned` with proper error handling and logging.
+  - Integrated into the main event handler index for consistent event routing.
+
+### Changed
+
+- **Email Template Branding** — All transactional email templates updated with consistent NodeByte LTD branding.
+  - 32 email templates across account lifecycle (welcome, verification, password reset, subscription updates, storage events, nexium events, etc.) now display NodeByte LTD copyright and branding.
+  - Company name consolidated for consistent brand presentation across all customer communications.
+- **Admin Broadcast Email Markdown** — Admin broadcast emails now properly render markdown formatting.
+  - `AdminBroadcastEmail` template rewritten to support inline markdown rendering with email-safe HTML styling.
+  - Markdown support includes: headings (h1-h3), bold, italic, lists, links, blockquotes, code blocks, and horizontal rules.
+- **Footer Visual Design** — Footer animated border now matches navbar styling for consistency.
+  - Changed from static `gradient-border` to animated `gradient-border-animated` class.
+  - Provides cohesive visual language across the entire site header and footer.
+- **Animated Background System Refinement** — Animation functions improved for smoother, more visually appealing effects.
+  - Parallax scrolling now implements horizontal wrap-around layers for seamless infinite scrolling.
+  - Glitch effect with better frequency control and visual artifact distribution.
+  - Aurora effect improved for better smoothness and glow quality.
+  - Gradient shift enhanced with secondary radial gradient layer for depth.
+  - Scanlines animation now includes flicker effects for authenticity.
+  - Overall performance optimizations for the particle and effect systems.
+
+### Fixed
+
+- **OAuth Link/Unlink Flow Refactoring** — Discord and GitHub authentication link/unlink endpoints refactored for improved code clarity and consistency.
+  - Simplified callback handling in `/api/auth/link/[provider]/callback/` routes.
+  - Improved error handling and response consistency across all OAuth flows.
+  - Type safety enhancements to prevent edge cases in credential validation.
+- **Promo Code Admin Management** — Improvements to promo code creation and management API.
+  - Fixed edge cases in code validation and uniqueness checking.
+  - Enhanced response handling for duplicate code detection.
+- **Vultr Storage API Integration** — Code quality improvements to the Vultr Object Storage management endpoint.
+  - Refactored `POST /api/admin/storage/vultr/route.ts` for better maintainability and error handling.
+  - Improved instance provisioning flow with better status tracking.
+- **Legal Content API Improvements** — Legal routes refactored for better code structure and consistency.
+  - Improved parameter validation and response handling.
+  - Enhanced error messages for debugging.
+- **Video Player Meta Tags** — Fixed video rendering when URLs contain trailing slashes.
+  - `POST /api/files/[id]/player` now correctly handles URLs with trailing slashes without breaking playback metadata.
+- **File Service Updates** — Improvements to file upload and management service layer.
+  - Better error handling and validation logic in file operations.
+- **API Response Handling** — CORS and response utilities improved for better cross-origin support.
+  - Enhanced CORS header handling for consistent behavior across all endpoints.
+- **Type Safety Improvements** — Across-the-board type refinements and fixes.
+  - Fixed TypeScript validation errors to ensure strict type safety.
+  - Improved inference in generic functions and API responses.
+- **Linting and Code Quality** — Resolved linting issues and code quality recommendations from automated analysis.
+  - Removed unused imports and variables.
+  - Fixed inconsistent naming and spacing issues.
+- **License Information** — Updated copyright and license information in LICENSE file.
+  - Reflects current organizational changes and branding updates.
+
+### Deprecated
+
+- **Dynamic Background Component** — `packages/components/layout/dynamic-background.tsx` replaced by enhanced animated-background system.
+  - Existing animated background effects consolidated into unified system for better maintainability.
+
 ## [2.4.3] - 2026-05-18
 
 ### Added
+
 - **Admin Username Repair Endpoint** — New superadmin-only endpoint to detect and patch usernames that contain whitespace.
   - `POST /api/admin/users/repair-usernames` supports dry-run and apply modes.
   - Repair strategies: replace spaces with hyphens, replace with underscores, or remove spaces entirely.
@@ -17,12 +92,14 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Emits provision events and sends the bucket credentials email when assignment succeeds.
 
 ### Changed
+
 - **Stripe Subscription Metadata Persistence** — Checkout session creation now mirrors metadata onto `subscription_data.metadata` for subscription mode.
   - Ensures downstream webhook events (including invoice-based recovery flows) retain `type`, `location`, and `tier` context.
 - **Bucket Dashboard Recovery Behavior** — `/dashboard/bucket` now attempts automatic self-healing when a user has an active storage-bucket subscription but no assigned bucket record.
   - Page messaging updated to reflect automatic provisioning status instead of manual 12-24 hour setup expectations.
 
 ### Fixed
+
 - **Username Whitespace Validation Gaps** — Setup/admin username validation now blocks whitespace-containing usernames consistently.
   - Validation rules were aligned to prevent creating handles like `Eli Frost` in setup flows.
 - **Storage Bucket Purchase Reliability** — Webhook provisioning now merges checkout + subscription metadata and includes an invoice recovery path.
@@ -36,6 +113,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.4.2] - 2026-04-14
 
 ### Added
+
 - **User API Key Management System** — Users can now create, name, copy, and revoke multiple personal API keys from `/me` → API tab.
   - New `UserApiKey` Prisma model (`ebk_` prefix, SHA-256 hashed, max 10 keys per user, `lastUsedAt` tracking).
   - `packages/lib/api-keys/index.ts` — `generateApiKey()`, `listUserApiKeys()`, `createUserApiKey()` (enforces 10-key cap), `revokeUserApiKey()`.
@@ -75,6 +153,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - **Vultr API Key in Integrations Config** — `vultr.apiKey` added to the config schema (`packages/lib/config/index.ts`) and `DEFAULT_CONFIG`; the Vultr client reads from this field with a fallback to the `VULTR_API_KEY` environment variable.
 
 ### Changed
+
 - **Profile API Tab** — Upload token and API key management moved out of the Uploads tab into a new dedicated **API** tab in `/me`.
   - `KeyRound` icon; tab inserted between Uploads and Applications in the Content group.
   - Upload Host domain selector remains in the Uploads tab (upload config, not key management).
@@ -86,6 +165,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - **Dashboard Storage Tracker Reading Correct Source** — The overview storage card now reads `user.storageUsed` (the denormalized MB field updated on every upload/delete) instead of aggregating raw bytes from the `File` table, which excluded S3-backed objects and caused near-zero or incorrect totals.
 
 ### Fixed
+
 - **Storage Usage Inconsistencies** — Several parts of the site were displaying incorrect or near-zero storage values due to unit mismatches across the storage pipeline.
   - `File.size` and `User.storageUsed` are stored in **MB**; the analytics API was naming those values with `bytes`-suffixed fields, causing consumers to double-convert.
   - `GET /api/analytics/storage` — response fields renamed: `totalBytes` → `totalMB`, `daily[].bytes` → `daily[].mb`, `breakdown[].bytes` → `breakdown[].mb`.
@@ -110,6 +190,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.4.1] - 2026-04-10
 
 ### Added
+
 - **Static Web Standards Files** — `robots.txt` and `manifest.webmanifest` moved to `public/` for faster serving and simpler deployment.
   - `public/robots.txt` — Static robot exclusion file for search engines and web crawlers; disallows `/api/`, `/dashboard/`, `/admin/` paths globally and blocks AI crawlers from user content (`/u/`).
   - `public/manifest.webmanifest` — Static PWA manifest with standalone display, dark theme (`#09090b` background, `#F97316` accent), app shortcuts (Upload, Shorten URL, Pricing), and maskable SVG icon support.
@@ -146,6 +227,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - `packages/components/admin/payments/promo-codes-manager.tsx` — "Private code" toggle (Switch + description) added to the create dialog; private codes display an `EyeOff · Private` pill badge inline with their code in the table. Create form default state extended with `isPrivate: false`.
 
 ### Fixed
+
 - **Admin Broadcast Email Markdown Not Rendering** — The compose UI advertised markdown support but the `AdminBroadcastEmail` template rendered the body as a plain text node, causing `**bold**`, `# headings`, `- lists`, etc. to appear literally in the email.
   - Added a `marked` renderer with email-safe inline styles for all elements (paragraphs, headings h1–h3, bold, italic, lists, links, blockquotes, code blocks, inline code, horizontal rules) since email clients strip `<style>` tags and don't honour Tailwind class names on dynamically injected HTML.
   - Replaced `<Text>{body}</Text>` with `<div dangerouslySetInnerHTML={{ __html: marked.parse(body) }} />` in `packages/lib/emails/templates/admin-broadcast.tsx`.
@@ -166,19 +248,21 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - `useScrollSafeOpen` hook added to `file-filters.tsx` — touch-triggered opens are deferred by one `requestAnimationFrame`; if the browser fires `pointercancel` (scroll took over) before the frame runs, the pending open is cancelled. Mouse and keyboard interactions open immediately with no change in behaviour.
 
 ### Policy
+
 - **SLA Uptime Commitment Adjusted** — Monthly uptime guarantee updated from `99.9%` to `99.6%` to better reflect a sustainable foundation for Emberly's current stage of growth.
 - **Infrastructure Timezone Alignment** — Monitoring, maintenance windows, and status reporting moved from UTC to **Mountain Standard Time (MST / GMT-7)** to align with Emberly's Canada-based operations.
 
 ## [2.4.0] - 2026-04-09
 
 ### Added
+
 - **Profile Route Moved to `/me`** — User profile settings previously lived at `/dashboard/profile`; now a standalone route at `/me` with its own layout and sidebar.
   - `app/(main)/me/layout.tsx` — new layout using `DashboardWrapper` (dashboard nav, no footer).
   - `app/(main)/me/page.tsx` — profile page powered by `ProfileClient` which has its own Account / Content / Engagement / Billing tab sidebar.
   - `app/(main)/me/logout-button.tsx` — `LogoutButton` moved from `dashboard/profile/`.
   - `/dashboard/profile` route removed; `/profile` redirect page updated to point at `/me`.
   - OAuth callback routes (GitHub and Discord link/unlink) updated to redirect to `/me` after completion.
-- **Full-Width Hero Cards on All Dashboard & Admin Pages** — Every dashboard and admin page now renders a full-width glass hero/title card *above* the `[sidebar | content]` flex row, rather than inside it.
+- **Full-Width Hero Cards on All Dashboard & Admin Pages** — Every dashboard and admin page now renders a full-width glass hero/title card _above_ the `[sidebar | content]` flex row, rather than inside it.
   - `DashboardShell` gains an optional `header?: React.ReactNode` prop; when provided it renders full-width above the sidebar+content flex row.
   - `AdminShell` gains the same `header` prop with identical behaviour.
   - All dashboard pages (`/dashboard`, `/dashboard/files`, `/dashboard/analytics`, `/dashboard/upload`, `/dashboard/urls`, `/dashboard/domains`, `/dashboard/paste`, `/dashboard/verification-codes`, `/dashboard/bucket`, `/dashboard/discovery`) updated to pass their hero as `header`.
@@ -202,6 +286,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Expand state initialised to open when already under `/dashboard/discovery`.
 
 ### Fixed
+
 - **Double Navbar on `/me` Routes** — `ConditionalBaseNav` excluded `/dashboard` and `/admin` from the base nav but not `/me`, causing two navbars to render on the profile page (`<BaseNav />` from the main layout + `DashboardWrapper`'s fixed glass navbar).
   - Added `/me` to the exclusion list in `conditional-base-nav.tsx`.
 - **`LogoutButton` Import Broken After Profile Move** — `discovery/page.tsx` imported `LogoutButton` from `../../profile/logout-button` which no longer exists after the profile route moved to `/me`. Fixed to `../../me/logout-button`.
@@ -215,6 +300,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.3.0] - 2026-04-09
 
 ### Added
+
 - **Discovery Dashboard Redesign** — Full sidebar-controlled layout replacing the previous flat tab strip.
   - Three sidebar modes: talent (sub-tabs), squad detail (squad tabs), and top-level (squads list).
   - Talent sub-sections — Profile, Skills, Signals, Opportunities, Applications — rendered as indented sidebar items below "Talent Profile" on desktop; horizontal strip on mobile.
@@ -274,6 +360,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - `PUT /api/discovery/signals/[id]` — re-fetches metadata when the URL field changes on an existing `GITHUB_REPO` signal, keeping star/fork counts fresh on edit.
 
 ### Fixed
+
 - **Squad Dashboard Blank Screen** — Squad detail page rendered nothing after a previous session changed the GET route to return `{ squad, isOwner }` while the client still read the response as the squad object directly.
   - Reverted `GET /api/discovery/squads/[id]` to return the squad directly via `apiResponse(squad)`; the `isOwner` flag is redundant since `page.tsx` passes `role` as a prop from the server.
 - **Kick Member Failures** — Kick action was broken in two independent ways.
@@ -316,6 +403,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Prisma migration: `20260409062443_add_squad_invites`.
 
 ### Technical
+
 - **Signal Display Refactor** — All three signal render locations unified behind the shared `SignalCard` component.
   - `nexium-dashboard.tsx` (profile settings panel), `nexium-public-section.tsx` (public profile sidebar), and `public-profile.tsx` (Talent tab full page) all replaced their inline signal render blocks with `<SignalCard />`.
   - Dashboard panel wraps each card in a `group relative` container so a floating delete button appears on hover without cluttering the card layout.
@@ -332,6 +420,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.2.0] - 2026-04-04
 
 ### Added
+
 - **Stripe API Clover Compatibility** — Updated promo code creation to use new Stripe v2025-11-17.clover API structure.
   - `promotionCodes.create` now uses `promotion: { type: 'coupon', coupon: string }` wrapper instead of direct `coupon: string` parameter.
   - Applied to three endpoints: `POST /api/admin/promo-codes`, `GET /api/admin/promo-codes`, and `POST /api/payments/promo-codes`.
@@ -372,6 +461,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Matches the design pattern of `AddOnSelector` component.
 
 ### Changed
+
 - **Documentation Files Comprehensive Update** — Production-ready documentation for open source project.
   - `README.md` expanded from minimal placeholder to complete project overview including:
     - Feature breakdown (file storage, domains, verification, teams, applications, admin tools)
@@ -396,6 +486,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Prevents Prisma (server-only database code) from being bundled into browser JavaScript.
 
 ### Fixed
+
 - **TypeScript Nullish Coalescing Operator Syntax** — Resolved Turbopack build error in GitHub utility.
   - Fixed operator precedence in `packages/lib/github/index.ts:181` by adding parentheses.
   - Changed: `org ?? integrations.github?.org || process.env.GITHUB_ORG ?? 'EmberlyOSS'`
@@ -416,6 +507,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Cleaned up `[KENER]` prefixed console logs used during debugging phase.
 
 ### Technical
+
 - **Prisma Migrations** — Three migrations for storage and permissions infrastructure.
   - `20260404075543_add_user_buckets` — User bucket management schema with quota tracking.
   - `20260404085324_add_user_grants` — User grants and permission system models.
@@ -432,6 +524,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.1.0] - 2026-04-03
 
 ### Added
+
 - **Brand Icon System (`skill-icons.tsx`)** — New shared utility in `packages/components/profile/` mapping 100+ skill name patterns to brand icons.
   - Uses **react-icons/si** (Simple Icons SVG) for modern tech: React, Next.js, TypeScript, Docker, Kubernetes, Terraform, GraphQL, Tailwind CSS, Svelte, Angular, Kotlin, Flutter, Rust, Go, and more.
   - Uses **devicons CSS font** for supplemental coverage: Python, Node.js, PHP, Ruby, Java, Swift, Dart, PostgreSQL, MySQL, MongoDB, Redis, GitHub, Firebase, AWS, HTML5, CSS3, Sass, Linux, Ubuntu, Debian, jQuery, npm, Laravel, Django, Meteor, Heroku, Jenkins, Travis CI, and more.
@@ -465,6 +558,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Fetches all payment method types via `stripe.customers.listPaymentMethods` (captures Link-attached cards that `type:'card'` misses).
 
 ### Changed
+
 - **Public Profile Redesign** — `public-profile.tsx` fully rewritten with a tabbed layout (Overview, Files, URLs, Contributions, Talent). Contributions tab lazy-loads on first click.
 - **Contributions API Performance** — `GET /api/users/[id]/contributions` parallelized with `Promise.allSettled` — all repo and commit detail fetches now run concurrently, eliminating sequential O(repos × commits) round-trips.
 - **Analytics Gating** — `GET /api/analytics/overview` now enforces plan-based gating on `topFiles` and `topUrls` fields (returns empty arrays for free tier) instead of unconditionally sending them.
@@ -472,6 +566,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - **`package.json` Cleanup** — Removed `bun` as a runtime dependency; added `react-icons` and `devicons` as explicit dependencies; `tsx` added for script execution.
 
 ### Fixed
+
 - **`/u/[shortCode]` Username Lookup** — Short URL redirect now correctly resolves by username/vanity ID instead of raw user ID.
 - **Proxy Custom Domain Root Rewrite** — Fixed incorrect rewrite target when a visitor hits `/` on a verified custom domain.
 - **Private Profile Handling** — Profile page now correctly shows a private state instead of partially rendering when `profileVisibility` is private.
@@ -482,6 +577,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [2.0.0] - 2026-04-02
 
 ### Added
+
 - **Royal Purple Theme** - Signature preset Emberly theme with rich purple color palette.
   - Royal Purple (💜) now the default theme for all new installations.
   - Comprehensive color configuration with custom hue/saturation/lightness controls.
@@ -703,6 +799,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Integrated into 4 tab-based components: profile settings, Nexium dashboard, PricingTabs, and admin settings manager.
 
 ### Changed
+
 - **v2 Glass Design System Normalization** - Comprehensive site-wide audit and standardization of all card, surface, and container components.
   - `bg-background/80 backdrop-blur-lg border-border/50 shadow-sm` established as the single canonical surface standard.
   - `Card` component updated from `bg-card/80` to `bg-background/80` to match glass system opacity.
@@ -725,6 +822,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - `bg-background/50` styling consistent with the rest of the add-on action row.
 
 ### Fixed
+
 - **Broken Nexium Import Paths** - Corrected 24 API routes and lib files importing from non-existent `discovery` module paths post-rebrand.
   - `@/packages/lib/discovery` → `@/packages/lib/nexium` in 13 `app/api/discovery/**` route files.
   - `@/packages/types/dto/discovery` → `@/packages/types/dto/nexium` in 11 `app/api/discovery/**` route files.
@@ -735,11 +833,11 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - **Build Error — Missing Module** - Fixed `contact/route.ts` importing from non-existent `@/packages/lib/notifications`.
   - Corrected to `@/packages/lib/events/utils/discord-webhook` which is the actual `notifyDiscord` export location.
 
-
   - Outline buttons now use glass styling with semi-transparent background (`bg-background/60 backdrop-blur-sm`).
   - Default button hover shadow increased and uses primary color tint for glow effect.
   - Active state changed to `scale-[0.97]` (down from `scale-95`) for subtler press feedback.
   - Border color on outline buttons refined to `border-white/[0.08]` for better contrast.
+
 - **Card Component Styling** - Improved shadows, borders, and overall visual depth.
   - Card border-radius increased from `rounded-xl` to `rounded-2xl`.
   - Border color updated to `border-white/[0.08]` for consistency with modern design.
@@ -848,6 +946,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Removed `packages/components/docs/nav-links.ts` - hardcoded docs navigation routes.
 
 ### Fixed
+
 - **Theme Management** - Fixed system-theme context to properly initialize with royal-purple default.
   - Default theme context now matches config default ('royal-purple' instead of 'default-dark').
   - Theme initialization logic consolidated to prevent mismatches between system and user preferences.
@@ -860,6 +959,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Properly handles missing or empty perk roles without errors.
 
 ### Removed
+
 - **ST5 Fan Hub System** - Removed ST5 (streaming show fan community hub) in preparation for feature sunset.
   - Deleted `packages/components/st5/Comments.tsx` - full comment system with replies, reactions, image attachments, spoiler tags.
   - Deleted `packages/components/st5/Countdown.tsx` - countdown timer to release dates with live status.
@@ -884,6 +984,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Only user theme customization now supported (stored in profile).
 
 ### Security
+
 - **Discord Webhook URL Validation** - All Discord webhook URLs validated as proper HTTPS endpoints.
   - Zod schema ensures webhook URLs are valid URLs (not arbitrary strings).
   - Webhook URLs stored securely in database (plaintext but should be rotated if leaked).
@@ -895,6 +996,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - All squad management endpoints enforce ownership verification (owner-only for destructive operations).
 
 ### Technical
+
 - **Configuration Defaults** - System now defaults to Royal Purple theme instead of Default Dark.
   - Updated `DEFAULT_CONFIG` in `packages/lib/config/index.ts` with Royal Purple color values.
   - Updated `DEFAULT_THEME_CONFIG` in `packages/lib/theme/theme-types.ts`.
@@ -992,6 +1094,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [1.4.0] - 2026-01-04
 
 ### Added
+
 - **Public User API Access** - Added `/api/users` to public paths for contribution stats visibility.
   - Public profiles can now display GitHub contribution statistics without authentication.
   - Ensures contribution data is accessible for public profile pages.
@@ -1027,6 +1130,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Contact information updated to use correct domain (`hey@embrly.ca`, Discord invite link).
 
 ### Changed
+
 - **Profile Dashboard Tab Navigation** - Migrated from select menu to proper icon-based tabs.
   - Replaced Select dropdown with horizontal TabsList component for better UX.
   - Added icons to all 10 profile tabs: Profile (User), Billing (CreditCard), Uploads (Upload), Security (Shield), Perks (Gift), Referrals (Users), Notifications (Bell), Appearance (Palette), Testimonials (MessageSquare), Data (Database).
@@ -1084,6 +1188,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Color swatches show live theme values with proper hex code extraction from computed styles.
 
 ### Fixed
+
 - **Rich Embeds Metadata System** - Fixed inconsistent behavior where `enableRichEmbeds` setting was not respected for all file types.
   - **Images now respect `enableRichEmbeds=false`**: Previously images always showed preview regardless of setting; now returns minimal metadata with no image preview.
   - **Videos now respect `enableRichEmbeds=false`**: Previously videos still generated video metadata; now returns minimal metadata with no media.
@@ -1120,6 +1225,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [1.3.0] - 2025-12-29
 
 ### Added
+
 - **Enhanced Public Profile System** - Comprehensive user profile pages with GitHub integration and milestone-based perk displays.
   - Tab-based interface with Overview, Contributions, and Files sections for organized content presentation.
   - Milestone tier system display: Bronze (🥉), Silver (🥈), Gold (🥇), Platinum (💎), and Diamond (💠) badges for contributors and Discord boosters.
@@ -1147,6 +1253,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Works with both tabs component and select menu for consistent navigation experience.
 
 ### Changed
+
 - **Public Profile Architecture Refactored** - Switched from API-based to direct database access.
   - Removed intermediate API route calls in favor of server-side Prisma queries for better performance.
   - Updated to use Next.js 15 async params pattern (`await params`) throughout dynamic routes.
@@ -1170,6 +1277,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Commit metadata includes repository name, file count, line changes, and formatted dates.
 
 ### Fixed
+
 - **Next.js 15 Compatibility Issues** - Resolved dynamic route parameter handling errors.
   - Fixed "params is a Promise" errors by properly awaiting params in all dynamic route handlers.
   - Removed invalid `fetch` cache options causing build-time errors.
@@ -1190,6 +1298,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [1.2.0] - 2025-12-29
 
 ### Added
+
 - **2FA Recovery Codes System** - One-time backup codes for account recovery if authenticator is lost.
   - Generate 10 recovery codes when enabling 2FA, displayed only once to the user.
   - Codes stored in database with used/unused tracking and timestamps.
@@ -1258,6 +1367,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Checkout and purchase routes now include order metadata for credit transaction attribution.
 
 ### Changed
+
 - Metadata system significantly refactored and simplified:
   - Consolidated metadata building from ~400+ lines across multiple helper functions into streamlined `buildRichMetadata()`, `buildSiteMetadata()`, and `buildPageMetadata()` functions.
   - Removed 150+ lines of unnecessary helper functions (`buildOpenGraphImages`, `buildOpenGraphAudio`, `buildTwitterMetadata`, `buildOtherMetadata`).
@@ -1291,6 +1401,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
   - Added development setup instructions.
 
 ### Fixed
+
 - Critical 2FA enforcement vulnerability: users with 2FA enabled were able to bypass authentication without entering an authenticator code.
   - Root cause: NextAuth's `authorize` function was returning user objects on password validation, which NextAuth interprets as successful authentication regardless of 2FA status.
   - Solution: Changed to throw `Error('TwoFactorRequired')` when 2FA is enabled but code is missing, properly failing authentication and forcing 2FA prompt on frontend.
@@ -1320,12 +1431,14 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [1.1.0] - 2025-12-27
 
 ### Added
+
 - Dynamic Open Graph and Twitter card images (`opengraph-image.tsx`, `twitter-image.tsx`) using Next.js ImageResponse API with Hawkins Neon theme styling, Emberly branding, and feature pills.
 - Current plan banner on pricing page: dedicated `CurrentPlanBanner` component displaying the user's active plan prominently above the plans grid with plan details, feature preview pills, and "Manage Billing" link.
 - CORS headers and `OPTIONS`/`HEAD` handlers added to raw file route (`/[userUrlId]/[filename]/raw`) for Discord and Twitter video embed compatibility.
 - Video metadata tags: explicit `og:video`, `og:video:secure_url`, `og:video:type`, `og:video:width`, and `og:video:height` meta tags in `buildOtherMetadata` for proper video embeds on social platforms.
 
 ### Changed
+
 - Pricing page tabs restyled: `TabsList` and billing cycle toggle now share consistent glass-morphism styling (`bg-muted/50 rounded-xl`) with matching active states (`bg-primary text-primary-foreground`).
 - Plans grid refactored: current plan is now separated from the upgrade options grid; remaining plans display under an "Upgrade your plan" section header.
 - `PlanSection` component restructured into smaller components (`CurrentPlanBanner`, `PlanCard`) for cleaner code organization.
@@ -1333,6 +1446,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Bot handler logic clarified for video content type detection and metadata delivery.
 
 ### Fixed
+
 - Magic link authentication session loading: fixed `sessionVersion` mismatch where the stale value was used instead of the incremented value from `prisma.user.update()`, causing immediate session invalidation after login.
 - Middleware constants: fixed typo in `PUBLIC_PATHS` array that could cause incorrect path matching.
 - Pricing tabs `RovingFocusGroupItem` error: restored `TabsList` wrapper around `TabsTrigger` components to satisfy Radix UI's accessibility context requirements.
@@ -1340,6 +1454,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 ## [1.0.0] - 2025-12-26
 
 ### Added
+
 - Commitlint for enforcing some sort of standard with commit messages.
 - Server-side 2FA endpoints: `GET/POST/DELETE /api/profile/2fa` generating TOTP secrets and QR data (uses `otplib` + `qrcode`), plus client-friendly payloads.
 - Client 2FA flows: full enable flow (QR + code confirmation) and a new multi-step disable flow (warning → code → password → confirm → disable).
@@ -1367,6 +1482,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Page metadata: added `buildPageMetadata` exports to auth pages (login, register, forgot, reset), changelogs, blog listing, and created wrapper layouts for client-only pages (verify-email, alpha-migration, setup); added `generateMetadata` to dynamic routes (`blog/[slug]`, `legal/[...slug]`) for proper SEO.
 
 ### Changed
+
 - Server-side password verification when disabling 2FA: DELETE `/api/profile/2fa` now requires account password and verifies with `bcrypt.compare` before clearing 2FA.
 - Client robustness fixes: include credentials on profile/2fa fetches, unwrap API response envelope (`payload.data ?? payload`), visible fetch errors and debug logs to surface failures.
 - Navigation & UI tweaks: `BaseNav` avatar now links to `/me` to match `UserNav`, mobile sheet trigger/footers improved, and modal z-index/overflow fixes.
@@ -1388,6 +1504,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Domains page completely redesigned: stats cards showing total/verified/pending counts, Cloudflare recommendation banner (dismissible), collapsible domain rows with inline DNS configuration display, and improved empty states.
 
 ### Fixed
+
 - Fixed broken JSX/parse error in `components/profile/security/profile-security.tsx` and restored a working client component.
 - Fixed disable-modal not opening (modal nesting and button `type` issues resolved) and added a visible click debug counter during troubleshooting.
 - Resolved "Loading QR…" / 2FA state mismatch by fetching secrets at the correct lifecycle point and adding an initial `Checking 2FA…` UI while profile loads.
@@ -1403,10 +1520,10 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Fixed Prisma client imports across 17 files to use the generated client path (`@/prisma/generated/prisma/client`) instead of `@prisma/client`, resolving Turbopack module resolution errors during build.
 - Fixed TypeScript build errors: config path in verification-codes page, missing `id` prop on `GlassCard`, `billingPeriod` type annotation in pricing helpers, extra argument in admin email logs API, invalid `_sum2` in analytics summary, Map type and property names in top-users analytics, logger fallbacks and payload type annotations in domain routes.
 
-
 ## [1.0.0-alpha.6] - 2025-12-16
 
 ### Added
+
 - Snowfall site-wide visual: falling snow canvas that activates when a Christmas/Holly theme is in use (client canvas component + theme-aware detection).
 - Per-user appearance settings: theme presets, hue overrides, live preview on the client, and persistence to the user's profile (`theme` stored on `User`).
 - New server APIs and components:
@@ -1418,6 +1535,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Package additions for server-side 2FA/QRCodes: `otplib` and `qrcode`.
 
 ### Changed
+
 - Theme propagation and client hydration: `data-theme` is now set on the `<html>` element and a small client initializer ensures the system/site theme is applied before React hydration so client-only features (Snowfall, previews) reliably reflect system-level site appearance.
 - `hooks/use-profile.ts` now exposes `updateProfile()` and the profile API `PUT /api/profile` accepts `theme` and persists appearance changes.
 - Navigation and header updates:
@@ -1429,6 +1547,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Changelogs, partners, testimonials and ST5 pages refactored to use shared layout primitives (`PageShell`, `DashboardWrapper`) and improved responsive layouts.
 
 ### Fixed
+
 - Defensive checks and runtime guards added to Settings, profile and other pages to prevent TypeErrors (e.g. attempting to access `quotas` on undefined objects).
 - Admin role checks updated to treat `SUPERADMIN` equivalently to `ADMIN` where appropriate (settings/posts/admin routes and UIs).
 - Resolved `updateProfile is not a function` by returning `updateProfile` from the profile hook the client uses.
@@ -1436,101 +1555,105 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Prisma schema changes for 2FA and other models were added and migrations applied during development (see migrations folder).
 - Misc layout and accessibility bug fixes across navs, modals, and small-screen components (modal scrolling, focus traps, dropdown outside-click behaviour, mobile overflow fixes).
 
-
 ## [1.0.0-alpha.5] - 2025-12-12
 
 ### Added
+
 - Persisted partners to the database with a new `Partner` Prisma model and migration.
 - Admin partner management UI (`/dashboard/partners`) with create/edit/delete and an empty-state.
 - Server API routes for partners (`/api/partners` and `/api/partners/[id]`) supporting public GET and admin-protected create/update/delete.
 - Homepage partners carousel wired to server data so partners can be surfaced dynamically.
- - New `Testimonial` Prisma model, migrations, and server APIs for public and admin operations (`/api/testimonials`).
- - Profile testimonial UI allowing users to submit, edit, archive, or delete a single testimonial from their profile.
- - Admin testimonial management in the dashboard with approve/hide/archive controls.
- - Public testimonial listing component with avatar support (image or initials fallback) and star-rating display.
- - Profile Data Explorer: added server GET for `/api/profile` and a client JSON viewer for exporting/inspecting account data.
+- New `Testimonial` Prisma model, migrations, and server APIs for public and admin operations (`/api/testimonials`).
+- Profile testimonial UI allowing users to submit, edit, archive, or delete a single testimonial from their profile.
+- Admin testimonial management in the dashboard with approve/hide/archive controls.
+- Public testimonial listing component with avatar support (image or initials fallback) and star-rating display.
+- Profile Data Explorer: added server GET for `/api/profile` and a client JSON viewer for exporting/inspecting account data.
 
 ### Changed
+
 - Home page now fetches active partners server-side and conditionally renders the partners carousel.
 - `components/partners/partners-carousel.tsx` refactored to accept server-driven `partners` props and fixed a JSX parsing bug.
 - Navigation: added `Partners` admin link to both base and dashboard navigation.
 - Error and Not Found pages standardized to use the site's fixed header (`BaseNav` / `DashboardNav` + `UserNav`), `DynamicBackground`, and a centered card layout for visual consistency.
 - Dialog primitive and modals updated to cap height and enable internal scrolling for better mobile behavior; applied to edit/view user modals.
- - Standardized layout and theme across the site so pages use a consistent `PageShell` / `DashboardWrapper` composition with `BaseNav`, `DashboardNav`, `DynamicBackground`, and shared spacing/typography tokens.
- - Testimonial APIs updated to support `?mine=true` for fetching the current user's testimonial and admin `?all=true` for full lists.
- - Profile submit flow now enforces one testimonial per user (client shows Edit when a testimonial exists); POST creates only when no existing testimonial is present.
- - `components/testimonials` presentation refactored to use `Avatar` with initials fallback and a responsive card/grid layout.
+- Standardized layout and theme across the site so pages use a consistent `PageShell` / `DashboardWrapper` composition with `BaseNav`, `DashboardNav`, `DynamicBackground`, and shared spacing/typography tokens.
+- Testimonial APIs updated to support `?mine=true` for fetching the current user's testimonial and admin `?all=true` for full lists.
+- Profile submit flow now enforces one testimonial per user (client shows Edit when a testimonial exists); POST creates only when no existing testimonial is present.
+- `components/testimonials` presentation refactored to use `Avatar` with initials fallback and a responsive card/grid layout.
 
 ### Fixed
+
 - Guarded and unwrapped API responses in the dashboard partners list so `partners` is always an array (resolved `partners.map is not a function`).
 - Fixed modal overflow on small screens so modals are scrollable and close controls remain accessible.
 - Repaired a syntax/parse error in the partners carousel implementation.
 - Various small layout and runtime fixes related to the partners integration and admin tooling.
- - Fixed client-side handling of API envelopes so `data === null` is not treated as an existing testimonial.
- - Added safe date parsing for testimonial `createdAt` to prevent display of `Invalid Date`.
- - Render testimonial ratings as star icons and added responsive button layout for mobile-friendly actions (submit/edit/delete/archive).
- - Resolved several runtime/hydration issues found while wiring testimonials and profile APIs (including Radix focus-group SSR fix and missing icon imports).
-
+- Fixed client-side handling of API envelopes so `data === null` is not treated as an existing testimonial.
+- Added safe date parsing for testimonial `createdAt` to prevent display of `Invalid Date`.
+- Render testimonial ratings as star icons and added responsive button layout for mobile-friendly actions (submit/edit/delete/archive).
+- Resolved several runtime/hydration issues found while wiring testimonials and profile APIs (including Radix focus-group SSR fix and missing icon imports).
 
 ## [1.0.0-alpha.4] - 2025-12-12
 
 ### Added
+
 - Public access for the pricing page via updated middleware constants.
 - Navigation menus and dropdowns for both the main website and dashboard.
 - Expanded analytics tracking for user actions and page visits.
 - New analytics endpoints and improved dashboard analytics display.
- - `PageShell` applied across public pages (blog, docs, legal) for consistent header and content layout.
- - Table-style listing components used for blog, docs, and legal hub indexes for tighter, more readable lists.
- - New legal pages: Refund Policy and Service Level Agreement (SLA) with detailed policy text.
- - `DashboardWrapper` now supports a `nav` prop to choose between base and dashboard navigation contexts.
+- `PageShell` applied across public pages (blog, docs, legal) for consistent header and content layout.
+- Table-style listing components used for blog, docs, and legal hub indexes for tighter, more readable lists.
+- New legal pages: Refund Policy and Service Level Agreement (SLA) with detailed policy text.
+- `DashboardWrapper` now supports a `nav` prop to choose between base and dashboard navigation contexts.
 
- - Analytics server routes: `overview`, `storage`, `top-items`, `top-users`, and `metrics/activity` providing timeseries, top-10 lists, and storage summaries.
- - Top users scoring & privacy model: primary + composite scoring (downloads + clicks, avg-per-file) and privacy-aware responses (anonymized distribution for non-admins, full list for admins).
- - Changelogs feature: server route `/api/changelogs` (GitHub releases fetch), `components/changelogs/ChangelogList.tsx`, and `/changelogs` page to list organizational releases (uses `react-markdown` for release bodies).
- - Recharts added for dashboard charts and visualizations.
- - Client UI components: `PageShell`, `DocsCard` (table-style), changelogs list with expandable rows and search, and analytics overview components.
+- Analytics server routes: `overview`, `storage`, `top-items`, `top-users`, and `metrics/activity` providing timeseries, top-10 lists, and storage summaries.
+- Top users scoring & privacy model: primary + composite scoring (downloads + clicks, avg-per-file) and privacy-aware responses (anonymized distribution for non-admins, full list for admins).
+- Changelogs feature: server route `/api/changelogs` (GitHub releases fetch), `components/changelogs/ChangelogList.tsx`, and `/changelogs` page to list organizational releases (uses `react-markdown` for release bodies).
+- Recharts added for dashboard charts and visualizations.
+- Client UI components: `PageShell`, `DocsCard` (table-style), changelogs list with expandable rows and search, and analytics overview components.
 
 ### Changed
+
 - Blog management layout now restricts post creation/management to admin users only.
 - Refined analytics event structure and improved data consistency.
 - Updated navigation logic for better user experience.
- - Main and dashboard navigation dropdowns converted to managed `DropdownMenu` primitives (replacing CSS hover groups) for reliable outside-click closing and keyboard interaction.
- - Public layout now uses a `ConditionalBaseNav` so the base navigation is only shown where appropriate; `DashboardWrapper` renders the dashboard header only when required.
- - Blog and docs index views refactored from card grids into the shared `Table` UI component.
- - Legal subpages refactored to use `PageShell` with compact left navigation and prose-based content; legal hub uses table rows and includes Refund and SLA links.
+- Main and dashboard navigation dropdowns converted to managed `DropdownMenu` primitives (replacing CSS hover groups) for reliable outside-click closing and keyboard interaction.
+- Public layout now uses a `ConditionalBaseNav` so the base navigation is only shown where appropriate; `DashboardWrapper` renders the dashboard header only when required.
+- Blog and docs index views refactored from card grids into the shared `Table` UI component.
+- Legal subpages refactored to use `PageShell` with compact left navigation and prose-based content; legal hub uses table rows and includes Refund and SLA links.
 
- - Docs layout: left TOC converted to a compact card for desktop and the mobile TOC toggle simplified to a small disclosure. `DocsToc` updated to hide on large screens in favor of the left card nav.
- - `PageShell` updated to integrate with `DashboardWrapper` so public pages show the same dynamic background and header as dashboard pages.
- - Changelogs page: moved to `DashboardWrapper`-backed layout for consistent background, and `ChangelogList` styling refactored to a compact table with expanders.
- - Added `react-markdown` and adjusted `package.json` to include the dependency (client-side markdown rendering in changelogs).
+- Docs layout: left TOC converted to a compact card for desktop and the mobile TOC toggle simplified to a small disclosure. `DocsToc` updated to hide on large screens in favor of the left card nav.
+- `PageShell` updated to integrate with `DashboardWrapper` so public pages show the same dynamic background and header as dashboard pages.
+- Changelogs page: moved to `DashboardWrapper`-backed layout for consistent background, and `ChangelogList` styling refactored to a compact table with expanders.
+- Added `react-markdown` and adjusted `package.json` to include the dependency (client-side markdown rendering in changelogs).
 
- - Navigation UX: `BaseNav` is now a fixed header so it scrolls consistently with the page; `ConditionalBaseNav` renders a spacer to prevent content overlap with the fixed header.
- - `DashboardNav` mobile sheet now includes a profile / auth footer area (sign in / register / profile / sign out) so account actions remain accessible on small screens.
- - Improved responsive nav behavior to prevent link overflow on smaller screens and to centralize nav rendering responsibilities.
+- Navigation UX: `BaseNav` is now a fixed header so it scrolls consistently with the page; `ConditionalBaseNav` renders a spacer to prevent content overlap with the fixed header.
+- `DashboardNav` mobile sheet now includes a profile / auth footer area (sign in / register / profile / sign out) so account actions remain accessible on small screens.
+- Improved responsive nav behavior to prevent link overflow on smaller screens and to centralize nav rendering responsibilities.
 
 ### Fixed
+
 - Navigation menu dropdowns.
 - Various navigation and menu-related bugs.
 - Fixed broken analytics event reporting and dashboard stats.
 - Addressed issues with analytics data aggregation and display.
 - Minor UI/UX bugs across dashboard and public pages.
- - Resolved duplicate/overlapping navigation rendering on public pages by centralizing base nav rendering and gating the dashboard header.
- - Desktop dropdowns now reliably auto-close on outside click and behave consistently across pages.
- - Fixed several small layout regressions introduced during nav and hero refactors.
+- Resolved duplicate/overlapping navigation rendering on public pages by centralizing base nav rendering and gating the dashboard header.
+- Desktop dropdowns now reliably auto-close on outside click and behave consistently across pages.
+- Fixed several small layout regressions introduced during nav and hero refactors.
 
-  - Fixed base navigation overlap by making the base header fixed and adding a spacer via `ConditionalBaseNav`.
-  - Added mobile sheet footer to `DashboardNav` to surface auth/profile actions and prevent layout overflow.
-  - Resolved additional responsive overflow issues for dashboard nav links on narrow viewports.
+- Fixed base navigation overlap by making the base header fixed and adding a spacer via `ConditionalBaseNav`.
+- Added mobile sheet footer to `DashboardNav` to surface auth/profile actions and prevent layout overflow.
+- Resolved additional responsive overflow issues for dashboard nav links on narrow viewports.
 
- - Fixed duplicate variable declarations and hook-order issues introduced during iterative changes (`TopUsers.tsx`, `top-users` route, and `ChangelogList.tsx`).
- - Corrected top-users scoring inconsistency by introducing `compositeScore` weighting to account for `filesCount` so users with many files do not score lower unfairly.
- - Fixed a Hook ordering bug in `ChangelogList.tsx` so expand state is declared before early returns.
- - Various build fixes and runtime stability improvements encountered while wiring the new pages and APIs.
-
+- Fixed duplicate variable declarations and hook-order issues introduced during iterative changes (`TopUsers.tsx`, `top-users` route, and `ChangelogList.tsx`).
+- Corrected top-users scoring inconsistency by introducing `compositeScore` weighting to account for `filesCount` so users with many files do not score lower unfairly.
+- Fixed a Hook ordering bug in `ChangelogList.tsx` so expand state is declared before early returns.
+- Various build fixes and runtime stability improvements encountered while wiring the new pages and APIs.
 
 ## [1.0.0-alpha.3] - 2025-12-11
 
 ### Added
+
 - New Stranger Things 5 hub page with themed visuals, countdowns, and facts.
 - `Comments` feature for the ST5 page: users can post comments with attachments (images/GIFs), mark spoilers, and admins can hide comments.
 - `Hawkins Neon` theme preset added to the theme customizer.
@@ -1541,6 +1664,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Support for image/GIF attachments in comments with spoiler flag handling.
 
 ### Changed
+
 - Refactored ST5 page layout into a three-column grid (countdowns + info left, facts right).
 - Repaired and standardized the Countdown component sizing and layout.
 - Moved interactive add-on quantity controls into a client `AddOnCheckout` component.
@@ -1550,6 +1674,7 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Files API validation improved (content-type/size checks) and storage records better integrated with comment attachments.
 
 ### Database
+
 - Prisma schema updated: extended `St5Comment` with `isHidden` and `isSpoiler`, added `St5CommentAttachment` model.
 - NOTE: Run `prisma migrate` to apply schema changes locally before using the new comments endpoints.
 - Additional migrations added to support attachments and moderation fields. Run:
@@ -1559,12 +1684,14 @@ The format is based on "Keep a Changelog" and follows [Semantic Versioning](http
 - Confirm `St5CommentAttachment` and `File` tables exist after migration.
 
 ### Fixed
+
 - Various layout and build issues (including a parse error in `Countdown.tsx` repaired).
 - Fixed a build-breaking parse error in `components/st5/Countdown.tsx` and removed/merged temporary fallback components.
 - Fixed several domain-related edge-cases that affected custom domain provisioning and SSL assignment.
 - Resolved issues with S3 uploads that caused broken previews for certain file types.
 
 ### Removed
+
 - Contact form and `/api/contact` route replaced with links-first contact page.
 - Temporary development artifacts (e.g., `CountdownFixed.tsx`) consolidated or removed as part of cleanup.
 

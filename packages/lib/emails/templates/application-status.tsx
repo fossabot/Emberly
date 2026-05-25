@@ -15,7 +15,11 @@ import {
 } from '@react-email/components'
 import { Tailwind } from '@react-email/tailwind'
 
-export type ApplicationStatusType = 'received' | 'reviewing' | 'approved' | 'rejected'
+export type ApplicationStatusType =
+  | 'received'
+  | 'reviewing'
+  | 'approved'
+  | 'rejected'
 
 export interface ApplicationStatusEmailProps {
   /** Name of the applicant */
@@ -105,7 +109,9 @@ export function ApplicationStatusEmail({
               <Row>
                 <Column align="left">
                   <Link href="https://embrly.ca" className="inline-block">
-                    <Text className="m-0 text-xl font-bold text-orange-600">Emberly</Text>
+                    <Text className="m-0 text-xl font-bold text-orange-600">
+                      Emberly
+                    </Text>
                   </Link>
                 </Column>
               </Row>
@@ -122,7 +128,9 @@ export function ApplicationStatusEmail({
             <Section className="border border-gray-200 rounded-lg bg-white p-8">
               <Row>
                 <Column>
-                  <Text className="m-0 mb-4 text-2xl font-bold text-gray-900">{headline}</Text>
+                  <Text className="m-0 mb-4 text-2xl font-bold text-gray-900">
+                    {headline}
+                  </Text>
                 </Column>
               </Row>
               <Row>
@@ -170,10 +178,12 @@ export function ApplicationStatusEmail({
               <Row>
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-400">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                   <Text className="m-0 mt-1 text-xs text-gray-400">
-                    You received this email because you submitted an application on Emberly.
+                    You received this email because you submitted an application
+                    on Emberly.
                   </Text>
                 </Column>
               </Row>

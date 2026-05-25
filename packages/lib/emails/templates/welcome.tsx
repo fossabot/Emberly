@@ -20,11 +20,16 @@ interface WelcomeEmailProps {
   verificationUrl?: string
 }
 
-export function WelcomeEmail({ name = 'there', verificationUrl }: WelcomeEmailProps) {
+export function WelcomeEmail({
+  name = 'there',
+  verificationUrl,
+}: WelcomeEmailProps) {
   return (
     <Html>
       <Head>
-        <Preview>Welcome to Emberly – Get started with secure file sharing</Preview>
+        <Preview>
+          Welcome to Emberly – Get started with secure file sharing
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -58,10 +63,12 @@ export function WelcomeEmail({ name = 'there', verificationUrl }: WelcomeEmailPr
               <Row>
                 <Column>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Thanks for signing up with Emberly. We're excited to have you on board!
+                    Thanks for signing up with Emberly. We're excited to have
+                    you on board!
                   </Text>
                   <Text className="m-0 mb-4 text-base leading-relaxed text-gray-700">
-                    Emberly makes it easy to share files securely with custom domains, rich metadata, and powerful APIs.
+                    Emberly makes it easy to share files securely with custom
+                    domains, rich metadata, and powerful APIs.
                   </Text>
                 </Column>
               </Row>
@@ -76,9 +83,21 @@ export function WelcomeEmail({ name = 'there', verificationUrl }: WelcomeEmailPr
               </Row>
 
               {[
-                { icon: '🔒', title: 'Privacy First', desc: 'End-to-end encryption and password protection' },
-                { icon: '⚡', title: 'Lightning Fast', desc: 'CDN-backed delivery and instant short URLs' },
-                { icon: '🌍', title: 'Custom Domains', desc: 'Serve files under your own brand' },
+                {
+                  icon: '🔒',
+                  title: 'Privacy First',
+                  desc: 'End-to-end encryption and password protection',
+                },
+                {
+                  icon: '⚡',
+                  title: 'Lightning Fast',
+                  desc: 'CDN-backed delivery and instant short URLs',
+                },
+                {
+                  icon: '🌍',
+                  title: 'Custom Domains',
+                  desc: 'Serve files under your own brand',
+                },
               ].map((feature, idx) => (
                 <Row key={idx} className="mb-3">
                   <Column className="w-8">
@@ -130,7 +149,8 @@ export function WelcomeEmail({ name = 'there', verificationUrl }: WelcomeEmailPr
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

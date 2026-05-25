@@ -88,6 +88,7 @@ export async function POST(req: Request) {
     return apiResponse(report)
   } catch (error) {
     logger.error('Error submitting squad report', error as Error)
-    return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    return apiError('Internal server error')
   }
 }
+

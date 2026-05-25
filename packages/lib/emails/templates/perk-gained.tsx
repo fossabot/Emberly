@@ -30,11 +30,13 @@ export function PerkGainedEmail({
   expiresAt,
   viewUrl = 'https://embrly.ca/me',
 }: PerkGainedEmailProps) {
-  const expiryDate = expiresAt ? new Date(expiresAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }) : null
+  const expiryDate = expiresAt
+    ? new Date(expiresAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null
 
   return (
     <Html>
@@ -61,9 +63,7 @@ export function PerkGainedEmail({
             <Section className="border border-green-200 rounded-lg bg-gradient-to-br from-green-50 to-white p-8 text-center">
               <Row>
                 <Column align="center">
-                  <Text className="m-0 mb-4 text-5xl">
-                    {perkIcon}
-                  </Text>
+                  <Text className="m-0 mb-4 text-5xl">{perkIcon}</Text>
                   <Text className="m-0 mb-2 text-sm font-semibold text-green-700 uppercase tracking-wide">
                     Perk Unlocked
                   </Text>
@@ -88,7 +88,9 @@ export function PerkGainedEmail({
                 <Row className="mb-6 rounded-lg bg-yellow-50 p-4 border border-yellow-200">
                   <Column align="center">
                     <Text className="m-0 text-sm text-yellow-800">
-                      <span className="font-semibold">⏰ Expires on {expiryDate}</span>
+                      <span className="font-semibold">
+                        ⏰ Expires on {expiryDate}
+                      </span>
                     </Text>
                   </Column>
                 </Row>
@@ -98,7 +100,9 @@ export function PerkGainedEmail({
                 <Row className="mb-6 rounded-lg bg-green-50 p-4 border border-green-200">
                   <Column align="center">
                     <Text className="m-0 text-sm text-green-800">
-                      <span className="font-semibold">✨ This perk is permanent!</span>
+                      <span className="font-semibold">
+                        ✨ This perk is permanent!
+                      </span>
                     </Text>
                   </Column>
                 </Row>
@@ -123,9 +127,7 @@ export function PerkGainedEmail({
                     <Text className="m-0 text-lg">✨</Text>
                   </Column>
                   <Column className="flex-1">
-                    <Text className="m-0 text-gray-700">
-                      {benefit}
-                    </Text>
+                    <Text className="m-0 text-gray-700">{benefit}</Text>
                   </Column>
                 </Row>
               ))}
@@ -157,7 +159,8 @@ export function PerkGainedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

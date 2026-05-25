@@ -25,13 +25,15 @@ const ALERT_COLORS = {
 /**
  * Send alert to admin Discord channel
  */
-async function sendAdminAlert(embed: {
+interface DiscordEmbed {
   title: string
   description?: string
   color: number
   fields?: Array<{ name: string; value: string; inline?: boolean }>
   timestamp?: Date
-}): Promise<void> {
+}
+
+async function sendAdminAlert(embed: DiscordEmbed): Promise<void> {
   const integrations = await getIntegrations()
   const webhookUrl = integrations.discord?.webhookUrl || process.env.DISCORD_WEBHOOK_URL
   if (!webhookUrl) {
@@ -40,10 +42,14 @@ async function sendAdminAlert(embed: {
   }
 
   try {
+    const embedFields = embed.fields as Array<{ name: string; value: string; inline?: boolean }> | undefined
     await notifyDiscord({
       webhookUrl,
       embeds: [{
-        ...embed,
+        title: embed.title,
+        description: embed.description,
+        color: embed.color,
+        fields: embedFields,
         timestamp: embed.timestamp?.toISOString(),
       }],
     })

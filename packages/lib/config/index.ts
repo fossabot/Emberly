@@ -1,4 +1,4 @@
-import type { InputJsonValue } from '@prisma/client/runtime/library'
+import { Prisma } from '@/prisma/generated/prisma/client'
 import { z } from 'zod'
 
 import { configCache } from '@/packages/lib/cache/config-cache'
@@ -259,7 +259,7 @@ export async function initConfig(): Promise<EmberlyConfig> {
       update: {}, // Don't update if it exists
       create: {
         key: 'site_config',
-        value: DEFAULT_CONFIG as InputJsonValue,
+        value: DEFAULT_CONFIG as Prisma.InputJsonValue,
       },
     })
 
@@ -284,9 +284,9 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
   for (const key in source) {
     if (source[key] !== undefined) {
       if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-        result[key] = deepMerge(target[key] || {}, source[key] as any)
+        result[key] = deepMerge(target[key] ?? {} as T[Extract<keyof T, string>], source[key] as T[Extract<keyof T, string>])
       } else {
-        result[key] = source[key] as any
+        result[key] = source[key] as T[Extract<keyof T, string>]
       }
     }
   }
@@ -430,16 +430,16 @@ export async function updateConfig(
     if (existing) {
       await prisma.config.update({
         where: { id: existing.id },
-        data: { value: validatedConfig as InputJsonValue },
+        data: { value: validatedConfig as Prisma.InputJsonValue },
       })
     } else {
       // Use upsert to handle race conditions
       await prisma.config.upsert({
         where: { key: 'site_config' },
-        update: { value: validatedConfig as InputJsonValue },
+        update: { value: validatedConfig as Prisma.InputJsonValue },
         create: {
           key: 'site_config',
-          value: validatedConfig as InputJsonValue,
+          value: validatedConfig as Prisma.InputJsonValue,
         },
       })
     }
@@ -477,8 +477,8 @@ export async function updateConfigSection<
       settings: {
         ...config.settings,
         [section]: {
-          ...config.settings[section],
-          ...data,
+          ...(config.settings[section] as Record<string, unknown>),
+          ...(data as Record<string, unknown>),
         },
       },
     }

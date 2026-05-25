@@ -7,7 +7,7 @@ import { loggers } from '@/packages/lib/logger'
 import { canAddCustomDomain, getPlanLimits, getUserDomainCount } from '@/packages/lib/storage/quota'
 import { calculateDomainSlotBonus } from '@/packages/lib/perks'
 
-const logger = loggers.domains || loggers.app
+const logger = loggers.domains
 import { createCustomHostname } from '@/packages/lib/cloudflare/client'
 import { isValidDomainName } from '@/packages/lib/domain/service'
 
@@ -60,10 +60,10 @@ export async function GET(req: Request) {
               })
             }
           } catch (cfErr) {
-            logger.debug('Cloudflare create on GET failed', cfErr as Error)
+            logger.debug('Cloudflare create on GET failed', { error: cfErr instanceof Error ? cfErr.message : String(cfErr) })
           }
         } catch (err) {
-          logger.debug('Failed to mark domain unverified', err as Error)
+          logger.debug('Failed to mark domain unverified', { error: err instanceof Error ? err.message : String(err) })
         }
       }
     }
@@ -107,11 +107,11 @@ export async function GET(req: Request) {
         } 
       })
     } catch (err) {
-      logger.error('Error computing domain limits', err as Error)
+      logger.error('Error computing domain limits', err instanceof Error ? err : String(err))
       return NextResponse.json({ domains })
     }
   } catch (error) {
-    logger.error('Error fetching domains', error as Error)
+    logger.error('Error fetching domains', error instanceof Error ? error : String(error))
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }
@@ -150,7 +150,8 @@ export async function POST(req: Request) {
     const updated = await prisma.customDomain.findUnique({ where: { id: created.id } })
     return NextResponse.json({ domain: updated })
   } catch (error) {
-    logger.error('Error creating custom domain', error as Error)
+    logger.error('Error creating custom domain', error instanceof Error ? error : String(error))
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }
+

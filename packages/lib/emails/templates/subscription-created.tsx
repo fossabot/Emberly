@@ -28,7 +28,8 @@ export function SubscriptionCreatedEmail({
   amount,
   currency,
 }: SubscriptionCreatedEmailProps) {
-  const intervalLabel = interval === 'year' ? 'year' : interval === 'month' ? 'month' : 'day'
+  const intervalLabel =
+    interval === 'year' ? 'year' : interval === 'month' ? 'month' : 'day'
   const formattedAmount = (amount / 100).toFixed(2)
 
   return (
@@ -75,7 +76,8 @@ export function SubscriptionCreatedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Your subscription has been activated! You now have access to all {planName} features.
+                    Your subscription has been activated! You now have access to
+                    all {planName} features.
                   </Text>
                 </Column>
               </Row>
@@ -90,7 +92,8 @@ export function SubscriptionCreatedEmail({
                     <strong>Plan:</strong> {planName}
                   </Text>
                   <Text className="m-0 text-sm text-gray-700">
-                    <strong>Billing:</strong> {formattedAmount} {currency} per {intervalLabel}
+                    <strong>Billing:</strong> {formattedAmount} {currency} per{' '}
+                    {intervalLabel}
                   </Text>
                 </Column>
               </Row>
@@ -114,7 +117,8 @@ export function SubscriptionCreatedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

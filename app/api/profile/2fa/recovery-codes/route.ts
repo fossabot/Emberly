@@ -108,3 +108,4 @@ export async function PUT(request: NextRequest) {
     return apiError('Failed to prepare recovery codes download')
   }
 }
+

@@ -1,9 +1,9 @@
 /**
  * File Service Layer
- * 
+ *
  * Consolidates all file operations: access control, metadata updates, deletion, etc.
  * Reduces duplication across file-related API routes
- * 
+ *
  * This REPLACES scattered logic in:
  * - app/api/files/[id]/route.ts
  * - app/api/files/[id]/download/route.ts
@@ -12,11 +12,10 @@
  * - app/api/files/chunks/route.ts
  * - app/api/files/chunks/[uploadId]/complete/route.ts
  */
-
-import { File, User, Prisma } from '@/prisma/generated/prisma/client'
 import { prisma } from '@/packages/lib/database/prisma'
-import { getStorageProvider } from '@/packages/lib/storage'
 import { loggers } from '@/packages/lib/logger'
+import { getStorageProvider } from '@/packages/lib/storage'
+import { File, Prisma, User } from '@/prisma/generated/prisma/client'
 import { compare, hash } from 'bcryptjs'
 
 const logger = loggers.files
@@ -88,7 +87,6 @@ export async function updateFileMetadata(
   updates: {
     visibility?: 'PUBLIC' | 'PRIVATE'
     password?: string | null
-    expiresAt?: Date | null
     name?: string
   }
 ) {
@@ -116,10 +114,6 @@ export async function updateFileMetadata(
     } else {
       updateData.password = null
     }
-  }
-
-  if (updates.expiresAt !== undefined) {
-    updateData.expiresAt = updates.expiresAt
   }
 
   if (updates.name !== undefined) {
@@ -173,8 +167,8 @@ export async function deleteFileWithCleanup(
 
   try {
     // Delete from storage provider
-    const storageProvider = getStorageProvider()
-    await storageProvider.delete(file.path)
+    const storageProvider = await getStorageProvider()
+    await storageProvider.deleteFile(file.path)
 
     // Delete from database
     await prisma.file.delete({
@@ -211,6 +205,7 @@ export async function deleteFilesWithCleanup(
   deletedCount: number
   failedCount: number
   totalStorageBytes: number
+  error?: string
 }> {
   let deletedCount = 0
   let failedCount = 0
@@ -220,18 +215,39 @@ export async function deleteFilesWithCleanup(
     where: { id: { in: fileIds }, userId },
   })
 
-  const storageProvider = getStorageProvider()
+  let storageProvider: Awaited<ReturnType<typeof getStorageProvider>>
+  try {
+    storageProvider = await getStorageProvider()
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to initialize storage provider'
+    logger.error(
+      'Failed to initialize storage provider for bulk delete',
+      error as Error,
+      { userId }
+    )
+    return {
+      success: false,
+      deletedCount: 0,
+      failedCount: files.length,
+      totalStorageBytes: 0,
+      error: message,
+    }
+  }
 
   for (const file of files) {
     try {
-      await storageProvider.delete(file.path)
+      await storageProvider.deleteFile(file.path)
       await prisma.file.delete({ where: { id: file.id } })
       deletedCount++
       totalStorageBytes += file.size
     } catch (error) {
       failedCount++
-      logger.warn('Failed to delete file during bulk delete', error as Error, {
+      logger.warn('Failed to delete file during bulk delete', {
         fileId: file.id,
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -269,10 +285,14 @@ export async function getFileWithRelations(fileId: string) {
       collaborators: {
         select: {
           id: true,
-          email: true,
-          name: true,
-          permission: true,
-          addedAt: true,
+          role: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
@@ -287,12 +307,12 @@ export async function isFileSecure(fileId: string): Promise<boolean> {
   const file = await prisma.file.findUnique({
     where: { id: fileId },
     select: {
-      isQuarantined: true,
+      flagged: true,
     },
   })
 
   if (!file) return false
-  return !file.isQuarantined
+  return !file.flagged
 }
 
 /**
@@ -386,7 +406,7 @@ export async function listUserFiles(
 }
 
 /**
- * Archive a file (soft delete - marks as archived)
+ * Archive a file by hiding it from public access without changing moderation flags.
  */
 export async function archiveFile(fileId: string, userId: string) {
   const file = await prisma.file.findUnique({
@@ -399,12 +419,12 @@ export async function archiveFile(fileId: string, userId: string) {
 
   return prisma.file.update({
     where: { id: fileId },
-    data: { isArchived: true },
+    data: { visibility: 'PRIVATE' },
   })
 }
 
 /**
- * Restore an archived file
+ * Restore an archived file to public visibility without changing moderation flags.
  */
 export async function restoreFile(fileId: string, userId: string) {
   const file = await prisma.file.findUnique({
@@ -417,6 +437,6 @@ export async function restoreFile(fileId: string, userId: string) {
 
   return prisma.file.update({
     where: { id: fileId },
-    data: { isArchived: false },
+    data: { visibility: 'PUBLIC' },
   })
 }

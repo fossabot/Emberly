@@ -31,7 +31,9 @@ export function NexiumSquadInviteAcceptedEmail({
   return (
     <Html>
       <Head>
-        <Preview>{memberName} accepted your invite to join {squadName}</Preview>
+        <Preview>
+          {memberName} accepted your invite to join {squadName}
+        </Preview>
       </Head>
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -41,7 +43,9 @@ export function NexiumSquadInviteAcceptedEmail({
               <Row>
                 <Column align="left">
                   <Link href="https://embrly.ca" className="inline-block">
-                    <Text className="m-0 text-xl font-bold text-orange-600">Emberly</Text>
+                    <Text className="m-0 text-xl font-bold text-orange-600">
+                      Emberly
+                    </Text>
                   </Link>
                 </Column>
               </Row>
@@ -67,8 +71,8 @@ export function NexiumSquadInviteAcceptedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    <strong>{memberName}</strong> has accepted your invitation and is now a member of{' '}
-                    <strong>{squadName}</strong>.
+                    <strong>{memberName}</strong> has accepted your invitation
+                    and is now a member of <strong>{squadName}</strong>.
                   </Text>
                 </Column>
               </Row>
@@ -76,9 +80,15 @@ export function NexiumSquadInviteAcceptedEmail({
               {/* Squad info */}
               <Row className="mb-8 rounded-lg bg-green-50 p-4 border border-green-200">
                 <Column>
-                  <Text className="m-0 mb-1 text-sm font-semibold text-green-900">New Member</Text>
-                  <Text className="m-0 text-lg font-bold text-green-800">{memberName}</Text>
-                  <Text className="m-0 mt-1 text-sm text-green-700">Joined {squadName}</Text>
+                  <Text className="m-0 mb-1 text-sm font-semibold text-green-900">
+                    New Member
+                  </Text>
+                  <Text className="m-0 text-lg font-bold text-green-800">
+                    {memberName}
+                  </Text>
+                  <Text className="m-0 mt-1 text-sm text-green-700">
+                    Joined {squadName}
+                  </Text>
                 </Column>
               </Row>
 
@@ -101,10 +111,14 @@ export function NexiumSquadInviteAcceptedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                   <Text className="m-0 mt-1 text-xs text-gray-400">
-                    <Link href="https://embrly.ca" className="text-gray-400 underline">
+                    <Link
+                      href="https://embrly.ca"
+                      className="text-gray-400 underline"
+                    >
                       embrly.ca
                     </Link>
                   </Text>

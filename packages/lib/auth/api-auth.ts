@@ -1,17 +1,15 @@
-import { createHash } from 'crypto'
-
 import { NextResponse } from 'next/server'
-
-import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/packages/lib/auth'
 import { sessionCache } from '@/packages/lib/cache/session-cache'
 import { prisma } from '@/packages/lib/database/prisma'
-import { hasPermission, Permission } from '@/packages/lib/permissions'
+import { Permission, hasPermission } from '@/packages/lib/permissions'
+import { createHash } from 'crypto'
+import { getServerSession } from 'next-auth'
 
 export type AuthenticatedUser = {
   id: string
-  email: string
+  email: string | null
   name: string | null
   storageUsed: number
   storageQuotaMB?: number | null
@@ -140,7 +138,7 @@ export async function getAuthenticatedUser(
     if (cached) {
       return {
         id: cached.id,
-        email: cached.email || '',
+        email: cached.email,
         name: cached.name,
         storageUsed: cached.storageUsed,
         storageQuotaMB: cached.storageQuotaMB,
@@ -233,7 +231,7 @@ export async function getAuthenticatedUser(
       if (cached) {
         return {
           id: cached.id,
-          email: cached.email || '',
+          email: cached.email,
           name: cached.name,
           storageUsed: cached.storageUsed,
           storageQuotaMB: cached.storageQuotaMB,
@@ -319,7 +317,10 @@ async function getSystemKeyUser(req?: Request) {
 export async function requireAdmin(req?: Request) {
   const session = await getServerSession(authOptions)
 
-  if (session?.user && hasPermission(session.user.role as any, Permission.ACCESS_ADMIN_PANEL)) {
+  if (
+    session?.user &&
+    hasPermission(session.user.role as any, Permission.ACCESS_ADMIN_PANEL)
+  ) {
     return { user: session.user, response: null }
   }
 
@@ -336,7 +337,13 @@ export async function requireAdmin(req?: Request) {
 export async function requireSuperAdmin(req?: Request) {
   const session = await getServerSession(authOptions)
 
-  if (session?.user && hasPermission(session.user.role as any, Permission.PERFORM_SUPERADMIN_ACTIONS)) {
+  if (
+    session?.user &&
+    hasPermission(
+      session.user.role as any,
+      Permission.PERFORM_SUPERADMIN_ACTIONS
+    )
+  ) {
     return { user: session.user, response: null }
   }
 
@@ -353,12 +360,15 @@ export async function requireSuperAdmin(req?: Request) {
 /**
  * Generic role requirement checker
  * More flexible than requireAdmin/requireSuperAdmin - pass the min role needed
- * 
+ *
  * Usage:
  *   const { user, response } = await requireRole('ADMIN')
  *   if (response) return response
  */
-export async function requireRole(minRole: 'USER' | 'ADMIN' | 'SUPERADMIN', req?: Request) {
+export async function requireRole(
+  minRole: 'USER' | 'ADMIN' | 'SUPERADMIN',
+  req?: Request
+) {
   const session = await getServerSession(authOptions)
 
   if (session?.user) {
@@ -388,7 +398,7 @@ export async function requireRole(minRole: 'USER' | 'ADMIN' | 'SUPERADMIN', req?
 /**
  * Granular permission requirement checker
  * Use this when you need to check for specific permissions beyond role hierarchy
- * 
+ *
  * Usage:
  *   const { user, response } = await requirePermission(Permission.DELETE_USERS)
  *   if (response) return response
@@ -453,7 +463,10 @@ export async function isSquadMember(
 /**
  * Check if user is squad owner
  */
-export async function isSquadOwner(userId: string, squadId: string): Promise<boolean> {
+export async function isSquadOwner(
+  userId: string,
+  squadId: string
+): Promise<boolean> {
   const squad = await prisma.nexiumSquad.findUnique({
     where: { id: squadId },
     select: { ownerUserId: true },
@@ -464,7 +477,7 @@ export async function isSquadOwner(userId: string, squadId: string): Promise<boo
 /**
  * Require squad membership for a route
  * Checks that user has any role in the squad
- * 
+ *
  * Usage:
  *   const { user, response, squadRole } = await requireSquadMembership(userId, squadId)
  *   if (response) return response
@@ -477,7 +490,10 @@ export async function requireSquadMembership(userId: string, squadId: string) {
 
   if (!squad) {
     return {
-      response: NextResponse.json({ error: 'Squad not found' }, { status: 404 }),
+      response: NextResponse.json(
+        { error: 'Squad not found' },
+        { status: 404 }
+      ),
       user: null,
       squadRole: null,
     }
@@ -487,7 +503,10 @@ export async function requireSquadMembership(userId: string, squadId: string) {
 
   if (!squadRole) {
     return {
-      response: NextResponse.json({ error: 'Not a squad member' }, { status: 403 }),
+      response: NextResponse.json(
+        { error: 'Not a squad member' },
+        { status: 403 }
+      ),
       user: null,
       squadRole: null,
     }
@@ -503,7 +522,7 @@ export async function requireSquadMembership(userId: string, squadId: string) {
 
 /**
  * Require squad owner role for a route
- * 
+ *
  * Usage:
  *   const { user, response } = await requireSquadOwner(userId, squadId)
  *   if (response) return response
@@ -516,14 +535,20 @@ export async function requireSquadOwner(userId: string, squadId: string) {
 
   if (!squad) {
     return {
-      response: NextResponse.json({ error: 'Squad not found' }, { status: 404 }),
+      response: NextResponse.json(
+        { error: 'Squad not found' },
+        { status: 404 }
+      ),
       user: null,
     }
   }
 
   if (squad.ownerUserId !== userId) {
     return {
-      response: NextResponse.json({ error: 'Only squad owner can perform this action' }, { status: 403 }),
+      response: NextResponse.json(
+        { error: 'Only squad owner can perform this action' },
+        { status: 403 }
+      ),
       user: null,
     }
   }
@@ -538,7 +563,7 @@ export async function requireSquadOwner(userId: string, squadId: string) {
 /**
  * Require specific squad permission for a route
  * More flexible than requireSquadOwner - can check for any squad permission
- * 
+ *
  * Usage:
  *   import { SquadPermission } from '@/packages/lib/permissions'
  *   const { user, response } = await requireSquadPermission(userId, squadId, SquadPermission.MANAGE_FILES)
@@ -549,14 +574,20 @@ export async function requireSquadPermission(
   squadId: string,
   permission: string // SquadPermission
 ) {
-  const { user, response, squadRole } = await requireSquadMembership(userId, squadId)
+  const { user, response, squadRole } = await requireSquadMembership(
+    userId,
+    squadId
+  )
 
   if (response) return { user: null, response }
 
   // Import at runtime to avoid circular dependencies
   const { hasSquadPermission } = await import('@/packages/lib/permissions')
 
-  const hasPermissionFlag = hasSquadPermission(squadRole as any, permission as any)
+  const hasPermissionFlag = hasSquadPermission(
+    squadRole as any,
+    permission as any
+  )
 
   if (!hasPermissionFlag) {
     return {

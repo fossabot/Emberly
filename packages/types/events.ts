@@ -593,6 +593,17 @@ export type EventTypeMap = {
   // MODERATION EVENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  'moderation.content-reported': {
+    reportId: string
+    contentType: string
+    contentId: string
+    contentName: string
+    reporterUserId: string
+    reporterUserName: string
+    category: string
+    reason: string
+  }
+
   'moderation.user-reported': {
     reportId: string
     reportedUserId: string
@@ -836,6 +847,14 @@ export type EventTypeMap = {
     opportunityTitle: string
     context?: RequestContext
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORAGE / BUCKET EVENTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  'storage.sync-buckets': {
+    _trigger?: 'periodic' | 'manual' // Internal field to track trigger type
+  }
 }
 
 export type EventType = keyof EventTypeMap
@@ -846,19 +865,96 @@ export type EventPayload<T extends EventType> = EventTypeMap[T]
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const EventCategories = {
-  file: ['file.uploaded', 'file.downloaded', 'file.deleted', 'file.visibility-changed', 'file.schedule-expiration', 'file.expired'],
-  auth: ['auth.login', 'auth.logout', 'auth.password-changed', 'auth.password-reset-requested', 'auth.password-reset-completed', 'auth.2fa-enabled', 'auth.2fa-disabled', 'auth.2fa-backup-codes-generated', 'auth.2fa-backup-code-used', 'auth.session-revoked'],
-  account: ['account.created', 'account.email-changed', 'account.email-verification-requested', 'account.email-verified', 'account.profile-updated', 'account.export-requested', 'account.export-completed', 'account.deletion-requested', 'account.deletion-cancelled', 'account.deleted'],
-  user: ['user.perk-gained', 'user.quota-reached', 'user.storage-assigned', 'user.bucket-provisioned', 'user.bucket-deprovisioned'],
+  file: [
+    'file.uploaded',
+    'file.downloaded',
+    'file.deleted',
+    'file.visibility-changed',
+    'file.schedule-expiration',
+    'file.expired',
+  ],
+  auth: [
+    'auth.login',
+    'auth.logout',
+    'auth.password-changed',
+    'auth.password-reset-requested',
+    'auth.password-reset-completed',
+    'auth.2fa-enabled',
+    'auth.2fa-disabled',
+    'auth.2fa-backup-codes-generated',
+    'auth.2fa-backup-code-used',
+    'auth.session-revoked',
+  ],
+  account: [
+    'account.created',
+    'account.email-changed',
+    'account.email-verification-requested',
+    'account.email-verified',
+    'account.profile-updated',
+    'account.export-requested',
+    'account.export-completed',
+    'account.deletion-requested',
+    'account.deletion-cancelled',
+    'account.deleted',
+  ],
+  user: [
+    'user.perk-gained',
+    'user.quota-reached',
+    'user.storage-assigned',
+    'user.bucket-provisioned',
+    'user.bucket-deprovisioned',
+  ],
   email: ['email.send', 'email.sent', 'email.failed', 'email.bounced'],
-  billing: ['billing.subscription-created', 'billing.subscription-updated', 'billing.subscription-cancelled', 'billing.payment-succeeded', 'billing.payment-failed', 'billing.refund-issued'],
-  security: ['security.suspicious-activity', 'security.rate-limit-exceeded', 'security.api-key-created', 'security.api-key-revoked'],
-  admin: ['admin.user-role-changed', 'admin.user-suspended', 'admin.user-unsuspended', 'admin.content-removed', 'admin.broadcast-sent', 'admin.user-banned', 'admin.user-unbanned'],
-  moderation: ['moderation.user-reported', 'moderation.report-resolved', 'moderation.squad-reported', 'moderation.squad-report-resolved'],
+  billing: [
+    'billing.subscription-created',
+    'billing.subscription-updated',
+    'billing.subscription-cancelled',
+    'billing.payment-succeeded',
+    'billing.payment-failed',
+    'billing.refund-issued',
+  ],
+  security: [
+    'security.suspicious-activity',
+    'security.rate-limit-exceeded',
+    'security.api-key-created',
+    'security.api-key-revoked',
+  ],
+  admin: [
+    'admin.user-role-changed',
+    'admin.user-suspended',
+    'admin.user-unsuspended',
+    'admin.content-removed',
+    'admin.broadcast-sent',
+    'admin.user-banned',
+    'admin.user-unbanned',
+  ],
+  moderation: [
+    'moderation.content-reported',
+    'moderation.user-reported',
+    'moderation.report-resolved',
+    'moderation.squad-reported',
+    'moderation.squad-report-resolved',
+  ],
   applications: ['application.submitted', 'application.reviewed'],
   testimonials: ['testimonial.submitted', 'testimonial.edited'],
   system: ['system.client-error', 'system.server-error'],
-  nexium: ['nexium.profile-created', 'nexium.profile-updated', 'nexium.profile-deleted', 'nexium.skill-added', 'nexium.skills-replaced', 'nexium.signal-added', 'nexium.opportunity-created', 'nexium.squad-created', 'nexium.squad-invite', 'nexium.squad-invite-accepted', 'nexium.squad-invite-declined', 'nexium.opportunity-match', 'nexium.application-received', 'nexium.application-accepted', 'nexium.application-rejected'],
+  nexium: [
+    'nexium.profile-created',
+    'nexium.profile-updated',
+    'nexium.profile-deleted',
+    'nexium.skill-added',
+    'nexium.skills-replaced',
+    'nexium.signal-added',
+    'nexium.opportunity-created',
+    'nexium.squad-created',
+    'nexium.squad-invite',
+    'nexium.squad-invite-accepted',
+    'nexium.squad-invite-declined',
+    'nexium.opportunity-match',
+    'nexium.application-received',
+    'nexium.application-accepted',
+    'nexium.application-rejected',
+  ],
 } as const
 
 export type EventCategory = keyof typeof EventCategories

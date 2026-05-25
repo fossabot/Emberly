@@ -23,7 +23,12 @@ export function SubscriptionUpdatedEmail({
   changeType,
   newPlanName,
 }: SubscriptionUpdatedEmailProps) {
-  const changeLabel = changeType === 'upgrade' ? 'upgraded' : changeType === 'downgrade' ? 'downgraded' : 'updated'
+  const changeLabel =
+    changeType === 'upgrade'
+      ? 'upgraded'
+      : changeType === 'downgrade'
+        ? 'downgraded'
+        : 'updated'
 
   return (
     <Html>
@@ -49,7 +54,8 @@ export function SubscriptionUpdatedEmail({
             {/* Alert Banner */}
             <Section className="mb-6 border-l-4 border-blue-500 rounded-lg bg-blue-50 p-4">
               <Text className="m-0 text-sm font-semibold text-blue-800">
-                ℹ️ Subscription {changeLabel.charAt(0).toUpperCase() + changeLabel.slice(1)}
+                ℹ️ Subscription{' '}
+                {changeLabel.charAt(0).toUpperCase() + changeLabel.slice(1)}
               </Text>
             </Section>
 
@@ -66,7 +72,9 @@ export function SubscriptionUpdatedEmail({
               <Row>
                 <Column>
                   <Text className="m-0 mb-6 text-base leading-relaxed text-gray-700">
-                    Your Emberly subscription has been successfully {changeLabel} to the <strong>{newPlanName}</strong> plan. Your changes take effect immediately.
+                    Your Emberly subscription has been successfully{' '}
+                    {changeLabel} to the <strong>{newPlanName}</strong> plan.
+                    Your changes take effect immediately.
                   </Text>
                 </Column>
               </Row>
@@ -74,7 +82,9 @@ export function SubscriptionUpdatedEmail({
               <Row className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Column>
                   <Text className="m-0 text-sm text-blue-800">
-                    <strong>ℹ️ Next steps:</strong> Your new plan features are now active. Visit your dashboard to review your updated benefits and settings.
+                    <strong>ℹ️ Next steps:</strong> Your new plan features are
+                    now active. Visit your dashboard to review your updated
+                    benefits and settings.
                   </Text>
                 </Column>
               </Row>
@@ -86,7 +96,8 @@ export function SubscriptionUpdatedEmail({
               <Row className="mt-8">
                 <Column align="center">
                   <Text className="m-0 text-xs text-gray-500">
-                    © {new Date().getFullYear()} Emberly. All rights reserved.
+                    © {new Date().getFullYear()} NodeByte LTD. All rights
+                    reserved.
                   </Text>
                 </Column>
               </Row>

@@ -55,6 +55,7 @@ export function AppearancePanel({ onSave, onThemeChange }: AppearancePanelProps 
     setEffectsEnabled,
     resetToDefault,
     metadata,
+    customColors,
   } = useTheme()
 
   // Group themes by category
@@ -134,7 +135,7 @@ export function AppearancePanel({ onSave, onThemeChange }: AppearancePanelProps 
         variant: 'destructive',
       })
     }
-  }, [saveTheme, router, toast, metadata])
+  }, [saveTheme, router, toast, metadata, customColors, onSave])
 
   // Get the theme ID for a preset (for selection matching)
   const getPresetThemeId = (preset: typeof THEME_PRESETS[0]) => {

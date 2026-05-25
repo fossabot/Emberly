@@ -7,11 +7,17 @@ import {
   PaginationMeta,
 } from '@/packages/types/dto/api-responses'
 
-export function apiResponse<T>(data: T): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
-    data,
-    success: true,
-  })
+export function apiResponse<T>(
+  data: T,
+  status: number = HTTP_STATUS.OK
+): NextResponse<ApiResponse<T>> {
+  return NextResponse.json(
+    {
+      data,
+      success: true,
+    },
+    { status }
+  )
 }
 
 export function paginatedResponse<T>(
@@ -47,7 +53,9 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  GONE: 410,
   PAYLOAD_TOO_LARGE: 413,
   UNPROCESSABLE_ENTITY: 422,
   INTERNAL_SERVER_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 }

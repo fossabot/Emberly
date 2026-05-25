@@ -1,5 +1,8 @@
 import { HTTP_STATUS, apiError, apiResponse } from '@/packages/lib/api/response'
 import { prisma } from '@/packages/lib/database/prisma'
+import { loggers } from '@/packages/lib/logger'
+
+const logger = loggers.api.getChildLogger('users-search')
 
 /**
  * GET /api/users/search?q=query&limit=10
@@ -11,7 +14,10 @@ export async function GET(req: Request) {
   const limit = Math.min(Number(url.searchParams.get('limit') ?? '10'), 50)
 
   if (!query || query.length < 1) {
-    return apiError('Query must be at least 1 character', HTTP_STATUS.BAD_REQUEST)
+    return apiError(
+      'Query must be at least 1 character',
+      HTTP_STATUS.BAD_REQUEST
+    )
   }
 
   try {
@@ -34,6 +40,7 @@ export async function GET(req: Request) {
 
     return apiResponse({ users })
   } catch (error) {
+    logger.error('User search failed', error as Error)
     return apiError('Search failed', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }

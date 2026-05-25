@@ -1,16 +1,18 @@
 import type { EventPayload, EventType } from '@/packages/types/events'
 
-import { 
-    sendTemplateEmail, 
-    BasicEmail, 
-    AdminBroadcastEmail, 
-    AccountChangeEmail, 
-    PerkGainedEmail, 
-    QuotaReachedEmail, 
-    StorageAssignedEmail, 
-    NewLoginEmail, 
-    NexiumWelcomeEmail, 
-    NexiumOpportunityEmail, 
+import type { ApplicationStatusType } from '@/packages/lib/emails/templates/application-status'
+
+import {
+    sendTemplateEmail,
+    BasicEmail,
+    AdminBroadcastEmail,
+    AccountChangeEmail,
+    PerkGainedEmail,
+    QuotaReachedEmail,
+    StorageAssignedEmail,
+    NewLoginEmail,
+    NexiumWelcomeEmail,
+    NexiumOpportunityEmail,
     NexiumSquadInviteEmail,
     NexiumSquadInviteAcceptedEmail,
     NexiumSquadInviteDeclinedEmail,
@@ -289,7 +291,7 @@ async function sendEmail(options: {
             template: MagicLinkEmail,
             props: {
                 magicLink: String(variables.magicLink || ''),
-                email: to instanceof Array ? to[0] : to,
+                email: to,
                 expiresInMinutes: typeof variables.expiresInMinutes === 'number' ? variables.expiresInMinutes : 15,
             },
             skipTracking: true,
@@ -512,10 +514,11 @@ async function sendEmail(options: {
             subject,
             template: ApplicationReplyEmail,
             props: {
-                applicantName: typeof variables.applicantName === 'string' ? variables.applicantName : undefined,
-                applicationId: String(variables.applicationId || ''),
-                replyUrl: String(variables.replyUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://embrly.ca'}/dashboard`),
-                message: typeof variables.message === 'string' ? variables.message : '',
+                recipientName: typeof variables.recipientName === 'string' ? variables.recipientName : undefined,
+                applicationType: typeof variables.applicationType === 'string' ? variables.applicationType : undefined,
+                applicationUrl: String(variables.applicationUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://embrly.ca'}/dashboard`),
+                replyContent: typeof variables.replyContent === 'string' ? variables.replyContent : '',
+                isStaffReply: typeof variables.isStaffReply === 'boolean' ? variables.isStaffReply : true,
             },
             skipTracking: true,
         })
@@ -528,10 +531,10 @@ async function sendEmail(options: {
             subject,
             template: ApplicationStatusEmail,
             props: {
-                applicantName: typeof variables.applicantName === 'string' ? variables.applicantName : undefined,
-                status: String(variables.status || ''),
+                recipientName: typeof variables.recipientName === 'string' ? variables.recipientName : undefined,
+                status: (variables.status as ApplicationStatusType) || 'received',
                 applicationUrl: String(variables.applicationUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://embrly.ca'}/dashboard`),
-                message: typeof variables.message === 'string' ? variables.message : undefined,
+                reviewNotes: typeof variables.reviewNotes === 'string' ? variables.reviewNotes : undefined,
             },
             skipTracking: true,
         })
