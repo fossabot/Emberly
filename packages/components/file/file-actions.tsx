@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import DOMPurify from 'dompurify'
-import { Copy, Download, ExternalLink, Flag, Link, Pencil, ScanText, Send } from 'lucide-react'
+import {
+  Copy,
+  Download,
+  ExternalLink,
+  Flag,
+  Link,
+  Pencil,
+  ScanText,
+  Send,
+} from 'lucide-react'
 import NextLink from 'next/link'
 import { useSession } from 'next-auth/react'
 
@@ -66,9 +75,14 @@ export function FileActions({
   const isEditor = collaboratorInfo.role === 'EDITOR'
   const isSuggester = collaboratorInfo.role === 'SUGGESTER'
   const canEditDirectly = (isOwner || isEditor) && isTextBased && fileId
-  const canSuggest = !isOwner && (isSuggester || collaboratorInfo.allowSuggestions) && isTextBased && fileId
+  const canSuggest =
+    !isOwner &&
+    (isSuggester || collaboratorInfo.allowSuggestions) &&
+    isTextBased &&
+    fileId
 
-  const isMarkdown = mimeType === 'text/markdown' ||
+  const isMarkdown =
+    mimeType === 'text/markdown' ||
     mimeType === 'text/x-markdown' ||
     name.endsWith('.md') ||
     name.endsWith('.markdown')
@@ -90,8 +104,15 @@ export function FileActions({
       ? `?password=${encodeURIComponent(DOMPurify.sanitize(verifiedPassword))}`
       : ''
     const sanitizedUrlPath = DOMPurify.sanitize(urlPath)
-    const fileUrl = `/api/files${sanitizedUrlPath}${passwordParam}`
-    const rawUrl = `${sanitizedUrlPath}/raw${passwordParam}`
+    // Add trailing slash before query parameters
+    const fileUrl = `/api/files${sanitizedUrlPath}/${passwordParam}`.replace(
+      /\/\?/,
+      '?'
+    )
+    const rawUrl = `${sanitizedUrlPath}/raw/${passwordParam}`.replace(
+      /\/\?/,
+      '?'
+    )
     setUrls({ fileUrl, rawUrl })
   }, [urlPath, verifiedPassword])
 
@@ -287,7 +308,11 @@ export function FileActions({
       {isOwner && isTextBased && fileId && (
         <>
           <CollaboratorManager fileId={fileId} isOwner={isOwner} />
-          <SuggestionManager fileId={fileId} isOwner={isOwner} isMarkdown={isMarkdown} />
+          <SuggestionManager
+            fileId={fileId}
+            isOwner={isOwner}
+            isMarkdown={isMarkdown}
+          />
         </>
       )}
 

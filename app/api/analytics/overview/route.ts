@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/packages/lib/auth/api-auth'
 import { prisma } from '@/packages/lib/database/prisma'
-import { planKeyForProduct, hasAnalytics, hasAdvancedAnalytics } from '@/packages/lib/plans'
-import { getEffectiveQuotaMB, getPlanLimits } from '@/packages/lib/storage/quota'
+import {
+  planKeyForProduct,
+  hasAnalytics,
+  hasAdvancedAnalytics,
+} from '@/packages/lib/plans'
+import {
+  getEffectiveQuotaMB,
+  getPlanLimits,
+} from '@/packages/lib/storage/quota'
 
 export async function GET(req: Request) {
   try {
@@ -12,24 +19,69 @@ export async function GET(req: Request) {
     let userId = user?.id
     // some session setups don't include `id` on `user`; fallback to lookup by email
     if (!userId && user?.email) {
-      const u = await prisma.user.findUnique({ where: { email: user.email }, select: { id: true } })
+      const u = await prisma.user.findUnique({
+        where: { email: user.email },
+        select: { id: true },
+      })
       if (u) userId = u.id
     }
 
     const where = userId ? { userId } : undefined
 
-    const [totalFiles, totalUrls, storageAgg, topUrls, topFiles, recentUploads, topStorageFiles, totalsAgg, urlClicksAgg, domainsCount, verifiedDomainsCount] = await Promise.all([
+    const [
+      totalFiles,
+      totalUrls,
+      storageAgg,
+      topUrls,
+      topFiles,
+      recentUploads,
+      topStorageFiles,
+      totalsAgg,
+      urlClicksAgg,
+      domainsCount,
+      verifiedDomainsCount,
+    ] = await Promise.all([
       prisma.file.count({ where }),
       prisma.shortenedUrl.count({ where }),
       prisma.file.aggregate({ where, _sum: { size: true } }),
-      prisma.shortenedUrl.findMany({ where, orderBy: { clicks: 'desc' }, take: 5, select: { id: true, shortCode: true, targetUrl: true, clicks: true } }),
-      prisma.file.findMany({ where, orderBy: { views: 'desc' }, take: 10, select: { id: true, name: true, views: true, downloads: true, uploadedAt: true } }),
-      prisma.file.findMany({ where, orderBy: { uploadedAt: 'desc' }, take: 10, select: { id: true, name: true, size: true, uploadedAt: true } }),
-      prisma.file.findMany({ where, orderBy: { size: 'desc' }, take: 10, select: { id: true, name: true, size: true } }),
+      prisma.shortenedUrl.findMany({
+        where,
+        orderBy: { clicks: 'desc' },
+        take: 5,
+        select: { id: true, shortCode: true, targetUrl: true, clicks: true },
+      }),
+      prisma.file.findMany({
+        where,
+        orderBy: { views: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          name: true,
+          views: true,
+          downloads: true,
+          uploadedAt: true,
+        },
+      }),
+      prisma.file.findMany({
+        where,
+        orderBy: { uploadedAt: 'desc' },
+        take: 10,
+        select: { id: true, name: true, size: true, uploadedAt: true },
+      }),
+      prisma.file.findMany({
+        where,
+        orderBy: { size: 'desc' },
+        take: 10,
+        select: { id: true, name: true, size: true },
+      }),
       prisma.file.aggregate({ where, _sum: { views: true, downloads: true } }),
       prisma.shortenedUrl.aggregate({ where, _sum: { clicks: true } }),
       prisma.customDomain.count({ where: { ...(userId ? { userId } : {}) } }),
-      prisma.customDomain.count({ where: { ...(userId ? { userId, verified: true } : { verified: true }) } }),
+      prisma.customDomain.count({
+        where: {
+          ...(userId ? { userId, verified: true } : { verified: true }),
+        },
+      }),
     ])
 
     // Daily file uploads (last 14 days)
@@ -43,8 +95,9 @@ export async function GET(req: Request) {
       const end = new Date(start)
       end.setDate(start.getDate() + 1)
 
-      // eslint-disable-next-line no-await-in-loop
-      const count = await prisma.file.count({ where: { ...(where || {}), uploadedAt: { gte: start, lt: end } } })
+      const count = await prisma.file.count({
+        where: { ...(where || {}), uploadedAt: { gte: start, lt: end } },
+      })
       uploadsPerDay.push({ date: start.toISOString().slice(0, 10), count })
     }
 
@@ -54,13 +107,27 @@ export async function GET(req: Request) {
 
     // compute allowed features and quota info for the viewer (plan-based gating)
     const allowed = { topFiles: false, topUrls: false, exportCSV: false }
-    let quotaInfo: { quotaMB: number; usedMB: number; remainingMB: number; percentageUsed: number } | null = null
-    let planInfo: { planName: string; uploadSizeCapMB: number | null; customDomainsLimit: number | null; storageQuotaGB: number | null } | null = null
+    let quotaInfo: {
+      quotaMB: number
+      usedMB: number
+      remainingMB: number
+      percentageUsed: number
+    } | null = null
+    let planInfo: {
+      planName: string
+      uploadSizeCapMB: number | null
+      customDomainsLimit: number | null
+      storageQuotaGB: number | null
+    } | null = null
 
     if (user) {
-      const subs = await prisma.subscription.findMany({ where: { userId: user?.id, status: 'active' }, include: { product: true } })
+      const subs = await prisma.subscription.findMany({
+        where: { userId: user?.id, status: 'active' },
+        include: { product: true },
+      })
       if (subs.length > 0) {
-        const bestPlan = subs.map(s => planKeyForProduct(s.product)).sort()[0] || 'free'
+        const bestPlan =
+          subs.map((s) => planKeyForProduct(s.product)).sort()[0] || 'free'
         allowed.topFiles = hasAnalytics(bestPlan)
         allowed.topUrls = hasAnalytics(bestPlan)
         allowed.exportCSV = hasAdvancedAnalytics(bestPlan)
@@ -116,7 +183,9 @@ export async function GET(req: Request) {
     })
   } catch (err) {
     console.error('analytics/overview error', err)
-    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch analytics' },
+      { status: 500 }
+    )
   }
 }
-

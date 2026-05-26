@@ -13,7 +13,10 @@ import {
   apiResponse,
   paginatedResponse,
 } from '@/packages/lib/api/response'
-import { getSquadFromBearerToken, requireAuth } from '@/packages/lib/auth/api-auth'
+import {
+  getSquadFromBearerToken,
+  requireAuth,
+} from '@/packages/lib/auth/api-auth'
 import { getConfig } from '@/packages/lib/config'
 import { prisma } from '@/packages/lib/database/prisma'
 import {
@@ -57,7 +60,8 @@ export async function POST(req: Request) {
           preferredUploadDomain: true,
         },
       })
-      if (!ownerUser) return apiError('Squad owner not found', HTTP_STATUS.UNAUTHORIZED)
+      if (!ownerUser)
+        return apiError('Squad owner not found', HTTP_STATUS.UNAUTHORIZED)
       user = ownerUser
       squadContext = squad
     } else {
@@ -72,7 +76,10 @@ export async function POST(req: Request) {
     try {
       formData = await req.formData()
     } catch {
-      return apiError('Failed to parse request body as multipart/form-data. Ensure Content-Type is multipart/form-data with a valid boundary.', HTTP_STATUS.BAD_REQUEST)
+      return apiError(
+        'Failed to parse request body as multipart/form-data. Ensure Content-Type is multipart/form-data with a valid boundary.',
+        HTTP_STATUS.BAD_REQUEST
+      )
     }
 
     const uploadedFile = formData.get('file') as File
@@ -109,10 +116,11 @@ export async function POST(req: Request) {
 
     // Check file size against plan upload cap and storage quota
     if (user.role !== 'ADMIN') {
-      const { getPlanLimits, canUploadSize } = await import('@/packages/lib/storage/quota')
+      const { getPlanLimits, canUploadSize } =
+        await import('@/packages/lib/storage/quota')
       const planLimits = await getPlanLimits(user.id)
       const fileSizeMB = bytesToMB(uploadedFile.size)
-      
+
       // Check plan upload size cap (null = unlimited for Ember/Enterprise)
       if (planLimits.uploadSizeCapMB !== null) {
         const maxUploadBytes = planLimits.uploadSizeCapMB * 1024 * 1024
@@ -123,7 +131,7 @@ export async function POST(req: Request) {
           )
         }
       }
-      
+
       // For squad uploads, also check squad storage quota
       if (squadContext) {
         const squadQuotaMB = squadContext.storageQuotaMB
@@ -141,7 +149,8 @@ export async function POST(req: Request) {
         const uploadCheck = await canUploadSize(user.id, fileSizeMB)
         if (!uploadCheck.allowed) {
           return apiError(
-            uploadCheck.reason || 'Storage quota exceeded. Purchase additional storage to continue uploading.',
+            uploadCheck.reason ||
+              'Storage quota exceeded. Purchase additional storage to continue uploading.',
             HTTP_STATUS.PAYLOAD_TOO_LARGE
           )
         }
@@ -149,7 +158,10 @@ export async function POST(req: Request) {
     }
 
     // Validate email verification and custom domain verification
-    const uploadValidation = await validateUploadRequest(user.id, requestedDomain)
+    const uploadValidation = await validateUploadRequest(
+      user.id,
+      requestedDomain
+    )
     if (!uploadValidation.valid) {
       return apiError(uploadValidation.error!, HTTP_STATUS.FORBIDDEN)
     }
@@ -165,7 +177,7 @@ export async function POST(req: Request) {
 
     const storageProvider = await getStorageProvider()
     const bytes = await uploadedFile.arrayBuffer()
-    
+
     // Security check: validate file against zip bombs, malware, dangerous types, and VirusTotal
     const securityCheck = await validateFileSecurityChecksWithVT(
       Buffer.from(bytes),
@@ -203,7 +215,7 @@ export async function POST(req: Request) {
         userId: user.id,
       })
     }
-    
+
     // carry through host headers as metadata so storage/proxy can use them
     const meta: Record<string, string> = {}
     try {
@@ -289,7 +301,9 @@ export async function POST(req: Request) {
       process.env.NODE_ENV === 'development'
         ? 'http://localhost:3000'
         : process.env.NEXTAUTH_URL?.replace(/\/$/, '') || ''
-    const fullUrl = (baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`).replace(/\/+$/, '')
+    const fullUrl = (
+      baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`
+    ).replace(/\/+$/, '')
 
     const sanitizeHost = (host: string) => urlForHost(host).replace(/\/+$/, '')
     const preferredHost = user.preferredUploadDomain
@@ -352,7 +366,7 @@ export async function POST(req: Request) {
     }
 
     const responseData: FileUploadResponse = {
-      url: `${finalFullUrl}${urlPath}`,
+      url: `${finalFullUrl}${urlPath}/`,
       name: displayName,
       size: uploadedFile.size,
       type: uploadedFile.type,
@@ -424,12 +438,18 @@ export async function GET(request: Request) {
       if (dateFrom || dateTo) {
         const dateFilter: Prisma.DateTimeFilter = {}
         if (dateFrom) dateFilter.gte = new Date(dateFrom)
-        if (dateTo) { const e = new Date(dateTo); e.setHours(23,59,59,999); dateFilter.lte = e }
+        if (dateTo) {
+          const e = new Date(dateTo)
+          e.setHours(23, 59, 59, 999)
+          dateFilter.lte = e
+        }
         conditions.push({ uploadedAt: dateFilter })
       }
       if (visibilityFilters.length > 0) {
         const visConds = visibilityFilters.map((f) =>
-          f === 'hasPassword' ? { password: { not: null } } : { visibility: f.toUpperCase() as 'PUBLIC' | 'PRIVATE' }
+          f === 'hasPassword'
+            ? { password: { not: null } }
+            : { visibility: f.toUpperCase() as 'PUBLIC' | 'PRIVATE' }
         )
         conditions.push({ OR: visConds })
       }
@@ -472,7 +492,8 @@ export async function GET(request: Request) {
         })
       )
 
-      return paginatedResponse<FileMetadata[]>(filesList as (FileMetadata & { expiresAt: Date | null })[],
+      return paginatedResponse<FileMetadata[]>(
+        filesList as (FileMetadata & { expiresAt: Date | null })[],
         { total, pageCount: Math.ceil(total / limit), page, limit }
       )
     }
@@ -609,4 +630,3 @@ export async function GET(request: Request) {
     return apiError('Failed to fetch files', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
-

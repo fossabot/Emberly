@@ -26,7 +26,10 @@ interface ApplicationRepliesProps {
   disabled?: boolean
 }
 
-export function ApplicationReplies({ applicationId, disabled }: ApplicationRepliesProps) {
+export function ApplicationReplies({
+  applicationId,
+  disabled,
+}: ApplicationRepliesProps) {
   const { toast } = useToast()
   const [replies, setReplies] = useState<Reply[]>([])
   const [loading, setLoading] = useState(true)
@@ -111,7 +114,6 @@ export function ApplicationReplies({ applicationId, disabled }: ApplicationRepli
             >
               <div className="flex items-center gap-2 mb-1.5">
                 {reply.user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={reply.user.image}
                     alt=""
@@ -126,7 +128,10 @@ export function ApplicationReplies({ applicationId, disabled }: ApplicationRepli
                   {reply.user.name || 'User'}
                 </span>
                 {reply.isStaffReply && (
-                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 py-0 px-1.5 h-4 gap-0.5">
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-primary/10 text-primary border-primary/20 py-0 px-1.5 h-4 gap-0.5"
+                  >
                     <Shield className="w-2.5 h-2.5" />
                     Staff
                   </Badge>
