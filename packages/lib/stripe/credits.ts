@@ -96,9 +96,14 @@ export async function applyReferralCreditsToStripe(
   } catch (error) {
     if (customerId) {
       try {
-        await stripeClient.customers.update(customerId, { balance: originalBalance })
+        await stripeClient.customers.update(customerId, {
+          balance: originalBalance,
+        })
       } catch (rollbackError) {
-        console.error('[Stripe Credits] Failed to roll back Stripe balance:', rollbackError)
+        console.error(
+          '[Stripe Credits] Failed to roll back Stripe balance:',
+          rollbackError
+        )
       }
     }
 
@@ -141,7 +146,7 @@ export async function ensureStripeCustomer(
     select: { stripeCustomerId: true },
   })
 
-  let customerId = user?.stripeCustomerId
+  const customerId = user?.stripeCustomerId
 
   // Verify existing customer ID is still valid
   if (customerId) {
@@ -149,7 +154,9 @@ export async function ensureStripeCustomer(
       await stripeClient.customers.retrieve(customerId)
       return customerId
     } catch (e: any) {
-      console.warn(`[Stripe] Stored customer ID invalid, creating new one: ${e?.message}`)
+      console.warn(
+        `[Stripe] Stored customer ID invalid, creating new one: ${e?.message}`
+      )
     }
   }
 
@@ -212,4 +219,3 @@ export async function adjustCredits(
 
   return transaction
 }
-

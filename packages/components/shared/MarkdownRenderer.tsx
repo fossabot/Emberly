@@ -9,14 +9,24 @@ import remarkGfm from 'remark-gfm'
 export default function MarkdownRenderer({ children }: { children: string }) {
   const components: Components = {
     img: (props) => (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={props.src as string} alt={(props.alt as string) || ''} className="rounded-md mx-auto my-4 max-w-full" />
+      <img
+        src={props.src as string}
+        alt={(props.alt as string) || ''}
+        className="rounded-md mx-auto my-4 max-w-full"
+      />
     ),
     code: ({ inline, className, children, ...props }) => {
-      if (inline) return <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>{children}</code>
+      if (inline)
+        return (
+          <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>
+            {children}
+          </code>
+        )
       return (
         <pre className="bg-surface p-4 rounded-md overflow-auto my-4">
-          <code className={className} {...props}>{children}</code>
+          <code className={className} {...props}>
+            {children}
+          </code>
         </pre>
       )
     },
@@ -33,12 +43,18 @@ export default function MarkdownRenderer({ children }: { children: string }) {
       </thead>
     ),
     th: ({ children, isHeader: _isHeader, ...props }) => (
-      <th className="px-3 py-2 text-left text-sm font-semibold border-b border-border/50 dark:border-border/20 whitespace-nowrap" {...props}>
+      <th
+        className="px-3 py-2 text-left text-sm font-semibold border-b border-border/50 dark:border-border/20 whitespace-nowrap"
+        {...props}
+      >
         {children}
       </th>
     ),
     td: ({ children, isHeader: _isHeader, ...props }) => (
-      <td className="px-3 py-2 text-sm border-b border-border/50 dark:border-border/20" {...props}>
+      <td
+        className="px-3 py-2 text-sm border-b border-border/50 dark:border-border/20"
+        {...props}
+      >
         {children}
       </td>
     ),
@@ -52,7 +68,11 @@ export default function MarkdownRenderer({ children }: { children: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]}
+      rehypePlugins={[
+        rehypeSanitize,
+        rehypeSlug,
+        [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+      ]}
       components={components}
     >
       {children}

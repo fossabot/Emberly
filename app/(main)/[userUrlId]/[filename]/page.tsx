@@ -11,7 +11,11 @@ import { ProtectedFile } from '@/packages/components/file/protected-file'
 import { DynamicBackground } from '@/packages/components/layout/dynamic-background'
 import { Footer } from '@/packages/components/layout/footer'
 import { Icons } from '@/packages/components/shared/icons'
-import { Avatar, AvatarFallback, AvatarImage } from '@/packages/components/ui/avatar'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/packages/components/ui/avatar'
 import { Button } from '@/packages/components/ui/button'
 import { Card } from '@/packages/components/ui/card'
 import { Input } from '@/packages/components/ui/input'
@@ -103,7 +107,16 @@ export async function generateMetadata({
 
   // Find the file
   const file = await findFileByUrlPath(userUrlId, filename, {
-    include: { user: { select: { name: true, image: true, urlId: true, enableRichEmbeds: true } } },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          urlId: true,
+          enableRichEmbeds: true,
+        },
+      },
+    },
   })
 
   if (!file || !file.user) {
@@ -159,7 +172,7 @@ export default async function FilePage({
   const urlPath = `/${userUrlId}/${filename}`
   const providedPassword = (await searchParams).password as string | undefined
 
-  let file = await findFileByUrlPath(userUrlId, filename, {
+  const file = await findFileByUrlPath(userUrlId, filename, {
     include: { user: true },
   })
 
@@ -175,7 +188,9 @@ export default async function FilePage({
   const serializedFile = prepareFileProps(file)
 
   const isOwner = session?.user?.id === serializedFile.userId
-  const isAdmin = (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'SUPERADMIN'
+  const isAdmin =
+    (session?.user as any)?.role === 'ADMIN' ||
+    (session?.user as any)?.role === 'SUPERADMIN'
   const isPrivate = serializedFile.visibility === 'PRIVATE' && !isOwner
 
   if (isPrivate) {
@@ -202,7 +217,8 @@ export default async function FilePage({
               </div>
               <h1 className="text-xl font-medium">Content Unavailable</h1>
               <p className="text-sm text-muted-foreground">
-                This file has been flagged by our moderation team and is currently unavailable.
+                This file has been flagged by our moderation team and is
+                currently unavailable.
               </p>
               <Button asChild variant="outline" className="mt-2">
                 <Link href="/">Go Home</Link>
@@ -229,29 +245,29 @@ export default async function FilePage({
           </div>
           <main className="flex items-center justify-center p-6 relative z-10 min-h-screen">
             <Card className="w-full max-w-md glass">
-                <div className="p-6">
-                  <h1 className="text-xl font-medium text-center mb-4">
-                    Password Protected File
-                  </h1>
-                  <p className="text-sm text-muted-foreground text-center mb-6">
-                    This file requires a password to access
-                  </p>
-                  <form className="space-y-4" action={urlPath}>
-                    <div className="space-y-2">
-                      <Input
-                        type="password"
-                        name="password"
-                        placeholder="Enter password"
-                        className="bg-background/60 backdrop-blur-sm border-border/50"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Access File
-                    </Button>
-                  </form>
-                </div>
-              </Card>
+              <div className="p-6">
+                <h1 className="text-xl font-medium text-center mb-4">
+                  Password Protected File
+                </h1>
+                <p className="text-sm text-muted-foreground text-center mb-6">
+                  This file requires a password to access
+                </p>
+                <form className="space-y-4" action={urlPath}>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="Enter password"
+                      className="bg-background/60 backdrop-blur-sm border-border/50"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Access File
+                  </Button>
+                </form>
+              </div>
+            </Card>
             {/* Footer moved to global FooterWrapper in app/(main)/layout.tsx */}
           </main>
         </div>
@@ -275,29 +291,29 @@ export default async function FilePage({
           </div>
           <main className="flex items-center justify-center p-6 relative z-10 min-h-screen">
             <Card className="w-full max-w-md glass">
-                <div className="p-6">
-                  <h1 className="text-xl font-medium text-center mb-4">
-                    Incorrect Password
-                  </h1>
-                  <p className="text-sm text-muted-foreground text-center mb-6">
-                    The password you entered is incorrect
-                  </p>
-                  <form className="space-y-4" action={urlPath}>
-                    <div className="space-y-2">
-                      <Input
-                        type="password"
-                        name="password"
-                        placeholder="Enter password"
-                        className="bg-background/60 backdrop-blur-sm border-border/50"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Try Again
-                    </Button>
-                  </form>
-                </div>
-              </Card>
+              <div className="p-6">
+                <h1 className="text-xl font-medium text-center mb-4">
+                  Incorrect Password
+                </h1>
+                <p className="text-sm text-muted-foreground text-center mb-6">
+                  The password you entered is incorrect
+                </p>
+                <form className="space-y-4" action={urlPath}>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="Enter password"
+                      className="bg-background/60 backdrop-blur-sm border-border/50"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Try Again
+                  </Button>
+                </form>
+              </div>
+            </Card>
             {/* Footer moved to global FooterWrapper in app/(main)/layout.tsx */}
           </main>
         </div>
@@ -322,7 +338,10 @@ export default async function FilePage({
           </Link>
         </div>
 
-        <Link href={`/user/${serializedFile.user.name}`} className="glass glass-hover rounded-xl px-3 py-2 sm:px-4 transition-all">
+        <Link
+          href={`/user/${serializedFile.user.name}`}
+          className="glass glass-hover rounded-xl px-3 py-2 sm:px-4 transition-all"
+        >
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Avatar className="h-6 w-6 sm:h-7 sm:w-7 ring-1 ring-white/10">
               <AvatarImage
@@ -349,11 +368,16 @@ export default async function FilePage({
           {serializedFile.flagged && (isOwner || isAdmin) && (
             <div className="mb-3 flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 backdrop-blur-sm px-4 py-3 text-sm text-destructive">
               <ShieldAlert className="h-4 w-4 shrink-0" />
-              <span>This file has been flagged by moderation{isOwner && ' and is hidden from public view'}.</span>
+              <span>
+                This file has been flagged by moderation
+                {isOwner && ' and is hidden from public view'}.
+              </span>
             </div>
           )}
 
-          <Card className={`overflow-hidden glass w-full ${serializedFile.flagged ? 'ring-1 ring-destructive/30' : ''}`}>
+          <Card
+            className={`overflow-hidden glass w-full ${serializedFile.flagged ? 'ring-1 ring-destructive/30' : ''}`}
+          >
             {/* File info header */}
             <div className="px-4 sm:px-6 pt-4 pb-3 border-b border-border/40">
               <div className="flex items-center justify-between gap-3">
@@ -364,7 +388,13 @@ export default async function FilePage({
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground/60">
                     <span>{formatFileSize(serializedFile.size)}</span>
                     <span className="text-white/10">·</span>
-                    <span>{uploadDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span>
+                      {uploadDate.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>

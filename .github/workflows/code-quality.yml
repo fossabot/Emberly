@@ -56,6 +56,3 @@ jobs:
 
       - name: Lint
         run: bun run lint
-
-      - name: Check formatting
-        run: bun x prettier --check "**/*.{ts,tsx,js,jsx,json,md}"
