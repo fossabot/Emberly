@@ -30,7 +30,9 @@ export async function GET(
   try {
     const { path } = await params
     const session = await getServerSession(authOptions)
-    const urlPath = '/' + path.join('/')
+    let urlPath = '/' + path.join('/')
+    // Remove trailing slash if present for database lookup
+    urlPath = urlPath.replace(/\/$/, '')
     const url = new URL(request.url)
     const providedPassword = url.searchParams.get('password')
     const isDownloadRequest = url.searchParams.get('download') === 'true'
@@ -52,7 +54,10 @@ export async function GET(
       return new Response(null, { status: 404 })
     }
 
-    const deny = await checkFileAccess(file, { userId: session?.user?.id, providedPassword })
+    const deny = await checkFileAccess(file, {
+      userId: session?.user?.id,
+      providedPassword,
+    })
     if (deny) return deny
 
     if (isDownloadRequest) {

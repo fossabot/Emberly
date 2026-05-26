@@ -32,7 +32,11 @@ import { getFileIcon } from '@/packages/components/dashboard/file-card/utils'
 import { ExpiryModal } from '@/packages/components/shared/expiry-modal'
 import { Icons } from '@/packages/components/shared/icons'
 import { OcrDialog } from '@/packages/components/shared/ocr-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/packages/components/ui/avatar'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/packages/components/ui/avatar'
 import { Badge } from '@/packages/components/ui/badge'
 import { Button } from '@/packages/components/ui/button'
 import { Card } from '@/packages/components/ui/card'
@@ -51,7 +55,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/packages/components/ui/select'
-import { RadioGroup, RadioGroupItem } from '@/packages/components/ui/radio-group'
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/packages/components/ui/radio-group'
 import {
   Tooltip,
   TooltipContent,
@@ -71,7 +78,11 @@ interface FileCardProps {
   enableRichEmbeds?: boolean
 }
 
-export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true }: FileCardProps) {
+export function FileCard({
+  file: initialFile,
+  onDelete,
+  enableRichEmbeds = true,
+}: FileCardProps) {
   const { toast } = useToast()
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [isVisibilityDialogOpen, setIsVisibilityDialogOpen] = useState(false)
@@ -90,11 +101,18 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
   const [ocrConfidence, setOcrConfidence] = useState<number | null>(null)
   const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
-  const [collaborators, setCollaborators] = useState<Array<{
-    id: string
-    role: string
-    user: { id: string; name: string | null; urlId: string | null; image: string | null }
-  }>>([])
+  const [collaborators, setCollaborators] = useState<
+    Array<{
+      id: string
+      role: string
+      user: {
+        id: string
+        name: string | null
+        urlId: string | null
+        image: string | null
+      }
+    }>
+  >([])
   const [shareInput, setShareInput] = useState('')
   const [shareRole, setShareRole] = useState<'EDITOR' | 'SUGGESTER'>('EDITOR')
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
@@ -108,7 +126,9 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
         const data = await response.json()
         setCollaborators(data.data ?? [])
       }
-    } catch { /* ignore */ } finally {
+    } catch {
+      /* ignore */
+    } finally {
       setIsLoadingCollaborators(false)
     }
   }
@@ -133,11 +153,15 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
       }
       setShareInput('')
       await fetchCollaborators()
-      toast({ title: 'File shared', description: 'Collaborator has been added' })
+      toast({
+        title: 'File shared',
+        description: 'Collaborator has been added',
+      })
     } catch (error) {
       toast({
         title: 'Failed to share file',
-        description: error instanceof Error ? error.message : 'Please try again',
+        description:
+          error instanceof Error ? error.message : 'Please try again',
         variant: 'destructive',
       })
     } finally {
@@ -161,7 +185,7 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
 
   const handleCopyLink = () => {
     const safeUrl = sanitizeUrl(file.urlPath)
-    writeToClipboard(`${window.location.origin}${safeUrl}`)
+    writeToClipboard(`${window.location.origin}${safeUrl}/`)
       .then(() => {
         toast({
           title: 'Link copied',
@@ -387,7 +411,12 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
           className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 opacity-0 ${!isLoadingOcr && 'group-hover:opacity-100'} transition-all duration-300 flex flex-col items-center justify-center gap-3`}
         >
           {/* View button */}
-          <Button variant="secondary" className="bg-white/15 hover:bg-white/25 backdrop-blur-md border-border/50 text-white" size="sm" asChild>
+          <Button
+            variant="secondary"
+            className="bg-white/15 hover:bg-white/25 backdrop-blur-md border-border/50 text-white"
+            size="sm"
+            asChild
+          >
             <Link href={sanitizeUrl(file.urlPath)}>View</Link>
           </Button>
 
@@ -561,18 +590,19 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md text-xs border ${isBefore(
-                      new Date(file.expiresAt),
-                      new Date(Date.now() + 24 * 60 * 60 * 1000)
-                    )
-                      ? 'bg-red-500/80 border-red-400/50 text-white'
-                      : isBefore(
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md text-xs border ${
+                      isBefore(
                         new Date(file.expiresAt),
-                        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                        new Date(Date.now() + 24 * 60 * 60 * 1000)
                       )
-                        ? 'bg-orange-500/80 border-orange-400/50 text-white'
-                        : 'bg-amber-500/80 border-amber-400/50 text-white'
-                      }`}
+                        ? 'bg-red-500/80 border-red-400/50 text-white'
+                        : isBefore(
+                              new Date(file.expiresAt),
+                              new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                            )
+                          ? 'bg-orange-500/80 border-orange-400/50 text-white'
+                          : 'bg-amber-500/80 border-amber-400/50 text-white'
+                    }`}
                   >
                     <Timer className="h-3 w-3" />
                     {formatDistanceToNow(new Date(file.expiresAt), {
@@ -648,7 +678,7 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
         </div>
       </div>
 
-      { }
+      {}
       <Dialog
         open={isPasswordDialogOpen}
         onOpenChange={setIsPasswordDialogOpen}
@@ -683,7 +713,7 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
         </DialogContent>
       </Dialog>
 
-      { }
+      {}
       <Dialog
         open={isVisibilityDialogOpen}
         onOpenChange={setIsVisibilityDialogOpen}
@@ -735,7 +765,7 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
         </DialogContent>
       </Dialog>
 
-      { }
+      {}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -805,7 +835,9 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground truncate">{file.name}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {file.name}
+            </p>
             {/* Add collaborator */}
             <div className="space-y-2">
               <Label>Add collaborator</Label>
@@ -814,10 +846,17 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
                   placeholder="Email or username"
                   value={shareInput}
                   onChange={(e) => setShareInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCollaborator()}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && handleAddCollaborator()
+                  }
                   className="flex-1"
                 />
-                <Select value={shareRole} onValueChange={(v) => setShareRole(v as 'EDITOR' | 'SUGGESTER')}>
+                <Select
+                  value={shareRole}
+                  onValueChange={(v) =>
+                    setShareRole(v as 'EDITOR' | 'SUGGESTER')
+                  }
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -846,19 +885,28 @@ export function FileCard({ file: initialFile, onDelete, enableRichEmbeds = true 
               {isLoadingCollaborators ? (
                 <p className="text-sm text-muted-foreground py-2">Loading...</p>
               ) : collaborators.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-2">No collaborators yet.</p>
+                <p className="text-sm text-muted-foreground py-2">
+                  No collaborators yet.
+                </p>
               ) : (
                 <div className="space-y-2 max-h-52 overflow-y-auto">
                   {collaborators.map((c) => (
                     <div key={c.id} className="flex items-center gap-2 py-1">
                       <Avatar className="h-7 w-7 shrink-0">
-                        <AvatarImage src={c.user.image ?? undefined} alt={c.user.name ?? 'User'} />
+                        <AvatarImage
+                          src={c.user.image ?? undefined}
+                          alt={c.user.name ?? 'User'}
+                        />
                         <AvatarFallback className="text-xs">
-                          {(c.user.name ?? c.user.urlId ?? '?')[0].toUpperCase()}
+                          {(c.user.name ??
+                            c.user.urlId ??
+                            '?')[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{c.user.name ?? c.user.urlId ?? 'Unknown'}</p>
+                        <p className="text-sm font-medium truncate">
+                          {c.user.name ?? c.user.urlId ?? 'Unknown'}
+                        </p>
                       </div>
                       <Badge variant="secondary" className="text-xs shrink-0">
                         {c.role === 'EDITOR' ? 'Editor' : 'Viewer'}

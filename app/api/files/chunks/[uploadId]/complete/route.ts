@@ -28,7 +28,13 @@ async function getAuthenticatedUser(req: Request) {
   if (session?.user) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, storageUsed: true, storageQuotaMB: true, urlId: true, role: true },
+      select: {
+        id: true,
+        storageUsed: true,
+        storageQuotaMB: true,
+        urlId: true,
+        role: true,
+      },
     })
     return user
   }
@@ -38,7 +44,13 @@ async function getAuthenticatedUser(req: Request) {
     const token = authHeader.substring(7)
     const user = await prisma.user.findUnique({
       where: { uploadToken: token },
-      select: { id: true, storageUsed: true, storageQuotaMB: true, urlId: true, role: true },
+      select: {
+        id: true,
+        storageUsed: true,
+        storageQuotaMB: true,
+        urlId: true,
+        role: true,
+      },
     })
     return user
   }
@@ -118,7 +130,7 @@ export async function POST(
         metadata.filename,
         metadata.mimeType
       )
-      
+
       if (!securityCheck.valid) {
         // Clean up the uploaded file
         try {
@@ -126,20 +138,20 @@ export async function POST(
         } catch (e) {
           logger.error('Failed to cleanup file after security check failure', e)
         }
-        
+
         logger.warn('Chunk file security validation failed', {
           fileName: metadata.filename,
           mimeType: metadata.mimeType,
           error: securityCheck.error,
           userId: metadata.userId,
         })
-        
+
         return NextResponse.json(
           { error: securityCheck.error || 'File failed security validation' },
           { status: 400 }
         )
       }
-      
+
       if (securityCheck.virusTotal?.scanPerformed) {
         logger.info('Chunk completion scanned by VirusTotal', {
           fileName: metadata.filename,
@@ -167,7 +179,7 @@ export async function POST(
       const { canUploadSize } = await import('@/packages/lib/storage/quota')
       const fileSizeMB = bytesToMB(metadata.totalSize)
       const uploadCheck = await canUploadSize(user.id, fileSizeMB)
-      
+
       if (!uploadCheck.allowed) {
         // Attempt to clean up the assembled object in storage
         try {
@@ -179,7 +191,8 @@ export async function POST(
         return NextResponse.json(
           {
             error: 'Storage quota exceeded',
-            message: 'Upload would exceed your storage quota. Purchase additional storage to continue.',
+            message:
+              'Upload would exceed your storage quota. Purchase additional storage to continue.',
             action: 'upgrade',
           },
           { status: 413 }
@@ -228,13 +241,18 @@ export async function POST(
     })
 
     if (updatedUser?.email) {
-      const { getEffectiveQuotaMB } = await import('@/packages/lib/storage/quota')
+      const { getEffectiveQuotaMB } =
+        await import('@/packages/lib/storage/quota')
       const config = await getConfig()
-      const defaultQuotaMB = config.settings.general.storage.quotas.default.unit === 'GB'
-        ? config.settings.general.storage.quotas.default.value * 1024
-        : config.settings.general.storage.quotas.default.value
+      const defaultQuotaMB =
+        config.settings.general.storage.quotas.default.unit === 'GB'
+          ? config.settings.general.storage.quotas.default.value * 1024
+          : config.settings.general.storage.quotas.default.value
 
-      const quotaInfo = await getEffectiveQuotaMB(metadata.userId, defaultQuotaMB)
+      const quotaInfo = await getEffectiveQuotaMB(
+        metadata.userId,
+        defaultQuotaMB
+      )
       const percentage = quotaInfo.percentageUsed
 
       // Emit quota-reached event if at 80% or more
@@ -243,8 +261,8 @@ export async function POST(
           userId: metadata.userId,
           email: updatedUser.email,
           quotaType: 'Storage',
-          currentUsage: Math.round(quotaInfo.usedMB / 1024 * 100) / 100,
-          quotaLimit: Math.round(quotaInfo.quotaMB / 1024 * 100) / 100,
+          currentUsage: Math.round((quotaInfo.usedMB / 1024) * 100) / 100,
+          quotaLimit: Math.round((quotaInfo.quotaMB / 1024) * 100) / 100,
           unit: 'GB',
           percentage: Math.round(percentage),
         })
@@ -306,7 +324,7 @@ export async function POST(
     }
 
     const responseData: FileUploadResponse = {
-      url: `${finalFullUrl}${metadata.urlPath}`,
+      url: `${finalFullUrl}${metadata.urlPath}/`,
       name: metadata.filename,
       size: metadata.totalSize,
       type: metadata.mimeType,
