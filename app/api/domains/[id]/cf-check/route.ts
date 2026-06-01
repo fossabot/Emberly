@@ -8,7 +8,6 @@ import {
   getCustomHostname,
   createCustomHostname,
   listCustomHostnames,
-  listDnsRecords,
 } from '@/packages/lib/cloudflare/client'
 import {
   getDomainWithOwnership,
@@ -128,48 +127,54 @@ export async function POST(
     }
 
     // Before creating (or discovering) a Cloudflare custom hostname, verify the
-    // user has added the required CNAME/alias. This prevents creating the CF
-    // hostname prematurely and lets the UI guide users to add the DNS record first.
+    // user has set up the CNAME at their own DNS provider pointing to our service.
+    // This prevents creating the CF hostname prematurely.
     // Expected CNAME target can be configured via env `CNAME_TARGET` or defaults
     // to `cname.emberly.site`.
     const expectedTarget = process.env.CNAME_TARGET || 'cname.emberly.site'
 
-    // For the configured domain (usually a subdomain like img.example.com),
-    // check for an existing CNAME record that points to our expected target.
+    // Use Cloudflare's public DNS-over-HTTPS (1.1.1.1) to resolve the user's
+    // domain CNAME — this checks the user's actual public DNS, not our zone.
     try {
-      const dnsRecords: any = await listDnsRecords({
-        type: 'CNAME',
-        name: domain.domain,
+      const dohUrl = `https://1.1.1.1/dns-query?name=${encodeURIComponent(domain.domain)}&type=CNAME`
+      const dohRes = await fetch(dohUrl, {
+        headers: { Accept: 'application/dns-json' },
+        signal: AbortSignal.timeout(5000),
       })
-      logger.debug('DNS records retrieved for domain', {
+      const dohData = dohRes.ok ? await dohRes.json().catch(() => null) : null
+      const cnameAnswers: any[] = Array.isArray(dohData?.Answer)
+        ? dohData.Answer
+        : []
+
+      logger.debug('Public DNS CNAME lookup', {
         domain: domain.domain,
-        recordCount: Array.isArray(dnsRecords)
-          ? dnsRecords.length
-          : 'not an array',
-        records: Array.isArray(dnsRecords)
-          ? dnsRecords.map((r: any) => ({ name: r?.name, content: r?.content }))
-          : dnsRecords,
+        expectedTarget,
+        status: dohData?.Status,
+        answers: cnameAnswers.map((a: any) => ({
+          type: a?.type,
+          data: a?.data,
+        })),
       })
-      const found =
-        Array.isArray(dnsRecords) &&
-        dnsRecords.find((r: any) => {
-          const content = (r?.content || '').replace(/\.$/, '').toLowerCase()
-          return content === expectedTarget.replace(/\.$/, '').toLowerCase()
-        })
+
+      // RCODE 0 = NOERROR; type 5 = CNAME
+      const found = cnameAnswers.some((a: any) => {
+        const data = (a?.data || '').replace(/\.$/, '').toLowerCase()
+        return (
+          a?.type === 5 &&
+          data === expectedTarget.replace(/\.$/, '').toLowerCase()
+        )
+      })
+
       if (!found) {
-        // Build detailed error response showing what CNAME records exist for debugging
-        const existingRecords = Array.isArray(dnsRecords)
-          ? dnsRecords.map((r: any) => ({
-              name: r?.name,
-              content: r?.content,
-              type: r?.type,
-            }))
-          : []
+        const existingCnames = cnameAnswers
+          .filter((a: any) => a?.type === 5)
+          .map((a: any) => (a?.data || '').replace(/\.$/, ''))
 
         logger.warn('CNAME verification failed', {
           domain: domain.domain,
           expectedTarget,
-          foundRecords: existingRecords.length,
+          foundCnames: existingCnames,
+          dnsStatus: dohData?.Status,
         })
 
         return NextResponse.json(
@@ -178,9 +183,9 @@ export async function POST(
             message: `Please add a CNAME record pointing ${domain.domain} to ${expectedTarget}`,
             domain: domain.domain,
             expected: expectedTarget,
-            existing_cname_records: existingRecords,
+            existing_cnames: existingCnames,
             hint:
-              'Add a CNAME record in your DNS provider with: Name = ' +
+              'Add a CNAME record at your DNS provider: Name = ' +
               domain.domain +
               ', Value = ' +
               expectedTarget,
@@ -189,10 +194,9 @@ export async function POST(
         )
       }
     } catch (dnsErr) {
-      // If DNS check fails due to Cloudflare API or other error, log and continue
-      // with creation attempt (server operators can inspect logs). But surface a helpful
-      // error to the client when appropriate.
-      logger.debug('DNS check failed', {
+      // If the public DNS check fails (network/timeout), log and continue
+      // with creation attempt — Cloudflare will validate on their end anyway.
+      logger.debug('Public DNS check failed, continuing', {
         message: (dnsErr as any)?.message ?? String(dnsErr),
         domain: domain.domain,
       })

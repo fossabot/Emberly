@@ -198,6 +198,18 @@ export function ProfileDomains() {
         return
       }
 
+      // Handle 400: Domain not in configured zone
+      if (res.status === 400) {
+        const msg =
+          data?.message || 'Domain configuration issue - please contact support'
+        toast({
+          title: 'Configuration error',
+          description: msg,
+          variant: 'destructive',
+        })
+        return
+      }
+
       // Handle 409: CNAME not configured
       if (res.status === 409) {
         const hint =
