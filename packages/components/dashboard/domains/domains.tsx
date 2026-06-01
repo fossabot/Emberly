@@ -25,9 +25,7 @@ import {
 } from '@/packages/components/ui/dialog'
 import { Input } from '@/packages/components/ui/input'
 import { Badge } from '@/packages/components/ui/badge'
-import {
-  TooltipProvider,
-} from '@/packages/components/ui/tooltip'
+import { TooltipProvider } from '@/packages/components/ui/tooltip'
 
 import { useToast } from '@/packages/hooks/use-toast'
 
@@ -41,7 +39,9 @@ export function ProfileDomains() {
   const [search, setSearch] = useState('')
 
   const [cfCheckingIds, setCfCheckingIds] = useState<string[]>([])
-  const cfPollingRef = useRef<Record<string, { count: number; last: number }>>({})
+  const cfPollingRef = useRef<Record<string, { count: number; last: number }>>(
+    {}
+  )
   const [newDomain, setNewDomain] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [domainLimit, setDomainLimit] = useState<{
@@ -84,7 +84,11 @@ export function ProfileDomains() {
     setAdding(true)
     setError(null)
 
-    if (domainLimit && domainLimit.unlimited !== true && (domainLimit.remaining ?? 1) <= 0) {
+    if (
+      domainLimit &&
+      domainLimit.unlimited !== true &&
+      (domainLimit.remaining ?? 1) <= 0
+    ) {
       setError('Domain limit reached. Upgrade your plan to add more domains.')
       setAdding(false)
       return
@@ -124,7 +128,10 @@ export function ProfileDomains() {
     try {
       const res = await fetch(`/api/domains/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed')
-      toast({ title: 'Domain removed', description: 'The domain has been deleted.' })
+      toast({
+        title: 'Domain removed',
+        description: 'The domain has been deleted.',
+      })
       await fetchDomains()
     } catch (err) {
       toast({
@@ -143,7 +150,10 @@ export function ProfileDomains() {
         body: JSON.stringify({ action: 'setPrimary' }),
       })
       if (!res.ok) throw new Error('Failed')
-      toast({ title: 'Primary domain set', description: 'Your default domain has been updated.' })
+      toast({
+        title: 'Primary domain set',
+        description: 'Your default domain has been updated.',
+      })
       await fetchDomains()
     } catch (err) {
       toast({
@@ -170,20 +180,42 @@ export function ProfileDomains() {
 
       const data = await res.json().catch(() => null)
       if (res.ok) {
-        if (data?.status && String(data.status).toLowerCase().includes('active')) {
+        if (
+          data?.status &&
+          String(data.status).toLowerCase().includes('active')
+        ) {
           toast({
             title: 'Domain verified!',
             description: 'Your domain is now active and ready to use.',
           })
         } else {
-          toast({ title: 'Status updated', description: 'Domain status has been refreshed.' })
+          toast({
+            title: 'Status updated',
+            description: 'Domain status has been refreshed.',
+          })
         }
         await fetchDomains()
         return
       }
 
+      // Handle 409: CNAME not configured
+      if (res.status === 409) {
+        const hint =
+          data?.hint || data?.message || 'Please add the required CNAME record'
+        toast({
+          title: 'CNAME not configured',
+          description: hint,
+          variant: 'destructive',
+        })
+        return
+      }
+
       const msg = data?.suggestion || data?.error || 'Verification check failed'
-      toast({ title: 'Verification issue', description: String(msg), variant: 'destructive' })
+      toast({
+        title: 'Verification issue',
+        description: String(msg),
+        variant: 'destructive',
+      })
     } catch (err) {
       toast({
         title: 'Check failed',
@@ -200,7 +232,12 @@ export function ProfileDomains() {
     const interval = setInterval(async () => {
       const now = Date.now()
       for (const d of domains) {
-        if (d.verified || d.cfStatus === 'active' || d.cfStatus === 'unsupported') continue
+        if (
+          d.verified ||
+          d.cfStatus === 'active' ||
+          d.cfStatus === 'unsupported'
+        )
+          continue
 
         const state = cfPollingRef.current[d.id] ?? { count: 0, last: 0 }
         const attemptCount = state.count || 0
@@ -211,16 +248,27 @@ export function ProfileDomains() {
 
         try {
           setCfCheckingIds((s) => (s.includes(d.id) ? s : [...s, d.id]))
-          const res = await fetch(`/api/domains/${d.id}/cf-check`, { method: 'POST' })
+          const res = await fetch(`/api/domains/${d.id}/cf-check`, {
+            method: 'POST',
+          })
 
           if (res.ok) {
             cfPollingRef.current[d.id] = { count: 0, last: Date.now() }
             await fetchDomains()
+          } else if (res.status === 409) {
+            // 409 means CNAME not configured - stop polling, user needs to take action
+            cfPollingRef.current[d.id] = { count: 6, last: Date.now() }
           } else {
-            cfPollingRef.current[d.id] = { count: attemptCount + 1, last: Date.now() }
+            cfPollingRef.current[d.id] = {
+              count: attemptCount + 1,
+              last: Date.now(),
+            }
           }
         } catch (err) {
-          cfPollingRef.current[d.id] = { count: attemptCount + 1, last: Date.now() }
+          cfPollingRef.current[d.id] = {
+            count: attemptCount + 1,
+            last: Date.now(),
+          }
         } finally {
           setCfCheckingIds((s) => s.filter((x) => x !== d.id))
         }
@@ -292,7 +340,9 @@ export function ProfileDomains() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {domainLimit?.unlimited ? '∞' : (domainLimit?.remaining ?? '∞')}
+                  {domainLimit?.unlimited
+                    ? '∞'
+                    : (domainLimit?.remaining ?? '∞')}
                 </p>
                 <p className="text-xs text-muted-foreground">Available Slots</p>
               </div>
@@ -308,15 +358,21 @@ export function ProfileDomains() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-orange-200">Cloudflare Recommended</h3>
-                <Badge variant="outline" className="text-xs border-orange-500/30 text-orange-300">
+                <h3 className="font-semibold text-orange-200">
+                  Cloudflare Recommended
+                </h3>
+                <Badge
+                  variant="outline"
+                  className="text-xs border-orange-500/30 text-orange-300"
+                >
                   Optional
                 </Badge>
               </div>
               <p className="text-sm text-orange-200/70 mb-3">
-                While not required, using Cloudflare as your DNS provider enables automatic TLS
-                certificate provisioning and faster domain verification. Any DNS provider that
-                supports CNAME records will work.
+                While not required, using Cloudflare as your DNS provider
+                enables automatic TLS certificate provisioning and faster domain
+                verification. Any DNS provider that supports CNAME records will
+                work.
               </p>
               <div className="flex flex-wrap gap-4 text-xs text-orange-200/60">
                 <div className="flex items-center gap-1.5">
@@ -339,7 +395,11 @@ export function ProfileDomains() {
               rel="noopener noreferrer"
               className="shrink-0"
             >
-              <Button variant="outline" size="sm" className="border-orange-500/30 hover:bg-orange-500/10">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-orange-500/30 hover:bg-orange-500/10"
+              >
                 Learn More
                 <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
               </Button>
@@ -360,7 +420,11 @@ export function ProfileDomains() {
           </div>
           <Button
             onClick={() => setOpenAdd(true)}
-            disabled={Boolean(domainLimit && !domainLimit.unlimited && (domainLimit.remaining ?? 1) <= 0)}
+            disabled={Boolean(
+              domainLimit &&
+              !domainLimit.unlimited &&
+              (domainLimit.remaining ?? 1) <= 0
+            )}
             className="shrink-0"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -373,18 +437,25 @@ export function ProfileDomains() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Info className="h-4 w-4" />
             {domainLimit.unlimited ? (
-              <span>Using {domainLimit.used} domain{domainLimit.used !== 1 ? 's' : ''} &mdash; <span className="text-primary">Unlimited slots</span></span>
+              <span>
+                Using {domainLimit.used} domain
+                {domainLimit.used !== 1 ? 's' : ''} &mdash;{' '}
+                <span className="text-primary">Unlimited slots</span>
+              </span>
             ) : (
               <span>
                 Using {domainLimit.used} of {domainLimit.allowed} domain slots
-                {(domainLimit.purchased ?? 0) > 0 && ` (${domainLimit.purchased} purchased)`}
+                {(domainLimit.purchased ?? 0) > 0 &&
+                  ` (${domainLimit.purchased} purchased)`}
               </span>
             )}
-            {!domainLimit.unlimited && (domainLimit.remaining ?? 1) <= 2 && (domainLimit.remaining ?? 1) > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {domainLimit.remaining} remaining
-              </Badge>
-            )}
+            {!domainLimit.unlimited &&
+              (domainLimit.remaining ?? 1) <= 2 &&
+              (domainLimit.remaining ?? 1) > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {domainLimit.remaining} remaining
+                </Badge>
+              )}
             {!domainLimit.unlimited && (domainLimit.remaining ?? 1) <= 0 && (
               <Badge variant="destructive" className="text-xs">
                 Limit reached
@@ -413,7 +484,10 @@ export function ProfileDomains() {
         {/* Help Text */}
         <p className="text-sm text-muted-foreground text-center">
           Need help? Check our{' '}
-          <a href="https://docs.embrly.ca/docs/user-guide/custom-domains" className="text-primary hover:underline">
+          <a
+            href="https://docs.embrly.ca/docs/user-guide/custom-domains"
+            className="text-primary hover:underline"
+          >
             domain setup guide
           </a>{' '}
           or{' '}
@@ -438,7 +512,9 @@ export function ProfileDomains() {
 
             <form onSubmit={addDomain} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Domain Name</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Domain Name
+                </label>
                 <Input
                   value={newDomain}
                   onChange={(e) => {
@@ -449,7 +525,9 @@ export function ProfileDomains() {
                   className="font-mono"
                   autoFocus
                 />
-                {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+                {error && (
+                  <p className="text-sm text-destructive mt-2">{error}</p>
+                )}
               </div>
 
               <div className="rounded-lg border border-border/50 bg-muted/30 p-4 space-y-3">
@@ -458,14 +536,23 @@ export function ProfileDomains() {
                   Setup Instructions
                 </h4>
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Add a CNAME record pointing to <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-xs">cname.emberly.site</code></li>
+                  <li>
+                    Add a CNAME record pointing to{' '}
+                    <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-xs">
+                      cname.emberly.site
+                    </code>
+                  </li>
                   <li>We&apos;ll automatically verify and provision TLS</li>
                   <li>Your domain will be ready once verified</li>
                 </ol>
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpenAdd(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpenAdd(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={adding || !newDomain.trim()}>
