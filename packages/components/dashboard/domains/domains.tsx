@@ -222,6 +222,20 @@ export function ProfileDomains() {
         return
       }
 
+      // Handle Cloudflare validation errors
+      if (
+        data?.verification_errors &&
+        Array.isArray(data.verification_errors)
+      ) {
+        const errors = data.verification_errors.join('; ')
+        toast({
+          title: 'Cloudflare validation failed',
+          description: errors,
+          variant: 'destructive',
+        })
+        return
+      }
+
       const msg = data?.suggestion || data?.error || 'Verification check failed'
       toast({
         title: 'Verification issue',
