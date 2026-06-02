@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on "Keep a Changelog" and follows [Semantic Versioning](https://semver.org/).
 
+## [2.4.5] - 2026-06-02
+
+### Added
+
+- **Domain Verification Real-time Validation**
+  - Simplified domain verification to use Cloudflare for SaaS real-time validation flow.
+  - Removed manual DNS validation checks and zone validation logic.
+  - Verification now relies entirely on Cloudflare's built-in CNAME validation.
+  - Endpoint returns 202 status when verification is pending; frontend polls for activation.
+  - Clearer error messages when CNAME is not properly configured.
+
+### Changed
+
+- **Removed Ownership Verification TXT Record**
+  - TXT record display removed from domain setup UI as it's not required for real-time validation.
+  - Real-time validation only requires CNAME record configuration.
+  - Simplifies domain verification setup flow for end users.
+- **Dynamic CNAME Display** — Domain setup instructions now show the user's actual subdomain instead of generic "@ or www" placeholder.
+  - CNAME host field displays correctly based on the configured domain/subdomain.
+  - Improves clarity when setting up multiple domain variations.
+
+### Fixed
+
+- **Domain Verification 409 Conflict Errors**
+  - Fixed recurring 409 (Conflict) errors users encountered during domain verification.
+  - Root cause was incorrect manual DNS validation bypassing Cloudflare's comprehensive checks.
+  - Now delegates all validation to Cloudflare, which automatically validates CNAME configuration in real-time.
+  - Users no longer see spurious 409s; errors now only occur when CNAME is genuinely misconfigured.
+- **File URLs for Discord Embeds and Media Detection**
+  - Added trailing slashes to all file URLs for proper media embed detection in Discord and other services.
+  - Modified file upload completion, retrieval, and sharing endpoints to append trailing slashes.
+  - Updated UI copy functions and file card components to preserve trailing slash formatting.
+  - Files: `app/api/files/route.ts`, `app/api/files/chunks/[uploadId]/complete/route.ts`, `app/api/files/[...path]/route.ts`, `packages/components/dashboard/file-card/index.tsx`, `packages/components/dashboard/shared-file-card.tsx`, `packages/components/file/file-actions.tsx`.
+- **Domain Error Handling Improvements**
+  - Enhanced error responses and logging for domain verification failures.
+  - Better user-facing messages when domain configuration is incorrect.
+  - Detailed error logging for troubleshooting verification issues.
+
 ## [2.4.4] - 2026-05-24
 
 ### Added
