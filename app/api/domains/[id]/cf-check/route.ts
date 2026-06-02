@@ -126,82 +126,18 @@ export async function POST(
       }
     }
 
-    // Before creating (or discovering) a Cloudflare custom hostname, verify the
-    // user has set up the CNAME at their own DNS provider pointing to our service.
-    // This prevents creating the CF hostname prematurely.
+    // Before creating (or discovering) a Cloudflare custom hostname, we let
+    // Cloudflare handle the real-time validation. The user must add a CNAME record
+    // pointing their domain to our CNAME target. Cloudflare will automatically validate
+    // this when we create the custom hostname.
     // Expected CNAME target can be configured via env `CNAME_TARGET` or defaults
     // to `cname.emberly.site`.
     const expectedTarget = process.env.CNAME_TARGET || 'cname.emberly.site'
 
-    // Use Cloudflare's public DNS-over-HTTPS (1.1.1.1) to resolve the user's
-    // domain CNAME — this checks the user's actual public DNS, not our zone.
-    try {
-      const dohUrl = `https://1.1.1.1/dns-query?name=${encodeURIComponent(domain.domain)}&type=CNAME`
-      const dohRes = await fetch(dohUrl, {
-        headers: { Accept: 'application/dns-json' },
-        signal: AbortSignal.timeout(5000),
-      })
-      const dohData = dohRes.ok ? await dohRes.json().catch(() => null) : null
-      const cnameAnswers: any[] = Array.isArray(dohData?.Answer)
-        ? dohData.Answer
-        : []
-
-      logger.debug('Public DNS CNAME lookup', {
-        domain: domain.domain,
-        expectedTarget,
-        status: dohData?.Status,
-        answers: cnameAnswers.map((a: any) => ({
-          type: a?.type,
-          data: a?.data,
-        })),
-      })
-
-      // RCODE 0 = NOERROR; type 5 = CNAME
-      const found = cnameAnswers.some((a: any) => {
-        const data = (a?.data || '').replace(/\.$/, '').toLowerCase()
-        return (
-          a?.type === 5 &&
-          data === expectedTarget.replace(/\.$/, '').toLowerCase()
-        )
-      })
-
-      if (!found) {
-        const existingCnames = cnameAnswers
-          .filter((a: any) => a?.type === 5)
-          .map((a: any) => (a?.data || '').replace(/\.$/, ''))
-
-        logger.warn('CNAME verification failed', {
-          domain: domain.domain,
-          expectedTarget,
-          foundCnames: existingCnames,
-          dnsStatus: dohData?.Status,
-        })
-
-        return NextResponse.json(
-          {
-            error: 'CNAME record not configured correctly',
-            message: `Please add a CNAME record pointing ${domain.domain} to ${expectedTarget}`,
-            domain: domain.domain,
-            expected: expectedTarget,
-            existing_cnames: existingCnames,
-            hint:
-              'Add a CNAME record at your DNS provider: Name = ' +
-              domain.domain +
-              ', Value = ' +
-              expectedTarget,
-          },
-          { status: 409 }
-        )
-      }
-    } catch (dnsErr) {
-      // If the public DNS check fails (network/timeout), log and continue
-      // with creation attempt — Cloudflare will validate on their end anyway.
-      logger.debug('Public DNS check failed, continuing', {
-        message: (dnsErr as any)?.message ?? String(dnsErr),
-        domain: domain.domain,
-      })
-      // continue — creation may still succeed in some setups
-    }
+    logger.debug('Creating/validating custom hostname', {
+      domain: domain.domain,
+      expectedTarget,
+    })
 
     // No CF hostname yet: try to discover existing zone-level custom hostname, otherwise create one
     try {

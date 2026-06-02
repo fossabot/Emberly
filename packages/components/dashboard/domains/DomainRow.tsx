@@ -57,7 +57,10 @@ export default function DomainRow({
   const copy = async (text: string, label?: string) => {
     try {
       await writeToClipboard(text)
-      toast({ title: 'Copied!', description: label || 'Value copied to clipboard' })
+      toast({
+        title: 'Copied!',
+        description: label || 'Value copied to clipboard',
+      })
     } catch (e) {
       toast({
         title: 'Copy failed',
@@ -70,7 +73,10 @@ export default function DomainRow({
   const getStatusBadge = () => {
     if (rechecking) {
       return (
-        <Badge variant="secondary" className="gap-1.5 bg-blue-500/10 text-blue-400 border-blue-500/20">
+        <Badge
+          variant="secondary"
+          className="gap-1.5 bg-blue-500/10 text-blue-400 border-blue-500/20"
+        >
           <Icons.spinner className="h-3 w-3 animate-spin" />
           Verifying
         </Badge>
@@ -79,7 +85,10 @@ export default function DomainRow({
 
     if (d.verified) {
       return (
-        <Badge variant="secondary" className="gap-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+        <Badge
+          variant="secondary"
+          className="gap-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+        >
           <Check className="h-3 w-3" />
           Verified
         </Badge>
@@ -89,7 +98,10 @@ export default function DomainRow({
     const status = d.cfStatus?.toLowerCase()
     if (status === 'pending') {
       return (
-        <Badge variant="secondary" className="gap-1.5 bg-amber-500/10 text-amber-400 border-amber-500/20">
+        <Badge
+          variant="secondary"
+          className="gap-1.5 bg-amber-500/10 text-amber-400 border-amber-500/20"
+        >
           <Clock className="h-3 w-3" />
           Pending
         </Badge>
@@ -97,7 +109,10 @@ export default function DomainRow({
     }
 
     return (
-      <Badge variant="secondary" className="gap-1.5 bg-rose-500/10 text-rose-400 border-rose-500/20">
+      <Badge
+        variant="secondary"
+        className="gap-1.5 bg-rose-500/10 text-rose-400 border-rose-500/20"
+      >
         <AlertCircle className="h-3 w-3" />
         {d.cfStatus || 'Setup Required'}
       </Badge>
@@ -130,7 +145,9 @@ export default function DomainRow({
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {d.cfHostnameId ? `ID: ${d.cfHostnameId.slice(0, 12)}...` : 'Awaiting setup'}
+                    {d.cfHostnameId
+                      ? `ID: ${d.cfHostnameId.slice(0, 12)}...`
+                      : 'Awaiting setup'}
                   </p>
                 </div>
               </button>
@@ -149,7 +166,9 @@ export default function DomainRow({
                 className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                 title="Re-check verification"
               >
-                <RefreshCw className={`h-4 w-4 ${rechecking ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${rechecking ? 'animate-spin' : ''}`}
+                />
               </Button>
               {!d.isPrimary && d.verified && (
                 <Button
@@ -210,29 +229,46 @@ export default function DomainRow({
                   <div className="glass-subtle p-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">CNAME</Badge>
-                        <span className="text-xs text-muted-foreground">Required</span>
+                        <Badge variant="outline" className="text-xs">
+                          CNAME
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Required
+                        </span>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Name / Host</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Name / Host
+                        </p>
                         <div className="flex items-center gap-2">
                           <code className="flex-1 text-sm font-mono bg-muted/50 px-2 py-1 rounded truncate">
-                            @ or www
+                            {d.domain.includes('.')
+                              ? d.domain.split('.')[0]
+                              : d.domain}
                           </code>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 shrink-0"
-                            onClick={() => copy('@', 'Host copied')}
+                            onClick={() =>
+                              copy(
+                                d.domain.includes('.')
+                                  ? d.domain.split('.')[0]
+                                  : d.domain,
+                                'Host copied'
+                              )
+                            }
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Target / Value</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Target / Value
+                        </p>
                         <div className="flex items-center gap-2">
                           <code className="flex-1 text-sm font-mono bg-muted/50 px-2 py-1 rounded truncate">
                             cname.emberly.site
@@ -241,7 +277,9 @@ export default function DomainRow({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 shrink-0"
-                            onClick={() => copy('cname.emberly.site', 'Target copied')}
+                            onClick={() =>
+                              copy('cname.emberly.site', 'Target copied')
+                            }
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
@@ -250,88 +288,25 @@ export default function DomainRow({
                     </div>
                   </div>
 
-                  {/* Ownership Verification TXT */}
-                  {d.cfMeta?.ownership_verification && (
-                    <div className="glass-subtle p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">TXT</Badge>
-                          <span className="text-xs text-muted-foreground">Ownership Verification</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Name</p>
-                          <div className="flex items-center gap-2">
-                            <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
-                              {d.cfMeta?.ownership_verification?.txt_name ||
-                                d.cfMeta?.ownership_verification?.name ||
-                                '@'}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0"
-                              onClick={() =>
-                                copy(
-                                    d.cfMeta?.ownership_verification?.txt_name ||
-                                  d.cfMeta?.ownership_verification?.name ||
-                                  '@',
-                                  'Name copied'
-                                )
-                              }
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Value</p>
-                          <div className="flex items-center gap-2">
-                            <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
-                              {d.cfMeta?.ownership_verification?.txt_value ||
-                                d.cfMeta?.ownership_verification?.value ||
-                                ''}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0"
-                              onClick={() =>
-                                copy(
-                                  d.cfMeta?.ownership_verification?.txt_value ||
-                                  d.cfMeta?.ownership_verification?.value ||
-                                  '',
-                                  'Value copied'
-                                )
-                              }
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Validation Records */}
                   {Array.isArray(d.cfMeta?.validation_records) &&
                     d.cfMeta.validation_records.map((r: any, i: number) => (
-                      <div
-                        key={i}
-                        className="glass-subtle p-3"
-                      >
+                      <div key={i} className="glass-subtle p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
                               {(r.type || 'TXT').toUpperCase()}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">Validation Record</span>
+                            <span className="text-xs text-muted-foreground">
+                              Validation Record
+                            </span>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Name</p>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Name
+                            </p>
                             <div className="flex items-center gap-2">
                               <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
                                 {r.txt_name || r.name || '@'}
@@ -340,14 +315,21 @@ export default function DomainRow({
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 shrink-0"
-                                onClick={() => copy(r.txt_name || r.name || '@', 'Name copied')}
+                                onClick={() =>
+                                  copy(
+                                    r.txt_name || r.name || '@',
+                                    'Name copied'
+                                  )
+                                }
                               >
                                 <Copy className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           </div>
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Value</p>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Value
+                            </p>
                             <div className="flex items-center gap-2">
                               <code className="flex-1 text-xs font-mono bg-muted/50 px-2 py-1 rounded truncate">
                                 {r.txt_value || r.value || ''}
@@ -356,7 +338,12 @@ export default function DomainRow({
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 shrink-0"
-                                onClick={() => copy(r.txt_value || r.value || '', 'Value copied')}
+                                onClick={() =>
+                                  copy(
+                                    r.txt_value || r.value || '',
+                                    'Value copied'
+                                  )
+                                }
                               >
                                 <Copy className="h-3.5 w-3.5" />
                               </Button>
@@ -369,8 +356,8 @@ export default function DomainRow({
                   {/* No metadata yet */}
                   {!d.cfMeta && !d.verified && (
                     <p className="text-sm text-muted-foreground">
-                      Add the CNAME record above, then click the refresh button to check verification
-                      status.
+                      Add the CNAME record above, then click the refresh button
+                      to check verification status.
                     </p>
                   )}
                 </div>
@@ -386,12 +373,16 @@ export default function DomainRow({
           <DialogHeader>
             <DialogTitle>Delete Domain</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <strong>{d.domain}</strong>? This action cannot be
-              undone and will remove all associated DNS configurations.
+              Are you sure you want to delete <strong>{d.domain}</strong>? This
+              action cannot be undone and will remove all associated DNS
+              configurations.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               Cancel
             </Button>
             <Button
