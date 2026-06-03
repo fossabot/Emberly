@@ -46,7 +46,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/packages/components/ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/packages/components/ui/avatar'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/packages/components/ui/avatar'
 import { Badge } from '@/packages/components/ui/badge'
 import { Button } from '@/packages/components/ui/button'
 import {
@@ -89,7 +93,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/packages/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/packages/components/ui/tabs'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/packages/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
@@ -102,18 +111,46 @@ import { cn } from '@/packages/lib/utils'
 import { sanitizeUrl } from '@/packages/lib/utils/url'
 
 import { useToast } from '@/packages/hooks/use-toast'
-import { UserFormData, useUserManagement } from '@/packages/hooks/use-user-management'
+import {
+  UserFormData,
+  useUserManagement,
+} from '@/packages/hooks/use-user-management'
 
-const ALL_GRANTS = ['STAFF', 'SUPPORT', 'DEVELOPER', 'MODERATOR', 'DESIGNER', 'PARTNER'] as const
+const ALL_GRANTS = [
+  'STAFF',
+  'SUPPORT',
+  'DEVELOPER',
+  'MODERATOR',
+  'DESIGNER',
+  'PARTNER',
+] as const
 type Grant = (typeof ALL_GRANTS)[number]
 
 const GRANT_META: Record<Grant, { label: string; className: string }> = {
-  STAFF:     { label: 'Staff',     className: 'bg-violet-500/15 text-violet-400 border-violet-400/30' },
-  SUPPORT:   { label: 'Support',   className: 'bg-sky-500/15 text-sky-400 border-sky-400/30' },
-  DEVELOPER: { label: 'Developer', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30' },
-  MODERATOR: { label: 'Moderator', className: 'bg-rose-500/15 text-rose-400 border-rose-400/30' },
-  DESIGNER:  { label: 'Designer',  className: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-400/30' },
-  PARTNER:   { label: 'Partner',   className: 'bg-amber-500/15 text-amber-400 border-amber-400/30' },
+  STAFF: {
+    label: 'Staff',
+    className: 'bg-violet-500/15 text-violet-400 border-violet-400/30',
+  },
+  SUPPORT: {
+    label: 'Support',
+    className: 'bg-sky-500/15 text-sky-400 border-sky-400/30',
+  },
+  DEVELOPER: {
+    label: 'Developer',
+    className: 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30',
+  },
+  MODERATOR: {
+    label: 'Moderator',
+    className: 'bg-rose-500/15 text-rose-400 border-rose-400/30',
+  },
+  DESIGNER: {
+    label: 'Designer',
+    className: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-400/30',
+  },
+  PARTNER: {
+    label: 'Partner',
+    className: 'bg-amber-500/15 text-amber-400 border-amber-400/30',
+  },
 }
 
 interface User {
@@ -426,16 +463,23 @@ export function UserList() {
   const [banExpiry, setBanExpiry] = useState('')
   const [isBanning, setIsBanning] = useState(false)
   const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false)
-  const [flagTarget, setFlagTarget] = useState<{ type: 'file' | 'url'; id: string; name: string; flagged: boolean } | null>(null)
+  const [flagTarget, setFlagTarget] = useState<{
+    type: 'file' | 'url'
+    id: string
+    name: string
+    flagged: boolean
+  } | null>(null)
   const [flagReason, setFlagReason] = useState('')
   const [isFlagging, setIsFlagging] = useState(false)
 
   // Available plans from DB for the plan-change dropdown
-  const [availablePlans, setAvailablePlans] = useState<Array<{ id: string; slug: string; name: string }>>([])
+  const [availablePlans, setAvailablePlans] = useState<
+    Array<{ id: string; slug: string; name: string }>
+  >([])
 
   useEffect(() => {
     fetch('/api/products/catalog')
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.data?.plans) setAvailablePlans(d.data.plans)
       })
@@ -799,12 +843,20 @@ export function UserList() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to ban user')
       }
-      toast({ title: 'User Banned', description: `${banTarget.name} has been banned.` })
+      toast({
+        title: 'User Banned',
+        description: `${banTarget.name} has been banned.`,
+      })
       setIsBanDialogOpen(false)
       setBanTarget(null)
       fetchUsers(currentPage)
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to ban user', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to ban user',
+        variant: 'destructive',
+      })
     } finally {
       setIsBanning(false)
     }
@@ -812,15 +864,25 @@ export function UserList() {
 
   const handleUnbanUser = async (user: User) => {
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/ban`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/users/${user.id}/ban`, {
+        method: 'DELETE',
+      })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to unban user')
       }
-      toast({ title: 'User Unbanned', description: `${user.name} has been unbanned.` })
+      toast({
+        title: 'User Unbanned',
+        description: `${user.name} has been unbanned.`,
+      })
       fetchUsers(currentPage)
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to unban user', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to unban user',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -832,7 +894,12 @@ export function UserList() {
     }
   }
 
-  const handleOpenFlag = (type: 'file' | 'url', id: string, name: string, flagged: boolean) => {
+  const handleOpenFlag = (
+    type: 'file' | 'url',
+    id: string,
+    name: string,
+    flagged: boolean
+  ) => {
     setFlagTarget({ type, id, name, flagged })
     setFlagReason('')
     setIsFlagDialogOpen(true)
@@ -870,7 +937,12 @@ export function UserList() {
         fetchUserUrls(viewingUser.id, urlPage)
       }
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to flag content', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to flag content',
+        variant: 'destructive',
+      })
     } finally {
       setIsFlagging(false)
     }
@@ -883,11 +955,26 @@ export function UserList() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'SUPERADMIN':
-        return <Badge className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border-0 gap-1"><Shield className="h-3 w-3" />Superadmin</Badge>
+        return (
+          <Badge className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border-0 gap-1">
+            <Shield className="h-3 w-3" />
+            Superadmin
+          </Badge>
+        )
       case 'ADMIN':
-        return <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0 gap-1"><Shield className="h-3 w-3" />Admin</Badge>
+        return (
+          <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0 gap-1">
+            <Shield className="h-3 w-3" />
+            Admin
+          </Badge>
+        )
       default:
-        return <Badge variant="secondary" className="bg-muted/50 gap-1"><Shield className="h-3 w-3" />User</Badge>
+        return (
+          <Badge variant="secondary" className="bg-muted/50 gap-1">
+            <Shield className="h-3 w-3" />
+            User
+          </Badge>
+        )
     }
   }
 
@@ -900,7 +987,9 @@ export function UserList() {
           </div>
           <div>
             <h2 className="text-xl font-semibold">Users</h2>
-            <p className="text-sm text-muted-foreground">{users.length} user{users.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-muted-foreground">
+              {users.length} user{users.length !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
         <Button onClick={handleNew} className="gap-2">
@@ -952,7 +1041,9 @@ export function UserList() {
                       </Avatar>
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5">
-                          <p className="font-medium leading-none">{user.name}</p>
+                          <p className="font-medium leading-none">
+                            {user.name}
+                          </p>
                           {user.isVerified && (
                             <BadgeCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                           )}
@@ -976,7 +1067,11 @@ export function UserList() {
                         const meta = GRANT_META[grant as Grant]
                         if (!meta) return null
                         return (
-                          <Badge key={grant} variant="outline" className={`text-xs gap-1 py-0 px-1.5 border ${meta.className}`}>
+                          <Badge
+                            key={grant}
+                            variant="outline"
+                            className={`text-xs gap-1 py-0 px-1.5 border ${meta.className}`}
+                          >
                             {meta.label}
                           </Badge>
                         )
@@ -985,12 +1080,20 @@ export function UserList() {
                   </TableCell>
                   <TableCell>
                     {user.subscriptions?.[0]?.product ? (
-                      <Badge variant="secondary" className="gap-1 text-xs bg-primary/10 text-primary border-0">
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 text-xs bg-primary/10 text-primary border-0"
+                      >
                         <Zap className="h-3 w-3" />
                         {user.subscriptions[0].product.name}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs bg-muted/50 border-0">Free</Badge>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-muted/50 border-0"
+                      >
+                        Free
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -1003,11 +1106,19 @@ export function UserList() {
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1 min-w-[100px]">
-                      <span className="text-sm">{formatFileSize(user.storageUsed)}</span>
+                      <span className="text-sm">
+                        {formatFileSize(user.storageUsed)}
+                      </span>
                       {(() => {
-                        const quotaGB = user.subscriptions?.[0]?.product?.storageQuotaGB
-                        const quotaMB = user.storageQuotaMB ?? (quotaGB != null ? quotaGB * 1024 : 10240)
-                        const pct = quotaMB > 0 ? Math.min((user.storageUsed / quotaMB) * 100, 100) : 0
+                        const quotaGB =
+                          user.subscriptions?.[0]?.product?.storageQuotaGB
+                        const quotaMB =
+                          user.storageQuotaMB ??
+                          (quotaGB != null ? quotaGB * 1024 : 10240)
+                        const pct =
+                          quotaMB > 0
+                            ? Math.min((user.storageUsed / quotaMB) * 100, 100)
+                            : 0
                         return (
                           <Progress
                             value={pct}
@@ -1073,8 +1184,9 @@ export function UserList() {
                           </Tooltip>
                         )}
 
-                        {user.role !== 'SUPERADMIN' && user.role !== 'ADMIN' && (
-                          user.bannedAt ? (
+                        {user.role !== 'SUPERADMIN' &&
+                          user.role !== 'ADMIN' &&
+                          (user.bannedAt ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -1106,8 +1218,7 @@ export function UserList() {
                                 <p>Ban User</p>
                               </TooltipContent>
                             </Tooltip>
-                          )
-                        )}
+                          ))}
 
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1121,7 +1232,11 @@ export function UserList() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{user.isVerified ? 'Remove Verification' : 'Verify User'}</p>
+                            <p>
+                              {user.isVerified
+                                ? 'Remove Verification'
+                                : 'Verify User'}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
 
@@ -1152,6 +1267,54 @@ export function UserList() {
           </TableBody>
         </Table>
       </div>
+
+      {pagination && pagination.pageCount > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {pagination.pageCount} • {pagination.total}{' '}
+            total users
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fetchUsers(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </PaginationItem>
+              {getPaginationRange(currentPage, pagination.pageCount).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => fetchUsers(page)}
+                      isActive={page === currentPage}
+                      className="h-8 w-8 cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+              <PaginationItem>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fetchUsers(currentPage + 1)}
+                  disabled={currentPage === pagination.pageCount}
+                  className="h-8 w-8"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="glass border-white/[0.08] max-h-[90vh] overflow-y-auto">
@@ -1237,12 +1400,18 @@ export function UserList() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="USER">User</SelectItem>
-                    {isSuperAdmin && <SelectItem value="ADMIN">Admin</SelectItem>}
-                    {isSuperAdmin && <SelectItem value="SUPERADMIN">Superadmin</SelectItem>}
+                    {isSuperAdmin && (
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    )}
+                    {isSuperAdmin && (
+                      <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {!isSuperAdmin && (
-                  <p className="text-sm text-muted-foreground">Only Superadmins can assign elevated roles.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Only Superadmins can assign elevated roles.
+                  </p>
                 )}
               </div>
               {editingUser && (
@@ -1273,13 +1442,21 @@ export function UserList() {
                   {isSuperAdmin ? (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="storageQuotaMB">Storage Quota (MB)</Label>
+                        <Label htmlFor="storageQuotaMB">
+                          Storage Quota (MB)
+                        </Label>
                         <Input
                           id="storageQuotaMB"
                           type="number"
                           value={formData.storageQuotaMB ?? ''}
                           onChange={(e) =>
-                            setFormData({ ...formData, storageQuotaMB: e.target.value === '' ? null : Number(e.target.value) })
+                            setFormData({
+                              ...formData,
+                              storageQuotaMB:
+                                e.target.value === ''
+                                  ? null
+                                  : Number(e.target.value),
+                            })
                           }
                           min="0"
                           placeholder="e.g. 10240"
@@ -1287,13 +1464,21 @@ export function UserList() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="grantStorageGB">Grant Storage (GB)</Label>
+                        <Label htmlFor="grantStorageGB">
+                          Grant Storage (GB)
+                        </Label>
                         <Input
                           id="grantStorageGB"
                           type="number"
                           value={formData.grantStorageGB ?? ''}
                           onChange={(e) =>
-                            setFormData({ ...formData, grantStorageGB: e.target.value === '' ? undefined : Number(e.target.value) })
+                            setFormData({
+                              ...formData,
+                              grantStorageGB:
+                                e.target.value === ''
+                                  ? undefined
+                                  : Number(e.target.value),
+                            })
                           }
                           min="0"
                           placeholder="e.g. 10"
@@ -1301,13 +1486,21 @@ export function UserList() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="grantCustomDomains">Grant Custom Domain Slots</Label>
+                        <Label htmlFor="grantCustomDomains">
+                          Grant Custom Domain Slots
+                        </Label>
                         <Input
                           id="grantCustomDomains"
                           type="number"
                           value={formData.grantCustomDomains ?? ''}
                           onChange={(e) =>
-                            setFormData({ ...formData, grantCustomDomains: e.target.value === '' ? undefined : Number(e.target.value) })
+                            setFormData({
+                              ...formData,
+                              grantCustomDomains:
+                                e.target.value === ''
+                                  ? undefined
+                                  : Number(e.target.value),
+                            })
                           }
                           min="0"
                           placeholder="e.g. 2"
@@ -1318,15 +1511,25 @@ export function UserList() {
                         <Label htmlFor="plan">Plan</Label>
                         {editingUser?.subscriptions?.[0]?.product && (
                           <p className="text-xs text-muted-foreground">
-                            Current: <span className="font-medium text-foreground">{editingUser.subscriptions[0].product.name}</span>
+                            Current:{' '}
+                            <span className="font-medium text-foreground">
+                              {editingUser.subscriptions[0].product.name}
+                            </span>
                             {' · '}
-                            {editingUser.subscriptions[0].product.storageQuotaGB == null ? '∞' : `${editingUser.subscriptions[0].product.storageQuotaGB} GB`} storage
+                            {editingUser.subscriptions[0].product
+                              .storageQuotaGB == null
+                              ? '∞'
+                              : `${editingUser.subscriptions[0].product.storageQuotaGB} GB`}{' '}
+                            storage
                           </p>
                         )}
                         <Select
                           value={(formData.planSlug as string) || 'keep'}
                           onValueChange={(value: string) =>
-                            setFormData({ ...formData, planSlug: value === 'keep' ? undefined : value })
+                            setFormData({
+                              ...formData,
+                              planSlug: value === 'keep' ? undefined : value,
+                            })
                           }
                         >
                           <SelectTrigger id="plan">
@@ -1344,7 +1547,10 @@ export function UserList() {
                       </div>
                     </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">Only Superadmins can grant storage, custom domains, or change plans.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Only Superadmins can grant storage, custom domains, or
+                      change plans.
+                    </p>
                   )}
                 </>
               )}
@@ -1353,7 +1559,10 @@ export function UserList() {
               {editingUser && isSuperAdmin && (
                 <div className="space-y-2">
                   <Label>Grants</Label>
-                  <p className="text-xs text-muted-foreground">Visible role badges shown on the user&apos;s public profile. Multiple can be active at once.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Visible role badges shown on the user&apos;s public profile.
+                    Multiple can be active at once.
+                  </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {ALL_GRANTS.map((grant) => {
                       const active = (editingUser.grants ?? []).includes(grant)
@@ -1365,19 +1574,31 @@ export function UserList() {
                           onClick={async () => {
                             try {
                               const method = active ? 'DELETE' : 'POST'
-                              const res = await fetch(`/api/admin/users/${editingUser.id}/grants`, {
-                                method,
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ grant }),
-                              })
-                              if (!res.ok) throw new Error('Failed to update grant')
+                              const res = await fetch(
+                                `/api/admin/users/${editingUser.id}/grants`,
+                                {
+                                  method,
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ grant }),
+                                }
+                              )
+                              if (!res.ok)
+                                throw new Error('Failed to update grant')
                               // Optimistically toggle the grant on the editing user object
                               const next = active
-                                ? (editingUser.grants ?? []).filter((g) => g !== grant)
+                                ? (editingUser.grants ?? []).filter(
+                                    (g) => g !== grant
+                                  )
                                 : [...(editingUser.grants ?? []), grant]
                               setEditingUser({ ...editingUser, grants: next })
                             } catch {
-                              toast({ title: 'Error', description: 'Failed to update grant', variant: 'destructive' })
+                              toast({
+                                title: 'Error',
+                                description: 'Failed to update grant',
+                                variant: 'destructive',
+                              })
                             }
                           }}
                           className={cn(
@@ -1387,7 +1608,11 @@ export function UserList() {
                               : 'bg-muted/30 text-muted-foreground border-border/40 hover:border-border'
                           )}
                         >
-                          {active ? <BadgeCheck className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          {active ? (
+                            <BadgeCheck className="w-3 h-3" />
+                          ) : (
+                            <Plus className="w-3 h-3" />
+                          )}
                           {meta.label}
                         </button>
                       )
@@ -1412,13 +1637,22 @@ export function UserList() {
             <Avatar className="h-10 w-10 border border-border/50">
               <AvatarImage src={viewingUser?.image || undefined} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {viewingUser?.name?.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                {viewingUser?.name
+                  ?.split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <DialogTitle className="text-lg font-semibold truncate">{viewingUser?.name}&apos;s Content</DialogTitle>
+              <DialogTitle className="text-lg font-semibold truncate">
+                {viewingUser?.name}&apos;s Content
+              </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                {filePagination?.total || 0} files · {urlPagination?.total || 0} URLs · {viewingUser ? formatFileSize(viewingUser.storageUsed) : '0 B'} used
+                {filePagination?.total || 0} files · {urlPagination?.total || 0}{' '}
+                URLs ·{' '}
+                {viewingUser ? formatFileSize(viewingUser.storageUsed) : '0 B'}{' '}
+                used
               </DialogDescription>
             </div>
           </div>
@@ -1426,20 +1660,39 @@ export function UserList() {
           <Tabs defaultValue="files" className="flex-1 flex flex-col min-h-0">
             <div className="px-6 pt-4">
               <TabsList className="h-9 items-center gap-1 p-1 rounded-xl bg-muted/50">
-                <TabsTrigger value="files" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-3 py-1.5 text-sm gap-1.5">
+                <TabsTrigger
+                  value="files"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-3 py-1.5 text-sm gap-1.5"
+                >
                   <File className="h-3.5 w-3.5" />
                   Files
-                  <Badge variant="secondary" className="bg-muted/50 text-xs ml-1 px-1.5 py-0">{filePagination?.total || 0}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-muted/50 text-xs ml-1 px-1.5 py-0"
+                  >
+                    {filePagination?.total || 0}
+                  </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="urls" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-3 py-1.5 text-sm gap-1.5">
+                <TabsTrigger
+                  value="urls"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-3 py-1.5 text-sm gap-1.5"
+                >
                   <Link2 className="h-3.5 w-3.5" />
                   URLs
-                  <Badge variant="secondary" className="bg-muted/50 text-xs ml-1 px-1.5 py-0">{urlPagination?.total || 0}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-muted/50 text-xs ml-1 px-1.5 py-0"
+                  >
+                    {urlPagination?.total || 0}
+                  </Badge>
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="files" className="flex-1 flex flex-col min-h-0 mt-0 px-6 pb-6">
+            <TabsContent
+              value="files"
+              className="flex-1 flex flex-col min-h-0 mt-0 px-6 pb-6"
+            >
               <div className="space-y-3 flex-1 flex flex-col min-h-0">
                 {/* Search & filters */}
                 <div className="flex gap-2 pt-3">
@@ -1448,14 +1701,21 @@ export function UserList() {
                     <Input
                       placeholder="Search files..."
                       value={fileFilters.search}
-                      onChange={(e) => handleFileFilterChange({ search: e.target.value })}
+                      onChange={(e) =>
+                        handleFileFilterChange({ search: e.target.value })
+                      }
                       className="pl-9 bg-background/50 border-border/50"
                     />
                   </div>
                   <Select
                     value={fileFilters.visibility || 'all'}
                     onValueChange={(value) =>
-                      handleFileFilterChange({ visibility: value === 'all' ? null : (value as 'PUBLIC' | 'PRIVATE') })
+                      handleFileFilterChange({
+                        visibility:
+                          value === 'all'
+                            ? null
+                            : (value as 'PUBLIC' | 'PRIVATE'),
+                      })
                     }
                   >
                     <SelectTrigger className="w-[130px] bg-background/50 border-border/50">
@@ -1469,7 +1729,11 @@ export function UserList() {
                   </Select>
                   <Select
                     value={fileFilters.type || 'all'}
-                    onValueChange={(value) => handleFileFilterChange({ type: value === 'all' ? '' : value })}
+                    onValueChange={(value) =>
+                      handleFileFilterChange({
+                        type: value === 'all' ? '' : value,
+                      })
+                    }
                   >
                     <SelectTrigger className="w-[130px] bg-background/50 border-border/50">
                       <SelectValue placeholder="Type" />
@@ -1491,7 +1755,9 @@ export function UserList() {
                       <div className="p-3 rounded-xl bg-muted/50 mb-3">
                         <FolderOpen className="h-8 w-8 text-muted-foreground/50" />
                       </div>
-                      <p className="text-sm text-muted-foreground">No files found</p>
+                      <p className="text-sm text-muted-foreground">
+                        No files found
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1501,13 +1767,12 @@ export function UserList() {
                           className={cn(
                             'group relative flex items-center gap-3 p-3 rounded-xl transition-all',
                             'glass-subtle glass-hover',
-                            file.flagged && 'ring-1 ring-destructive/50 bg-destructive/5'
+                            file.flagged &&
+                              'ring-1 ring-destructive/50 bg-destructive/5'
                           )}
                         >
                           {/* Preview */}
-                          <div className="shrink-0">
-                            {getFilePreview(file)}
-                          </div>
+                          <div className="shrink-0">{getFilePreview(file)}</div>
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
@@ -1527,23 +1792,43 @@ export function UserList() {
                                       <Flag className="h-3.5 w-3.5 text-destructive shrink-0" />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Flagged: {file.flagReason || 'No reason'}</p>
+                                      <p>
+                                        Flagged:{' '}
+                                        {file.flagReason || 'No reason'}
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                              <span className="text-xs text-muted-foreground/40">·</span>
-                              <span className="text-xs text-muted-foreground">{new Date(file.uploadedAt).toLocaleDateString()}</span>
-                              <span className="text-xs text-muted-foreground/40">·</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatFileSize(file.size)}
+                              </span>
+                              <span className="text-xs text-muted-foreground/40">
+                                ·
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(file.uploadedAt).toLocaleDateString()}
+                              </span>
+                              <span className="text-xs text-muted-foreground/40">
+                                ·
+                              </span>
                               {file.password ? (
-                                <Badge className="bg-chart-4/20 text-chart-4 border-0 text-[10px] px-1.5 py-0 h-4">Protected</Badge>
+                                <Badge className="bg-chart-4/20 text-chart-4 border-0 text-[10px] px-1.5 py-0 h-4">
+                                  Protected
+                                </Badge>
                               ) : file.visibility === 'PRIVATE' ? (
-                                <Badge variant="secondary" className="bg-muted/50 text-[10px] px-1.5 py-0 h-4">Private</Badge>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-muted/50 text-[10px] px-1.5 py-0 h-4"
+                                >
+                                  Private
+                                </Badge>
                               ) : (
-                                <Badge className="bg-chart-2/20 text-chart-2 border-0 text-[10px] px-1.5 py-0 h-4">Public</Badge>
+                                <Badge className="bg-chart-2/20 text-chart-2 border-0 text-[10px] px-1.5 py-0 h-4">
+                                  Public
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -1557,7 +1842,12 @@ export function UserList() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7"
-                                    onClick={() => window.open(sanitizeUrl(file.urlPath), '_blank')}
+                                    onClick={() =>
+                                      window.open(
+                                        sanitizeUrl(file.urlPath),
+                                        '_blank'
+                                      )
+                                    }
                                   >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                   </Button>
@@ -1569,29 +1859,59 @@ export function UserList() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={cn('h-7 w-7', file.flagged ? 'text-destructive hover:text-destructive' : 'hover:text-amber-500')}
-                                    onClick={() => handleOpenFlag('file', file.id, file.name, !!file.flagged)}
+                                    className={cn(
+                                      'h-7 w-7',
+                                      file.flagged
+                                        ? 'text-destructive hover:text-destructive'
+                                        : 'hover:text-amber-500'
+                                    )}
+                                    onClick={() =>
+                                      handleOpenFlag(
+                                        'file',
+                                        file.id,
+                                        file.name,
+                                        !!file.flagged
+                                      )
+                                    }
                                   >
-                                    {file.flagged ? <ShieldOff className="h-3.5 w-3.5" /> : <Flag className="h-3.5 w-3.5" />}
+                                    {file.flagged ? (
+                                      <ShieldOff className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <Flag className="h-3.5 w-3.5" />
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{file.flagged ? 'Unflag' : 'Flag'}</TooltipContent>
+                                <TooltipContent>
+                                  {file.flagged ? 'Unflag' : 'Flag'}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                >
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setSelectedFile(file); setIsFileSettingsOpen(true) }}>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedFile(file)
+                                    setIsFileSettingsOpen(true)
+                                  }}
+                                >
                                   <Lock className="h-4 w-4 mr-2" />
                                   Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
-                                  onClick={() => { setSelectedFile(file); setIsFileDeleteDialogOpen(true) }}
+                                  onClick={() => {
+                                    setSelectedFile(file)
+                                    setIsFileDeleteDialogOpen(true)
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
@@ -1614,28 +1934,43 @@ export function UserList() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); viewingUser && fetchUserFiles(viewingUser.id, filePage - 1) }}
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.preventDefault()
+                            viewingUser &&
+                              fetchUserFiles(viewingUser.id, filePage - 1)
+                          }}
                           disabled={filePage === 1}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                       </PaginationItem>
-                      {getPaginationRange(filePage, filePagination.pages).map((p) => (
-                        <PaginationItem key={p}>
-                          <PaginationLink
-                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); viewingUser && fetchUserFiles(viewingUser.id, p) }}
-                            isActive={p === filePage}
-                          >
-                            {p}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                      {getPaginationRange(filePage, filePagination.pages).map(
+                        (p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              onClick={(
+                                e: React.MouseEvent<HTMLAnchorElement>
+                              ) => {
+                                e.preventDefault()
+                                viewingUser && fetchUserFiles(viewingUser.id, p)
+                              }}
+                              isActive={p === filePage}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
                       <PaginationItem>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); viewingUser && fetchUserFiles(viewingUser.id, filePage + 1) }}
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.preventDefault()
+                            viewingUser &&
+                              fetchUserFiles(viewingUser.id, filePage + 1)
+                          }}
                           disabled={filePage === filePagination.pages}
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -1647,7 +1982,10 @@ export function UserList() {
               </div>
             </TabsContent>
 
-            <TabsContent value="urls" className="flex-1 flex flex-col min-h-0 mt-0 px-6 pb-6">
+            <TabsContent
+              value="urls"
+              className="flex-1 flex flex-col min-h-0 mt-0 px-6 pb-6"
+            >
               <div className="space-y-3 flex-1 flex flex-col min-h-0">
                 {/* Search */}
                 <div className="relative pt-3">
@@ -1667,7 +2005,9 @@ export function UserList() {
                       <div className="p-3 rounded-xl bg-muted/50 mb-3">
                         <Link2 className="h-8 w-8 text-muted-foreground/50" />
                       </div>
-                      <p className="text-sm text-muted-foreground">No URLs found</p>
+                      <p className="text-sm text-muted-foreground">
+                        No URLs found
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -1677,7 +2017,8 @@ export function UserList() {
                           className={cn(
                             'group flex items-center gap-3 p-3 rounded-xl transition-all',
                             'glass-subtle glass-hover',
-                            url.flagged && 'ring-1 ring-destructive/50 bg-destructive/5'
+                            url.flagged &&
+                              'ring-1 ring-destructive/50 bg-destructive/5'
                           )}
                         >
                           <div className="p-2 rounded-lg bg-primary/10 shrink-0">
@@ -1701,15 +2042,26 @@ export function UserList() {
                                       <Flag className="h-3.5 w-3.5 text-destructive shrink-0" />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Flagged: {url.flagReason || 'No reason'}</p>
+                                      <p>
+                                        Flagged: {url.flagReason || 'No reason'}
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
-                              <Badge variant="secondary" className="bg-muted/50 text-[10px] px-1.5 py-0 h-4 ml-1">{url.clicks} clicks</Badge>
+                              <Badge
+                                variant="secondary"
+                                className="bg-muted/50 text-[10px] px-1.5 py-0 h-4 ml-1"
+                              >
+                                {url.clicks} clicks
+                              </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{url.targetUrl}</p>
-                            <span className="text-xs text-muted-foreground/60">{new Date(url.createdAt).toLocaleDateString()}</span>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {url.targetUrl}
+                            </p>
+                            <span className="text-xs text-muted-foreground/60">
+                              {new Date(url.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
 
                           <div className="shrink-0 flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -1720,7 +2072,12 @@ export function UserList() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7"
-                                    onClick={() => window.open(`/u/${url.shortCode}`, '_blank')}
+                                    onClick={() =>
+                                      window.open(
+                                        `/u/${url.shortCode}`,
+                                        '_blank'
+                                      )
+                                    }
                                   >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                   </Button>
@@ -1732,18 +2089,40 @@ export function UserList() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={cn('h-7 w-7', url.flagged ? 'text-destructive hover:text-destructive' : 'hover:text-amber-500')}
-                                    onClick={() => handleOpenFlag('url', url.id, url.shortCode, !!url.flagged)}
+                                    className={cn(
+                                      'h-7 w-7',
+                                      url.flagged
+                                        ? 'text-destructive hover:text-destructive'
+                                        : 'hover:text-amber-500'
+                                    )}
+                                    onClick={() =>
+                                      handleOpenFlag(
+                                        'url',
+                                        url.id,
+                                        url.shortCode,
+                                        !!url.flagged
+                                      )
+                                    }
                                   >
-                                    {url.flagged ? <ShieldOff className="h-3.5 w-3.5" /> : <Flag className="h-3.5 w-3.5" />}
+                                    {url.flagged ? (
+                                      <ShieldOff className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <Flag className="h-3.5 w-3.5" />
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{url.flagged ? 'Unflag' : 'Flag'}</TooltipContent>
+                                <TooltipContent>
+                                  {url.flagged ? 'Unflag' : 'Flag'}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                >
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -1773,28 +2152,43 @@ export function UserList() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); viewingUser && fetchUserUrls(viewingUser.id, urlPage - 1) }}
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.preventDefault()
+                            viewingUser &&
+                              fetchUserUrls(viewingUser.id, urlPage - 1)
+                          }}
                           disabled={urlPage === 1}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                       </PaginationItem>
-                      {getPaginationRange(urlPage, urlPagination.pages).map((p) => (
-                        <PaginationItem key={p}>
-                          <PaginationLink
-                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); viewingUser && fetchUserUrls(viewingUser.id, p) }}
-                            isActive={p === urlPage}
-                          >
-                            {p}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                      {getPaginationRange(urlPage, urlPagination.pages).map(
+                        (p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              onClick={(
+                                e: React.MouseEvent<HTMLAnchorElement>
+                              ) => {
+                                e.preventDefault()
+                                viewingUser && fetchUserUrls(viewingUser.id, p)
+                              }}
+                              isActive={p === urlPage}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
                       <PaginationItem>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); viewingUser && fetchUserUrls(viewingUser.id, urlPage + 1) }}
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.preventDefault()
+                            viewingUser &&
+                              fetchUserUrls(viewingUser.id, urlPage + 1)
+                          }}
                           disabled={urlPage === urlPagination.pages}
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -1898,7 +2292,8 @@ export function UserList() {
           <DialogHeader>
             <DialogTitle>Ban User</DialogTitle>
             <DialogDescription>
-              Ban {banTarget?.name} from the platform. They will be immediately logged out.
+              Ban {banTarget?.name} from the platform. They will be immediately
+              logged out.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1941,13 +2336,21 @@ export function UserList() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBanDialogOpen(false)} disabled={isBanning}>
+            <Button
+              variant="outline"
+              onClick={() => setIsBanDialogOpen(false)}
+              disabled={isBanning}
+            >
               Cancel
             </Button>
             <Button
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleBanUser}
-              disabled={isBanning || banReason.length < 10 || (banType === 'temporary' && !banExpiry)}
+              disabled={
+                isBanning ||
+                banReason.length < 10 ||
+                (banType === 'temporary' && !banExpiry)
+              }
             >
               {isBanning ? 'Banning...' : 'Ban User'}
             </Button>
@@ -1959,7 +2362,9 @@ export function UserList() {
       <Dialog open={isFlagDialogOpen} onOpenChange={setIsFlagDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{flagTarget?.flagged ? 'Unflag Content' : 'Flag Content'}</DialogTitle>
+            <DialogTitle>
+              {flagTarget?.flagged ? 'Unflag Content' : 'Flag Content'}
+            </DialogTitle>
             <DialogDescription>
               {flagTarget?.flagged
                 ? `Remove the flag from "${flagTarget?.name}"? It will be visible to the public again.`
@@ -1979,15 +2384,29 @@ export function UserList() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFlagDialogOpen(false)} disabled={isFlagging}>
+            <Button
+              variant="outline"
+              onClick={() => setIsFlagDialogOpen(false)}
+              disabled={isFlagging}
+            >
               Cancel
             </Button>
             <Button
-              className={flagTarget?.flagged ? '' : 'bg-amber-500 text-white hover:bg-amber-600'}
+              className={
+                flagTarget?.flagged
+                  ? ''
+                  : 'bg-amber-500 text-white hover:bg-amber-600'
+              }
               onClick={handleFlagContent}
-              disabled={isFlagging || (!flagTarget?.flagged && flagReason.length < 3)}
+              disabled={
+                isFlagging || (!flagTarget?.flagged && flagReason.length < 3)
+              }
             >
-              {isFlagging ? 'Processing...' : flagTarget?.flagged ? 'Remove Flag' : 'Flag Content'}
+              {isFlagging
+                ? 'Processing...'
+                : flagTarget?.flagged
+                  ? 'Remove Flag'
+                  : 'Flag Content'}
             </Button>
           </DialogFooter>
         </DialogContent>

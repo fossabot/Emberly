@@ -8,7 +8,7 @@
 /* THANKS */
 
   All open-source contributors and community members.
-  Discord: https://discord.gg/emberly
+  Discord: https://discord.gg/36spBmzZVB
 
 /* TECHNOLOGY */
 

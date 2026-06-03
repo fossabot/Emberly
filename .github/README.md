@@ -7,30 +7,35 @@ Emberly is an open source platform for modern file storage, sharing, and identit
 ## Features
 
 **File Storage & Sharing**
+
 - S3 compatible object storage with configurable upload limits
 - Secure file sharing with customizable access controls
 - Real world file organization and management
 - Bandwidth efficient delivery through global infrastructure
 
 **Domain & Branding**
+
 - Custom domain support with annual registration
 - Personal or team branded file sharing pages
 - Domain SSL certificate management
 - DNS configuration assistance
 
 **Identity & Verification**
+
 - User verification badges with multiple tier options
 - Verification queue with application review system
 - Badge display on public profiles
 - Organization verification for teams
 
 **Team & Collaboration**
+
 - Squad based team subscriptions with seat based pricing
 - Granular permission management (roles: SUPPORT, DEVELOPER, MODERATOR, DESIGNER, STAFF)
 - Team member invitations and management
 - Shared storage pools with usage tracking
 
 **Applications & Trust**
+
 - Staff application system for organizational partnerships
 - Partner program enrollment
 - Verification badge applications
@@ -38,6 +43,7 @@ Emberly is an open source platform for modern file storage, sharing, and identit
 - Email notifications for all application updates
 
 **Administrative Tools**
+
 - Promo code management with configurable discounts
 - User management dashboard
 - Application review queue with multi stage triage
@@ -82,6 +88,7 @@ The application will be available at http://localhost:3000.
 ## Tech Stack
 
 **Frontend & Framework**
+
 - [Next.js 15](https://nextjs.org/) - React framework with App Router
 - [React 19](https://react.dev/) - UI library
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
@@ -89,18 +96,21 @@ The application will be available at http://localhost:3000.
 - [shadcn/ui](https://ui.shadcn.com/) - Component library
 
 **Backend & Database**
+
 - [PostgreSQL](https://www.postgresql.org/) - Relational database
 - [Prisma ORM](https://www.prisma.io/) - Database toolkit
 - [Stripe](https://stripe.com/) - Payment processing
 - [Resend](https://resend.com/) - Email delivery
 
 **Infrastructure & Services**
+
 - [S3 compatible storage](https://aws.amazon.com/s3/) - File storage
 - [Kener](https://kener.ing/) - Status page monitoring
 - [Next.js Auth](https://next-auth.js.org/) - Authentication
 - [Sentry](https://sentry.io/) - Error tracking
 
 **Development Tools**
+
 - [Bun](https://bun.sh/) - Runtime and package manager
 - [ESLint](https://eslint.org/) - Code linting
 - [Prisma Migrate](https://www.prisma.io/docs/orm/prisma-migrate) - Database migrations
@@ -121,18 +131,18 @@ packages/
     - auth/              # Authentication UI
     - dashboard/         # User dashboard
     - ui/                # Base UI building blocks
-  
+
   hooks/                 # Custom React hooks
     - use file upload     # File uploading
     - use profile         # User profile data
     - use user content    # User content queries
-  
+
   lib/                   # Utility functions
     - api/               # API helpers
     - auth/              # Authentication utilities
     - cache/             # Caching logic
     - stripe/            # Stripe integration
-  
+
   types/                 # TypeScript definitions
 
 prisma/                  # Database schema and migrations
@@ -158,7 +168,7 @@ We welcome contributions from the community. Please see [CONTRIBUTING.md](CONTRI
 
 Get help and connect with the community:
 
-- **Discord** - [Join our server](https://discord.gg/A8c58ScRCj) for realtime discussions
+- **Discord** - [Join our server](https://discord.gg/36spBmzZVB) for realtime discussions
 - **GitHub Discussions** - Ask questions and share ideas
 - **Email** - Contact [hey@embrly.ca](mailto:hey@embrly.ca) for support
 
@@ -172,4 +182,4 @@ This project adheres to the Contributor Covenant Code of Conduct. By participati
 
 ## Acknowledgments
 
-Thank you to all [contributors](https://github.com/EmberlyOSS/Emberly/graphs/contributors) who have helped make Emberly possible. We also appreciate the open source projects and communities that make this platform possible. 
+Thank you to all [contributors](https://github.com/EmberlyOSS/Emberly/graphs/contributors) who have helped make Emberly possible. We also appreciate the open source projects and communities that make this platform possible.

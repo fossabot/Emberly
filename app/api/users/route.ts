@@ -1,4 +1,9 @@
-import { UserResponse, UserSchema, CreateUserSchema, UpdateUserSchema } from '@/packages/types/dto/user'
+import {
+  UserResponse,
+  UserSchema,
+  CreateUserSchema,
+  UpdateUserSchema,
+} from '@/packages/types/dto/user'
 import { hash } from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -14,7 +19,12 @@ import { events } from '@/packages/lib/events'
 import { emitAuditEvent } from '@/packages/lib/events/audit-helper'
 import { loggers } from '@/packages/lib/logger'
 import { getStorageProvider } from '@/packages/lib/storage'
-import { findUserByEmail, findUserById, findUserByUrlId, urlIdIsUnique } from '@/packages/lib/users/lookup'
+import {
+  findUserByEmail,
+  findUserById,
+  findUserByUrlId,
+  urlIdIsUnique,
+} from '@/packages/lib/users/lookup'
 import { USER_ADMIN_SELECT } from '@/packages/lib/users/service'
 
 const logger = loggers.users
@@ -26,7 +36,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '25')
+    const limit = parseInt(searchParams.get('limit') || '8')
     const skip = (page - 1) * limit
 
     const total = await prisma.user.count()
@@ -41,7 +51,10 @@ export async function GET(req: Request) {
     })
 
     // Deduplicate grants in case of dirty data
-    const usersClean = users.map((u) => ({ ...u, grants: [...new Set(u.grants)] }))
+    const usersClean = users.map((u) => ({
+      ...u,
+      grants: [...new Set(u.grants)],
+    }))
 
     const pagination = {
       total,
@@ -151,7 +164,9 @@ export async function PUT(req: Request) {
       ...(body.role !== undefined && { role: body.role }),
       ...(body.password && { password: await hash(body.password, 10) }),
       ...(body.urlId && { urlId: body.urlId }),
-      ...(body.storageQuotaMB !== undefined && { storageQuotaMB: body.storageQuotaMB }),
+      ...(body.storageQuotaMB !== undefined && {
+        storageQuotaMB: body.storageQuotaMB,
+      }),
     }
     // If any of the following sensitive fields are present, require SUPERADMIN
     const sensitiveRequested =
@@ -166,7 +181,6 @@ export async function PUT(req: Request) {
       const { response: saResp } = await requireSuperAdmin()
       if (saResp) return saResp
     }
-
 
     // If admin requests to grant storage (in GB), create a one-off purchase record
     if (body.grantStorageGB !== undefined && body.grantStorageGB > 0) {
@@ -189,7 +203,8 @@ export async function PUT(req: Request) {
 
         if (user?.email) {
           // Calculate total storage after grant
-          const { getPurchasedStorageMB } = await import('@/packages/lib/storage/quota')
+          const { getPurchasedStorageMB } =
+            await import('@/packages/lib/storage/quota')
           const purchasedMB = await getPurchasedStorageMB(body.id)
           const baseQuotaMB = user.storageQuotaMB ?? 5120 // 5GB default
           const totalStorageMB = baseQuotaMB + purchasedMB
@@ -199,7 +214,7 @@ export async function PUT(req: Request) {
             email: user.email,
             storageAmount: body.grantStorageGB,
             unit: 'GB',
-            totalStorage: Math.round(totalStorageMB / 1024 * 100) / 100, // Convert to GB
+            totalStorage: Math.round((totalStorageMB / 1024) * 100) / 100, // Convert to GB
             reason: 'Admin grant',
           })
         }
@@ -221,7 +236,10 @@ export async function PUT(req: Request) {
           },
         })
       } catch (err) {
-        logger.error('Failed creating one-off custom domain grant', err as Error)
+        logger.error(
+          'Failed creating one-off custom domain grant',
+          err as Error
+        )
       }
     }
 
@@ -231,7 +249,9 @@ export async function PUT(req: Request) {
         const product = await prisma.product.findFirst({
           where: {
             OR: [
-              body.planProductId ? { stripeProductId: String(body.planProductId) } : undefined,
+              body.planProductId
+                ? { stripeProductId: String(body.planProductId) }
+                : undefined,
               body.planSlug ? { slug: String(body.planSlug) } : undefined,
             ].filter(Boolean) as any,
           },
@@ -241,15 +261,29 @@ export async function PUT(req: Request) {
         }
 
         // try to update an existing subscription or create a new one
-        const existingSub = await prisma.subscription.findFirst({ where: { userId: body.id } })
+        const existingSub = await prisma.subscription.findFirst({
+          where: { userId: body.id },
+        })
         if (existingSub) {
-          await prisma.subscription.update({ where: { id: existingSub.id }, data: { productId: product.id, status: 'active', stripeSubscriptionId: null } })
+          await prisma.subscription.update({
+            where: { id: existingSub.id },
+            data: {
+              productId: product.id,
+              status: 'active',
+              stripeSubscriptionId: null,
+            },
+          })
         } else {
-          await prisma.subscription.create({ data: { userId: body.id, productId: product.id, status: 'active' } })
+          await prisma.subscription.create({
+            data: { userId: body.id, productId: product.id, status: 'active' },
+          })
         }
       } catch (err) {
         logger.error('Failed to change user plan', err as Error)
-        return apiError('Failed to change plan', HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        return apiError(
+          'Failed to change plan',
+          HTTP_STATUS.INTERNAL_SERVER_ERROR
+        )
       }
     }
 
@@ -309,4 +343,3 @@ export async function PUT(req: Request) {
     return apiError('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }
-

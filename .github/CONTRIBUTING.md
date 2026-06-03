@@ -116,6 +116,7 @@ git checkout -b fix/your-bug-fix
 ```
 
 Branch naming conventions:
+
 - `feature/` - New features
 - `fix/` - Bug fixes
 - `docs/` - Documentation changes
@@ -243,7 +244,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) enforced by 
 ### Types
 
 | Type       | Description                                      |
-|------------|--------------------------------------------------|
+| ---------- | ------------------------------------------------ |
 | `feat`     | New feature                                      |
 | `fix`      | Bug fix                                          |
 | `docs`     | Documentation changes                            |
@@ -290,7 +291,7 @@ For feature requests, please include:
 
 ### Getting Help
 
-- **Discord** - Join our [Discord server](https://discord.gg/A8c58ScRCj) for realtime chat
+- **Discord** - Join our [Discord server](https://discord.gg/36spBmzZVB) for realtime chat
 - **GitHub Discussions** - For longer form conversations
 - **Issues** - For bug reports and feature requests
 
