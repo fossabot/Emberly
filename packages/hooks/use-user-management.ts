@@ -37,7 +37,7 @@ export interface User {
 
 export interface PaginationData {
   total: number
-  pages: number
+  pageCount: number
   page: number
   limit: number
 }
@@ -79,7 +79,7 @@ export function useUserManagement(options: UseUserManagementOptions = {}) {
     async (page: number = 1) => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/users?page=${page}&limit=25`)
+        const response = await fetch(`/api/users?page=${page}&limit=8`)
         if (!response.ok) throw new Error('Failed to fetch users')
         const data = await response.json()
         setUsers(data.data || [])
@@ -119,15 +119,8 @@ export function useUserManagement(options: UseUserManagementOptions = {}) {
         const responseData = await response.json()
         const newUser = responseData.data
 
-        setUsers((prevUsers) => [newUser, ...prevUsers])
-
-        if (pagination) {
-          setPagination({
-            ...pagination,
-            total: pagination.total + 1,
-            pages: Math.ceil((pagination.total + 1) / pagination.limit),
-          })
-        }
+        // Refetch the first page to maintain consistency
+        await fetchUsers(1)
 
         if (options.onUserCreated) {
           options.onUserCreated(newUser)
@@ -220,15 +213,8 @@ export function useUserManagement(options: UseUserManagementOptions = {}) {
           throw new Error('Failed to delete user')
         }
 
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId))
-
-        if (pagination) {
-          setPagination({
-            ...pagination,
-            total: pagination.total - 1,
-            pages: Math.ceil((pagination.total - 1) / pagination.limit),
-          })
-        }
+        // Refetch current page to maintain consistency
+        await fetchUsers(currentPage)
 
         if (options.onUserDeleted) {
           options.onUserDeleted(userId)
@@ -251,7 +237,7 @@ export function useUserManagement(options: UseUserManagementOptions = {}) {
         setIsLoading(false)
       }
     },
-    [pagination, toast, router, options]
+    [currentPage, fetchUsers, toast, router, options]
   )
 
   const removeUserAvatar = useCallback(
@@ -310,12 +296,17 @@ export function useUserManagement(options: UseUserManagementOptions = {}) {
 
         toast({
           title: 'Success',
-          description: verified ? 'User verified successfully' : 'User verification removed',
+          description: verified
+            ? 'User verified successfully'
+            : 'User verification removed',
         })
       } catch (error) {
         toast({
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to update verification',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to update verification',
           variant: 'destructive',
         })
         throw error

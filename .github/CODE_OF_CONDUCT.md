@@ -126,8 +126,8 @@ Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcem
 If you have questions about this Code of Conduct, please reach out:
 
 - **Email**: [hey@embrly.ca](mailto:hey@embrly.ca)
-- **Discord**: [discord.gg/A8c58ScRCj](https://discord.gg/A8c58ScRCj)
+- **Discord**: [discord.gg/36spBmzZVB](https://discord.gg/36spBmzZVB)
 
 ---
 
-*Last updated: January 1, 2026*
+_Last updated: January 1, 2026_
