@@ -7,12 +7,12 @@ Thanks for helping keep Emberly and its users safe.
 We provide security fixes for:
 
 | Version | Supported |
-| --- | --- |
-| Latest stable release | Yes |
-| Previous stable release | Yes |
-| `main` branch | Best effort |
-| `develop` branch | Best effort |
-| Older unsupported releases | No |
+| --------- | ------- |
+| 2.4.x     | Yes     |
+| 2.3.x     | Yes     |
+| < 2.2.x   | No      |
+| `main` branch    | Yes |
+| `develop` branch | Yes |
 
 ## Reporting a Vulnerability
 
