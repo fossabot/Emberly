@@ -140,7 +140,7 @@ export default function S3Section({ tiers }: Props) {
                         <div>
                             <h2 className="text-2xl font-bold">Object Storage</h2>
                             <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-                                Dedicated S3-compatible buckets backed by Vultr infrastructure. Choose the performance
+                                Dedicated S3 compatible buckets. Choose the performance
                                 tier that fits your workload all tiers remove platform storage and upload limits.
                             </p>
                         </div>
