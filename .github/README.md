@@ -2,6 +2,8 @@
 
 Emberly is an open source platform for modern file storage, sharing, and identity verification. Build your digital presence with powerful tools for teams and individuals.
 
+[![Build Checks](https://github.com/EmberlyOSS/Emberly/actions/workflows/build.yml/badge.svg)](https://github.com/EmberlyOSS/Emberly/actions/workflows/build.yml)
+
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/EmberlyOSS/Emberly?utm_source=oss&utm_medium=github&utm_campaign=EmberlyOSS%2FEmberly&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## Features
